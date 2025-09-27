@@ -1,144 +1,272 @@
-<!-- ======= BOTTOM NAV (Pegar antes de </body>) ======= -->
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Carlitos — Camino (estilo simple y limpio)</title>
+<link rel="preconnect" href="https://fonts.gstatic.com">
 <style>
-  /* Bottom nav - estilo pill central oscuro */
-  .carlitos-bottom-nav {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 12px;
-    display: flex;
-    justify-content: center;
-    pointer-events: auto;
-    z-index: 9999;
+  /* Tipografía */
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+  :root{
+    --bg:#f6fbff;
+    --panel:#ffffff;
+    --muted:#6b7280;
+    --accent:#10b981; /* green vibe */
+    --accent2:#06b6d4;
+    --done:#34d399;
+    --shadow: 0 8px 28px rgba(16,24,40,0.08);
+    font-family: 'Inter',system-ui,Arial;
   }
-  .carlitos-bottom-inner {
-    width: calc(100% - 32px);
-    max-width: 760px;
-    background: rgba(6,10,18,0.85); /* oscuro translúcido */
-    backdrop-filter: blur(6px);
-    border-radius: 14px;
-    padding: 8px 12px;
-    box-shadow: 0 8px 30px rgba(2,6,23,0.6);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    gap: 6px;
+  html,body{height:100%;margin:0;background:linear-gradient(180deg, #e8fdfa 0%, #f6fbff 100%);color:#082032}
+  .wrap{max-width:1100px;margin:22px auto;padding:18px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  h1{margin:0;font-size:20px}
+  .sub{color:var(--muted);font-size:13px}
+  .card{background:var(--panel);border-radius:14px;padding:14px;box-shadow:var(--shadow)}
+  .layout{display:flex;gap:16px;margin-top:16px;align-items:flex-start}
+  /* PATH area */
+  .path-wrap{flex:1;padding:18px}
+  .path-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .progress-pill{background:linear-gradient(90deg,var(--accent),var(--accent2));color:white;padding:8px 12px;border-radius:999px;font-weight:700}
+  .track{position:relative;height:120px;background:transparent;display:flex;align-items:center;overflow:auto;padding:8px 6px}
+  .track-inner{display:flex;align-items:center;gap:18px;padding:8px}
+  .node{
+    width:92px;height:92px;border-radius:18px;background:linear-gradient(180deg,#ffffff,#f7fbfb);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(2,6,23,0.06);transition:transform .22s ease, box-shadow .22s ease;cursor:pointer;
   }
-
-  .c-nav-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    text-decoration: none;
-    color: #9fb0c1;
-    font-size: 12px;
-    width: 84px;
-    padding: 6px 8px;
-    border-radius: 10px;
-    transition: color .18s ease, transform .12s ease, background .12s ease;
-  }
-  .c-nav-btn .c-icon {
-    width: 20px;
-    height: 20px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: currentColor;
-  }
-  .c-nav-btn:hover { transform: translateY(-3px); color: #d0f7fb; }
-  .c-nav-btn.active {
-    color: #06b6d4; /* color activo (azul/turquesa) */
-    background: linear-gradient(90deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-    box-shadow: 0 6px 20px rgba(6,182,212,0.08);
-  }
-
-  /* mobile tweak */
-  @media (max-width:420px){
-    .carlitos-bottom-inner { padding:8px; gap:4px; }
-    .c-nav-btn { width:64px; font-size:11px; }
+  .node:hover{transform:translateY(-6px);box-shadow:0 14px 40px rgba(2,6,23,0.12)}
+  .node.locked{opacity:0.5;filter:grayscale(0.02);cursor:not-allowed;transform:none}
+  .node .num{width:48px;height:48px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#042024;background:linear-gradient(180deg,#ecfeff,#e6fff9)}
+  .node.unlocked .num{background:linear-gradient(90deg,var(--accent),#34d399);color:#042024;box-shadow:0 6px 18px rgba(16,185,129,0.16)}
+  .node.done .num{background:linear-gradient(90deg,#16a34a,#34d399);color:#042024;box-shadow:0 10px 30px rgba(16,185,129,0.18)}
+  .node .label{margin-top:8px;font-weight:700;font-size:13px;text-align:center;color:#042024}
+  .connector{height:6px;width:56px;border-radius:6px;background:linear-gradient(90deg,#e6f7f2,#f0fbff);}
+  .connector.active{background:linear-gradient(90deg,var(--accent),var(--accent2));}
+  /* Right column detail */
+  .side{width:360px}
+  .side .title{font-weight:800;font-size:18px}
+  .side .desc{color:var(--muted);margin-top:8px}
+  .actions{margin-top:16px;display:flex;gap:10px}
+  .btn{background:linear-gradient(90deg,var(--accent),var(--accent2));border:none;padding:10px 14px;border-radius:10px;color:#042024;font-weight:800;cursor:pointer}
+  .btn-ghost{background:transparent;border:1px solid rgba(6,7,8,0.06);padding:10px 12px;border-radius:10px;cursor:pointer;color:var(--muted)}
+  .small{font-size:13px;color:var(--muted)}
+  .medals{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .medal{padding:8px 12px;border-radius:12px;background:linear-gradient(90deg,#fff,#f7fff8);box-shadow:0 6px 18px rgba(2,6,23,0.04);font-weight:700}
+  /* responsive */
+  @media(max-width:880px){
+    .layout{flex-direction:column}
+    .side{width:100%}
+    .track{height:220px}
+    .node{width:78px;height:78px}
   }
 </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Camino Carlitos</h1>
+        <div class="sub">Sencillo. Visual. Avanza por principios — desbloquea acciones.</div>
+      </div>
+      <div class="progress-pill" id="progressPill">0% • Inicio</div>
+    </header>
 
-<nav class="carlitos-bottom-nav" aria-label="Navegación principal">
-  <div class="carlitos-bottom-inner" role="navigation">
-    <a class="c-nav-btn" id="nav-home" href="index.html" title="Home" aria-current="page">
-      <!-- home icon -->
-      <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M3 11.5L12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.5z"/>
-      </svg>
-      <span>Home</span>
-    </a>
+    <div class="layout">
+      <div class="card path-wrap">
+        <div class="path-top">
+          <div class="small">Tu recorrido por principios</div>
+          <div class="small" id="nodeCounter">0 / 0 completados</div>
+        </div>
 
-    <a class="c-nav-btn" id="nav-add" href="#" title="Agregar" >
-      <!-- plus icon -->
-      <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M12 5v14M5 12h14"/>
-      </svg>
-      <span>Agregar</span>
-    </a>
+        <div class="track" id="track">
+          <div class="track-inner" id="trackInner">
+            <!-- nodes + connectors injected here -->
+          </div>
+        </div>
 
-    <a class="c-nav-btn" id="nav-micro" href="microaprendizaje.html" title="Microaprendizaje">
-      <!-- play/shorts icon -->
-      <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M5 3v18l15-9L5 3z"/>
-      </svg>
-      <span>Microaprendizaje</span>
-    </a>
+        <div style="margin-top:14px" class="small">Desliza horizontalmente para ver más niveles. Haz clic en un nodo para ver detalles a la derecha.</div>
+      </div>
 
-    <a class="c-nav-btn" id="nav-camino" href="camino.html" title="Camino">
-      <!-- path icon -->
-      <svg class="c-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M3 12h18M8 6h8M10 18h4"/>
-      </svg>
-      <span>Camino</span>
-    </a>
+      <div class="side card">
+        <div class="title" id="sideTitle">Selecciona un nivel</div>
+        <div class="desc small" id="sideDesc">Aquí verás el objetivo del nivel, requisito y la acción recomendada.</div>
+
+        <div class="actions">
+          <button class="btn" id="activateBtn" disabled>Activar regla (simulada)</button>
+          <button class="btn-ghost" id="simulateBtn">Simular requisito</button>
+        </div>
+
+        <div style="margin-top:14px">
+          <div class="small">Medallas</div>
+          <div class="medals" id="medals"></div>
+        </div>
+
+        <div style="margin-top:14px" class="small">Tip: Completa las micro-lecciones en Microaprendizaje; el Camino reconocerá las lecciones hechas y desbloqueará niveles automáticamente.</div>
+      </div>
+    </div>
   </div>
-</nav>
 
 <script>
-  // Marcar botón activo según la URL actual
-  (function markActiveNav(){
-    try{
-      const path = location.pathname.split('/').pop() || 'index.html';
-      // map file name to id
-      const map = {
-        'index.html': 'nav-home',
-        '': 'nav-home',
-        'microaprendizaje.html': 'nav-micro',
-        'camino.html': 'nav-camino'
-      };
-      const activeId = map[path] || null;
-      if(activeId){
-        document.querySelectorAll('.c-nav-btn').forEach(b => b.classList.remove('active'));
-        const el = document.getElementById(activeId);
-        if(el) el.classList.add('active');
-      }
-    }catch(e){console.warn(e)}
-  })();
+/* Datos del Camino: cada nivel referencia una lección (o entries) para desbloquear */
+const LEVELS = [
+  {id:'L1',short:'Ahorra',title:'Ahorra primero',desc:'Aparta un monto pequeño al recibir tu ingreso. Hábito > monto.',require:{type:'lesson',id:'l1'}, reward:'savings_small'},
+  {id:'L2',short:'Presup.',title:'Presupuesta top3',desc:'Define 3 categorías con límites semanales y controla gasto.',require:{type:'entries',count:7}, reward:'budget_top3'},
+  {id:'L3',short:'Deuda',title:'Ataca la deuda',desc:'Plan simple: avalancha o bola de nieve para tu tarjeta.',require:{type:'entries',count:15}, reward:'debt_avalanche'},
+  {id:'L4',short:'Colchón',title:'Fondo de emergencia',desc:'Empieza a construir un colchón: ahorros automáticos pequeños.',require:{type:'rule',key:'savings_small'}, reward:'emergency'},
+  {id:'L5',short:'Ingresos',title:'Diversifica ingresos',desc:'Activa misiones para ingresos extra y mejora tu IFP.',require:{type:'lesson',id:'l3'}, reward:'side_income'}
+];
 
-  // Ejemplo: el botón "Agregar" puede abrir el modal o la sección de añadir
-  document.getElementById('nav-add').addEventListener('click', function(ev){
-    ev.preventDefault();
-    // Si tu página tiene un modal o función addEntryOpen(), llamarla aquí.
-    // Por defecto navegaremos a index y abrimos el formulario (si existe)
-    if(location.pathname.split('/').pop() !== 'index.html'){
-      location.href = 'index.html';
-      // Si quieres abrir automáticamente el modal al cargar index, puedes
-      // colocar algo como localStorage.setItem('openAdd', '1') antes de redirigir,
-      // y en index.html comprobarlo al cargar.
-      localStorage.setItem('carlitos_open_add', '1');
-    } else {
-      // Si estás en index y tienes una función JS para abrir el formulario, llámala:
-      // window.openAddForm && window.openAddForm();
-      // fallback: focus al input de monto
-      const amt = document.getElementById('amount');
-      if(amt){ amt.focus(); }
+/* keys same as prior prototypes */
+const ENTRIES_KEY='carlitos_entries_v1';
+const LESSONS_KEY='carlitos_lessons_v2';
+
+const trackInner = document.getElementById('trackInner');
+const sideTitle = document.getElementById('sideTitle');
+const sideDesc = document.getElementById('sideDesc');
+const activateBtn = document.getElementById('activateBtn');
+const simulateBtn = document.getElementById('simulateBtn');
+const medalsEl = document.getElementById('medals');
+const progressPill = document.getElementById('progressPill');
+const nodeCounter = document.getElementById('nodeCounter');
+
+let selected = null;
+
+/* helpers to read local data */
+function loadEntries(){ try{ return JSON.parse(localStorage.getItem(ENTRIES_KEY)||'[]') }catch(e){return []} }
+function loadLessons(){ try{ return JSON.parse(localStorage.getItem(LESSONS_KEY)||'[]') }catch(e){return []} }
+function isRuleActive(k){ return !!localStorage.getItem('carlitos_rule_' + k) }
+
+/* determine state per level */
+function levelState(l){
+  // return 'locked'|'unlocked'|'done'
+  if(isRuleActive(l.reward)) return 'done';
+  const req = l.require;
+  if(req.type === 'lesson'){
+    const lessons = loadLessons();
+    const found = lessons.find(x=>x.id===req.id && x.done);
+    return found ? 'unlocked' : 'locked';
+  }
+  if(req.type === 'entries'){
+    const entries = loadEntries();
+    return entries.length >= (req.count||999) ? 'unlocked' : 'locked';
+  }
+  if(req.type === 'rule'){
+    return isRuleActive(req.key)? 'unlocked':'locked';
+  }
+  return 'locked';
+}
+
+/* build UI track */
+function buildTrack(){
+  trackInner.innerHTML = '';
+  LEVELS.forEach((lvl, idx)=>{
+    const state = levelState(lvl);
+    const node = document.createElement('div');
+    node.className = 'node ' + (state==='locked' ? 'locked' : state==='done' ? 'done' : 'unlocked');
+    node.dataset.id = lvl.id;
+    node.innerHTML = `
+      <div class="num">${idx+1}</div>
+      <div class="label">${lvl.short}</div>`;
+    node.addEventListener('click', ()=> selectLevel(lvl.id));
+    trackInner.appendChild(node);
+
+    // add connector except after last
+    if(idx < LEVELS.length -1){
+      const conn = document.createElement('div');
+      conn.className = 'connector ' + (state==='done' ? 'active' : '');
+      trackInner.appendChild(conn);
     }
   });
+  updateProgress();
+}
 
-  // Si usas el trick de redirigir y abrir, chequear en index.js al cargar:
-  // if(localStorage.getItem('carlitos_open_add')) { openAddForm(); localStorage.removeItem('carlitos_open_add'); }
+/* select level */
+function selectLevel(id){
+  const lvl = LEVELS.find(l=>l.id===id);
+  selected = lvl;
+  sideTitle.textContent = lvl.title;
+  sideDesc.textContent = lvl.desc;
+  const state = levelState(lvl);
+  activateBtn.disabled = (state !== 'unlocked');
+  activateBtn.textContent = isRuleActive(lvl.reward) ? 'Recompensa activa' : (state==='unlocked' ? 'Activar regla (simulada)' : 'Bloqueado');
+  // show requirement text
+  if(state==='locked'){
+    if(lvl.require.type==='lesson') sideDesc.textContent += `\nRequisito: Completa la micro-lección ${lvl.require.id}.`;
+    if(lvl.require.type==='entries') sideDesc.textContent += `\nRequisito: Registrar ${lvl.require.count} movimientos.`;
+    if(lvl.require.type==='rule') sideDesc.textContent += `\nRequisito: Activar regla ${lvl.require.key}.`;
+  }
+}
+
+/* activate simulated rule */
+activateBtn.addEventListener('click', ()=>{
+  if(!selected) return alert('Selecciona un nivel primero.');
+  localStorage.setItem('carlitos_rule_' + selected.reward, 'active');
+  alert('Regla simulada activada: ' + selected.reward);
+  buildTrack();
+  selectLevel(selected.id);
+  renderMedals();
+});
+
+/* simulate requirement for testing */
+simulateBtn.addEventListener('click', ()=>{
+  if(!selected) return alert('Selecciona un nivel primero.');
+  const req = selected.require;
+  if(req.type === 'entries'){
+    const entries = loadEntries();
+    const need = (req.count||0) - entries.length;
+    for(let i=0;i<need;i++){
+      entries.push({id:'sim'+Date.now()+i,type:'expense',amount:5,category:'Sim',date:new Date().toISOString().slice(0,10),note:'Sim'});
+    }
+    localStorage.setItem(ENTRIES_KEY, JSON.stringify(entries));
+    alert('Simulación: agregados movimientos hasta cumplir requisito.');
+  } else if(req.type === 'lesson'){
+    const lessons = loadLessons();
+    const idx = lessons.findIndex(l=>l.id===req.id);
+    if(idx>=0){ lessons[idx].done = true; localStorage.setItem(LESSONS_KEY, JSON.stringify(lessons)); alert('Simulación: lección marcada como hecha.'); }
+    else alert('Lección no encontrada para simular.');
+  } else if(req.type === 'rule'){
+    localStorage.setItem('carlitos_rule_' + req.key, 'active');
+    alert('Simulación: regla activada.');
+  }
+  buildTrack();
+  selectLevel(selected.id);
+  renderMedals();
+});
+
+/* medals */
+function renderMedals(){
+  medalsEl.innerHTML = '';
+  LEVELS.forEach(l=>{
+    const d = isRuleActive(l.reward);
+    const span = document.createElement('div');
+    span.className = 'medal';
+    span.textContent = d ? '🏅 ' + l.short : '🔒 ' + l.short;
+    medalsEl.appendChild(span);
+  });
+}
+
+/* progress */
+function updateProgress(){
+  const total = LEVELS.length;
+  const done = LEVELS.filter(l=> isRuleActive(l.reward)).length;
+  const pct = Math.round((done/total)*100);
+  progressPill.textContent = `${pct}% • Camino`;
+  nodeCounter.textContent = `${done} / ${total} completados`;
+}
+
+/* auto-unlock when lessons change (listen storage) */
+window.addEventListener('storage', (e)=>{
+  if(e.key === LESSONS_KEY || e.key === ENTRIES_KEY || e.key && e.key.startsWith('carlitos_rule_')){
+    buildTrack();
+    renderMedals();
+  }
+});
+
+/* initial */
+buildTrack();
+selectLevel(LEVELS[0].id);
+renderMedals();
 </script>
-<!-- ======= FIN BOTTOM NAV ======= -->
+</body>
+</html>
 
