@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Carlitos — Microaprendizaje (Reels)</title>
+  <style>
+    :root{
+      --bg:#071426; --card:#071a2a; --accent:#06b6d4; --muted:#9fb0c1;
+      font-family: Inter, system-ui, Arial; color:#e8f3fb;
+    }
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#04111b);overflow:hidden}
+    .app{height:100%;display:flex;flex-direction:column}
+    header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
+    h1{font-size:16px;margin:0;color:#fff}
+    .main{flex:1;position:relative;display:flex;align-items:center;justify-content:center;touch-action:pan-y}
+    .reel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:92%;max-width:420px;height:78%;background:#000;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+    .reel iframe{width:100%;height:100%;border:none}
+    .controls{position:absolute;right:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:10}
+    .ctrl-btn{background:rgba(255,255,255,0.08);border:none;padding:8px;border-radius:10px;color:#fff;cursor:pointer}
+    .bottom{padding:12px;display:flex;justify-content:space-between;align-items:center}
+    .bottom .nav-inner{width:100%;max-width:720px;background:rgba(3,7,18,0.9);padding:10px;border-radius:14px;margin:0 18px;display:flex;justify-content:space-around}
+    .nav{color:var(--muted);text-decoration:none;font-size:13px}
+    #counter{color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header>
+      <h1>Carlitos • Microaprendizaje</h1>
+      <div id="counter">0 / 0</div>
+    </header>
+
+    <div class="main" id="main">
+      <!-- Reel cards se insertan aquí -->
+      <div class="controls">
+        <button id="prevBtn" class="ctrl-btn">▲</button>
+        <button id="nextBtn" class="ctrl-btn">▼</button>
+      </div>
+    </div>
+
+    <div class="bottom">
+      <div class="nav-inner">
+        <a class="nav" href="index.html">Home</a>
+        <a class="nav" href="microaprendizaje.html">Microaprendizaje</a>
+        <a class="nav" href="camino.html">Camino</a>
+      </div>
+    </div>
+  </div>
+
+<script>
+const shorts = [
+  "https://www.youtube.com/shorts/JP2pCDTIcLY",
+  "https://www.youtube.com/shorts/yC4sLk3EaFI",
+  "https://www.youtube.com/shorts/tgxMqy4pmMM",
+  "https://www.youtube.com/shorts/sxdpWemIKuM",
+  "https://www.youtube.com/shorts/RHAhOJiRXUk",
+  "https://www.youtube.com/shorts/67fThtCYq-Y",
+  "https://www.youtube.com/shorts/YqR-3tHIUAw"
+];
+
+const main = document.getElementById('main');
+const counter = document.getElementById('counter');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+let currentIndex = 0;
+
+function getIdFromUrl(url){
+  try{
+    const u = new URL(url);
+    if(u.pathname.includes('/shorts/')){
+      return u.pathname.split('/shorts/')[1];
+    }
+    if(u.searchParams.get('v')) return u.searchParams.get('v');
+    return null;
+  }catch(e){return null;}
+}
+
+function renderReel(){
+  main.querySelectorAll('.reel').forEach(r=>r.remove());
+  if(shorts.length===0){
+    counter.textContent = "0 / 0";
+    return;
+  }
+  if(currentIndex < 0) currentIndex = 0;
+  if(currentIndex >= shorts.length) currentIndex = shorts.length-1;
+  const id = getIdFromUrl(shorts[currentIndex]);
+  const card = document.createElement('div');
+  card.className = 'reel';
+  card.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?rel=0&playsinline=1" allowfullscreen></iframe>`;
+  main.appendChild(card);
+  counter.textContent = `${currentIndex+1} / ${shorts.length}`;
+}
+
+function next(){ if(currentIndex < shorts.length-1){ currentIndex++; renderReel(); } }
+function prev(){ if(currentIndex > 0){ currentIndex--; renderReel(); } }
+
+nextBtn.addEventListener('click', next);
+prevBtn.addEventListener('click', prev);
+
+let startY=0,endY=0;
+main.addEventListener('touchstart', e=>{ startY=e.touches[0].clientY; }, {passive:true});
+main.addEventListener('touchend', e=>{ endY=e.changedTouches[0].clientY; handleSwipe(); }, {passive:true});
+function handleSwipe(){
+  const diff = startY-endY;
+  if(Math.abs(diff)<40) return;
+  if(diff>0) next(); else prev();
+}
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowDown') next();
+  if(e.key==='ArrowUp') prev();
+});
+
+// inicial
+renderReel();
+</script>
+</body>
+</html>
