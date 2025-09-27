@@ -1,496 +1,1404 @@
 <!doctype html>
+
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Carlitos — MVP Finanzas (Prototipo)</title>
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root{
-      --bg:#0f1724; --card:#0b1220; --accent:#06b6d4; --muted:#94a3b8; --glass: rgba(255,255,255,0.03);
-      font-family: Inter, system-ui, Arial;
-    }
-    body{margin:0;background:linear-gradient(180deg,#071024 0%, #081225 100%);color:#e6eef6;padding-bottom:76px;}
-    .container{max-width:1100px;margin:28px auto;padding:18px;}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-    h1{font-size:20px;margin:0}
-    .grid{display:grid;grid-template-columns:1fr 380px;gap:18px}
-    .card{background:var(--card);border-radius:12px;padding:14px;box-shadow:0 6px 18px rgba(2,6,23,0.6);}
-    form .row{display:flex;gap:8px;margin-bottom:8px}
-    input,select,button,textarea{background:var(--glass);border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:10px;border-radius:8px;outline:none}
-    input::placeholder{color:#6b7280}
-    button{background:linear-gradient(90deg,var(--accent),#7dd3fc);color:#062024;border:none;cursor:pointer;padding:10px 12px;font-weight:600}
-    .kpis{display:flex;gap:8px;flex-wrap:wrap}
-    .kpi{flex:1;min-width:120px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);padding:10px;border-radius:8px}
-    .small{font-size:12px;color:var(--muted)}
-    ul{list-style:none;padding:0;margin:0}
-    .entry{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.02)}
-    .danger{color:#ff7a7a}
-    .ok{color:#7ef0c7}
-    .level{background:linear-gradient(90deg,#0b1220,#071024);padding:10px;border-radius:8px;margin-top:10px}
-    footer{font-size:12px;color:var(--muted);text-align:center;margin-top:18px}
-    .hint{font-size:13px;color:var(--muted);margin-top:8px}
-    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted);padding:8px;border-radius:8px}
-    .flex{display:flex;gap:8px;align-items:center}
-    .mini{font-size:13px}
-    /* Bottom nav */
-    .bottom-nav{position:fixed;left:0;right:0;bottom:10px;display:flex;justify-content:center;pointer-events:auto;z-index:80}
-    .nav-inner{width:100%;max-width:720px;background:linear-gradient(90deg,rgba(3,7,18,0.9),rgba(6,8,20,0.9));padding:10px;border-radius:14px;margin:0 18px;display:flex;justify-content:space-around;box-shadow:0 8px 30px rgba(2,6,23,0.6)}
-    .nav-btn{background:transparent;border:none;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:6px;font-size:13px;cursor:pointer}
-    .nav-btn .dot{width:10px;height:10px;border-radius:50%;background:transparent}
-    .nav-btn.active{color:var(--accent)}
-    .nav-btn svg{opacity:0.9}
-  </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carlitos — Finanzas Gamificadas</title>
+    <!-- Tailwind CSS CDN (MANDATORY for modern responsive design) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Base Configuration - Carlitos 3D Llama Theme */
+        :root {
+            /* Colores basados en la imagen 3D: Celestes/Verdes/Púrpura suave */
+            --color-carlitos-primary: #52B6C8; /* Celeste/Cian (Principal) */
+            --color-carlitos-secondary: #37A35E; /* Verde Menta (Acento/Éxito) */
+            --color-carlitos-accent: #8A6FC8; /* Púrpura suave (Fondo/Contraste) */
+
+            --color-bg-dark: #1A1A2E; /* Fondo oscuro y profundo */
+            --color-card-dark: #2C2C45; /* Fondo de tarjeta suave */
+            --color-text-light: #ffffff; 
+            --color-text-muted: #a3a3a3;
+            --color-danger: #ff4757; 
+            --color-success: var(--color-carlitos-secondary); /* Usa el verde para éxito */
+            
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        /* Applying the dark theme and font */
+        body {
+            margin: 0;
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Custom scrollbar for dark theme */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #4a4a66; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: var(--color-bg-dark); }
+
+        /* Custom Styles for Onboarding - Centering and Transition */
+        .onboarding-container {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            min-height: 100vh;
+        }
+
+        /* Utility for Carlitos-style buttons with 3D feel */
+        .btn-carlitos-primary {
+            background: linear-gradient(135deg, var(--color-carlitos-primary), #4593A1);
+            color: white; 
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 0 #1f899e; /* Darker shadow for "press" effect */
+            transition: all 0.1s;
+        }
+        .btn-carlitos-primary:hover {
+            opacity: 0.9;
+        }
+        .btn-carlitos-primary:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #1f899e;
+        }
+
+        .btn-carlitos-outline {
+            background-color: transparent;
+            color: var(--color-carlitos-primary);
+            border: 2px solid var(--color-carlitos-primary);
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
+            transition: all 0.1s;
+        }
+
+        /* Style for Option Cards (Survey/Quiz) */
+        .option-card {
+            background-color: var(--color-card-dark);
+            border: 2px solid var(--color-card-dark);
+            color: var(--color-text-light);
+            transition: all 0.2s;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Sutil sombra */
+        }
+        .option-card:hover {
+            background-color: #3b3b5c;
+            border-color: #52527a;
+        }
+        .option-card.selected {
+            border-color: var(--color-carlitos-primary);
+            background-color: #3f3f61;
+        }
+        .option-card.correct {
+            border-color: var(--color-carlitos-secondary);
+            background-color: #2e4d3f;
+        }
+        .option-card.incorrect {
+            border-color: var(--color-danger);
+            background-color: #4d2e30;
+        }
+
+        /* Carlitos Character Bubble - Updated for softer tones */
+        .carlitos-bubble {
+            background-color: var(--color-carlitos-primary);
+            color: var(--color-bg-dark);
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            position: relative;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            max-width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .carlitos-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            width: 0;
+            height: 0;
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid var(--color-carlitos-primary);
+            
+        }
+
+        /* Dashboard specific styling */
+        .dashboard-form-input, .dashboard-form-select {
+            background-color: #3b3b5c;
+            border: 1px solid #52527a;
+            color: var(--color-text-light);
+            padding: 0.65rem;
+            border-radius: 8px;
+        }
+        
+        .main-content-grid, .dashboard-grid {
+            /* Ensure smooth transitions for layout changes */
+            transition: grid-template-columns 0.3s ease;
+        }
+        
+        /* Responsive grid for Dashboard */
+        @media (min-width: 1024px) {
+            .main-content-grid {
+                grid-template-columns: 250px 1fr; /* Sidebar navigation + main content */
+            }
+            .dashboard-grid {
+                /* Changed to 1fr 380px to accommodate a wider main panel and a stats sidebar */
+                grid-template-columns: 1fr 380px; 
+            }
+            /* Force the Registration/List area to occupy full width on small desktop/tablet */
+            .registration-panel {
+                grid-column: 1 / 3; /* Spans both columns on larger screens for better flow */
+            }
+        }
+        @media (max-width: 1023px) {
+            .main-content-grid {
+                grid-template-columns: 1fr; /* Full width for mobile */
+            }
+        }
+    </style>
 </head>
-<body>
-  <div class="container">
-    <header>
-      <h1>Carlitos — Prototipo MVP</h1>
-      <div class="mini small">Data guardada en tu navegador • Versión prototipo</div>
-    </header>
+<body class="selection:bg-cyan-500 selection:text-black">
 
-    <div class="grid">
-      <!-- Left: Main -->
-      <div>
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;gap:12px;align-items:center">
-            <div>
-              <div class="small">Balance estimado (mes)</div>
-              <div id="ifp" style="font-size:22px;font-weight:700">S/ 0</div>
-              <div class="hint">PIB personal (IFP) = Ingresos − Gastos</div>
-            </div>
-            <div style="width:45%">
-              <div class="small">Pronóstico gasto (30 días)</div>
-              <canvas id="forecastChart" height="80"></canvas>
-            </div>
-          </div>
-          <hr style="border:none;border-top:1px solid rgba(255,255,255,0.03);margin:12px 0">
-          <div style="display:flex;gap:12px;align-items:center">
-            <div style="flex:1">
-              <div class="small">Registrar gasto / ingreso</div>
-              <form id="entryForm">
-                <div class="row">
-                  <select id="type" required>
-                    <option value="expense">Gasto</option>
-                    <option value="income">Ingreso</option>
-                  </select>
-                  <input id="amount" type="number" step="0.01" placeholder="Monto (S/)" required>
-                </div>
-                <div class="row">
-                  <select id="category" required>
-                    <!-- Se llena dinámicamente en JS -->
-                  </select>
-                  <input id="date" type="date" required>
-                </div>
-                <div class="row">
-                  <input id="note" placeholder="Nota (opcional)">
-                  <button type="submit">Registrar</button>
-                </div>
-              </form>
-            </div>
-            <div style="width:220px">
-              <div class="small">Indicadores rápidos</div>
-              <div class="kpis">
-                <div class="kpi"><div class="small">Ingreso mensual</div><div id="sumIncome" style="font-weight:700">S/0</div></div>
-                <div class="kpi"><div class="small">Gasto mensual</div><div id="sumExpense" style="font-weight:700">S/0</div></div>
-                <div class="kpi"><div class="small">Salud sistema</div><div id="health" style="font-weight:700">0/100</div></div>
-              </div>
-            </div>
-          </div>
+<!-- Global State -->
+<script>
+    // Usamos la imagen proporcionada previamente
+    const CarlitosImage = 'WhatsApp Image 2025-09-27 at 12.13.18 PM.jpeg'; 
+    const STORAGE_KEY = 'carlitos_entries_v3';
+    const ONBOARDING_KEY = 'carlitos_onboarding_v3';
+    const LESSON_KEY = 'carlitos_lessons_v1';
+
+    // Global App State
+    const appState = {
+        onboardingComplete: localStorage.getItem(ONBOARDING_KEY) === 'true',
+        onboardingStep: 0,
+        entries: loadEntries(),
+        onboardingData: JSON.parse(localStorage.getItem('carlitos_onboarding_data_v3') || '{}'),
+        lessonsCompleted: JSON.parse(localStorage.getItem(LESSON_KEY) || '{}'),
+        activeModule: 'Carlitos', // Default to Carlitos Dashboard
+        isLessonActive: false, // Flag to manage lesson view
+        lessonData: {} // Data specific to the active lesson
+    };
+
+    /* Data Persistence */
+    function loadEntries() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        try { return JSON.parse(raw).map(e => ({ ...e, amount: parseFloat(e.amount) })) } catch (e) { return [] }
+    }
+
+    function saveEntries() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState.entries));
+        localStorage.setItem('carlitos_onboarding_data_v3', JSON.stringify(appState.onboardingData));
+        localStorage.setItem(LESSON_KEY, JSON.stringify(appState.lessonsCompleted));
+    }
+
+    /* Carlitos Character (Llama Financiera 3D) */
+    const CarlitosCharacter = (size='w-24 h-24') => `
+        <div class="flex flex-col items-center">
+            <!-- Carlitos the Financial Llama Image (Transparent Background) -->
+            <img src="${CarlitosImage}" alt="Carlitos la Llama Financiera 3D" 
+                 class="${size} object-contain p-1 shadow-2xl transition-transform duration-300 hover:scale-105" 
+                 style="border-radius: 50%; border: 3px solid var(--color-carlitos-primary);"
+                 onerror="this.src='https://placehold.co/100x100/37A35E/ffffff?text=Llama'" />
+            <div class="text-xs text-gray-400 mt-2">Tu mentor llama</div>
         </div>
+    `;
 
-        <!-- Entries list -->
-        <div class="card" style="margin-top:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><strong>Movimientos recientes</strong> <span class="small">(últimos 30)</span></div>
-            <div class="flex">
-              <button id="clearBtn" class="btn-ghost">Limpiar datos</button>
-              <button id="seedBtn" class="btn-ghost">Cargar ejemplo</button>
-            </div>
-          </div>
-          <div id="entriesList" style="margin-top:10px;max-height:320px;overflow:auto"></div>
+    const CarlitosLogo = (size='text-4xl') => `
+        <div class="flex items-center space-x-2">
+            <!-- Icono simplificado basado en el personaje, o solo texto con color -->
+            <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2ZM12 4C16.418 4 20 7.582 20 12C20 16.418 16.418 20 12 20C7.582 20 4 16.418 4 12C4 7.582 7.582 4 12 4ZM10 8V16L16 12L10 8Z" fill="url(#gradient-logo)"/>
+                <!-- Definición de Gradiente para el look 3D -->
+                <defs>
+                    <linearGradient id="gradient-logo" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:var(--color-carlitos-primary);stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:var(--color-carlitos-secondary);stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            <span class="${size} font-extrabold" style="color:var(--color-carlitos-primary)">CARLITOS</span>
         </div>
+    `;
+</script>
 
-        <!-- Levels / Missions -->
-        <div class="card" style="margin-top:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><strong>Camino Carlitos</strong><div class="small">Niveles y micro-lecciones</div></div>
-            <div id="levelBadge" class="level">Nivel 0 • Comienza</div>
-          </div>
+<!-- ----------------------- VIEW CONTAINER ----------------------- -->
 
-          <div id="lessonBox" style="margin-top:10px">
-            <div class="small">Lección actual:</div>
-            <div id="lessonText" style="margin-top:8px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.02)">
-              Registra tus primeros 3 movimientos para desbloquear la lección 1.
-            </div>
-            <div style="margin-top:8px" id="lessonAction"></div>
-          </div>
-        </div>
+<div id="appContainer" class="flex-1">
+    <!-- Content will be rendered here based on appState.onboardingComplete -->
+</div>
 
-      </div>
+<!-- ----------------------- BOTTOM NAV (Mobile Only) - Hidden until Onboarding is Complete ----------------------- -->
 
-      <!-- Right: Charts & tips -->
-      <div>
-        <div class="card">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><strong>Distribución por categoría</strong></div>
-            <div class="small">Insight rápido</div>
-          </div>
-          <canvas id="pieChart" height="200" style="margin-top:12px"></canvas>
-          <div id="insight" class="hint" style="margin-top:10px">Registra movimientos para obtener recomendaciones.</div>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><strong>Gasto diario (últimos 30 días)</strong></div>
-            <div class="small">Tendencia</div>
-          </div>
-          <canvas id="lineChart" height="160" style="margin-top:12px"></canvas>
-        </div>
-
-        <div class="card" style="margin-top:12px">
-          <div><strong>Sugerencias rápidas</strong></div>
-          <ul id="suggestions" style="margin-top:8px"></ul>
-        </div>
-
-      </div>
+<div id="mobileNav" class="fixed bottom-0 left-0 right-0 lg:hidden p-2 z-50 hidden">
+    <div class="flex justify-around bg-gray-900/90 backdrop-blur-sm p-2 rounded-xl shadow-2xl mx-2 border-t border-gray-700">
+        <!-- Module 1: Aprender -->
+        <button onclick="setModule('Aprender')" class="nav-button flex flex-col items-center p-2 rounded-lg transition-colors duration-200" data-module="Aprender">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+            <span class="text-xs mt-1">Aprender</span>
+        </button>
+        <!-- Module 2: Carlitos (Finanzas) -->
+        <button onclick="setModule('Carlitos')" class="nav-button flex flex-col items-center p-2 rounded-lg transition-colors duration-200" data-module="Carlitos">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12H3M18 5l3 7-3 7M6 5l-3 7 3 7"></path></svg>
+            <span class="text-xs mt-1">Carlitos</span>
+        </button>
+        <!-- Module 3: Microaprendizaje -->
+        <button onclick="setModule('Microaprendizaje')" class="nav-button flex flex-col items-center p-2 rounded-lg transition-colors duration-200" data-module="Microaprendizaje">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="22" height="18" rx="2" ry="2"></rect><path d="M9 12V9l-2 3"></path></svg>
+            <span class="text-xs mt-1">Clips</span>
+        </button>
     </div>
-
-    <footer class="small">Prototipo MVP • Carlitos — Enseña principios y deja crear tu propio sistema</footer>
-  </div>
-
-  <!-- Bottom nav -->
-  <div class="bottom-nav" role="navigation" aria-label="Navegación principal">
-    <div class="nav-inner">
-      <a class="nav-btn active" href="index.html" id="nav-home">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 11.5L12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Home
-      </a>
-      <a class="nav-btn" href="microaprendizaje.html" id="nav-micro">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Microaprendizaje
-      </a>
-      <a class="nav-btn" href="camino.html" id="nav-camino">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 12h18M8 6h8M10 18h4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        Camino
-      </a>
-    </div>
-  </div>
+</div>
 
 <script>
-/* -----------------------
-  Modelo de datos en localStorage:
-  'carlitos_entries_v1' => array de {id, type: 'expense'|'income', amount, category, date, note}
--------------------------*/
+    /* ----------------------- ONBOARDING IMPLEMENTATION ----------------------- */
+    
+    // ... (ONBOARDING LOGIC REMAINS THE SAME AS PREVIOUS FILE) ...
+    const onboardingSteps = [
+        // STEP 0: Splash/Login Screen
+        {
+            title: "¡La forma divertida y efectiva de mejorar tus finanzas!",
+            subtitle: "Toma el control, ahorra y alcanza tus metas con Carlitos.",
+            content: `
+                <div class="flex flex-col items-center justify-center h-full space-y-8 lg:flex-row lg:space-x-12 lg:space-y-0">
+                    <div class="flex-shrink-0">
+                        ${CarlitosCharacter('w-48 h-48')} 
+                    </div>
+                    <div class="text-center lg:text-left space-y-4">
+                        <div class="text-5xl font-extrabold" style="color:var(--color-carlitos-primary)">Carlitos</div>
+                        <p class="text-xl text-gray-300 max-w-md">
+                            Tu mentor llama financiera a tu servicio.
+                        </p>
+                    </div>
+                </div>
+            `,
+            action: `
+                <div class="flex flex-col md:flex-row justify-center lg:justify-end space-y-4 md:space-y-0 md:space-x-4 w-full">
+                    <button id="onboardingNextBtn" class="btn-carlitos-primary w-full md:w-56">¡EMPIEZA AHORA!</button>
+                    <button onclick="skipOnboarding()" class="btn-carlitos-outline w-full md:w-56">Ya tengo cuenta (Omitir)</button>
+                </div>
+            `
+        },
+        // STEP 1: Bienvenida 
+        {
+            title: "¡Hola! Soy Carlitos, tu llama financiera.",
+            subtitle: "Te acompañaré en tu camino hacia la libertad financiera.",
+            content: `
+                <div class="flex flex-col items-center justify-center h-full space-y-8">
+                    ${CarlitosCharacter('w-32 h-32')}
+                    <div class="carlitos-bubble text-center">
+                        ¡Hola! Cuéntame un poco sobre ti para personalizar tu plan.
+                    </div>
+                </div>
+            `,
+            action: `<button id="onboardingNextBtn" class="btn-carlitos-primary w-full md:w-56">CONTINUAR</button>`
+        },
+        // STEP 2: Propósito (Encuesta 1)
+        {
+            title: "¿Cuál es tu principal propósito financiero?",
+            subtitle: "Carlitos adapta el camino según tu meta.",
+            content: `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-xl mx-auto">
+                    <div class="option-card p-4 rounded-xl flex items-center space-x-3" data-value="deudas">
+                        <span class="text-2xl">💸</span> <span class="font-semibold">Salir de deudas rápido</span>
+                    </div>
+                    <div class="option-card p-4 rounded-xl flex items-center space-x-3" data-value="ahorro">
+                        <span class="text-2xl">🏦</span> <span class="font-semibold">Ahorrar para una meta grande</span>
+                    </div>
+                    <div class="option-card p-4 rounded-xl flex items-center space-x-3" data-value="inversion">
+                        <span class="text-2xl">📈</span> <span class="font-semibold">Aprender a invertir</span>
+                    </div>
+                    <div class="option-card p-4 rounded-xl flex items-center space-x-3" data-value="base">
+                        <span class="text-2xl">🌱</span> <span class="font-semibold">Establecer mi base financiera</span>
+                    </div>
+                </div>
+            `,
+            action: `<button id="onboardingNextBtn" class="btn-carlitos-primary w-full md:w-56 mt-6" disabled>CONTINUAR</button>`
+        },
+        // STEP 3: Compromiso de tiempo (Encuesta 2)
+        {
+            title: "¿Cuánto tiempo le dedicarás a Carlitos por día?",
+            subtitle: "La consistencia es la clave para el éxito financiero.",
+            content: `
+                <div class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 max-w-xl mx-auto">
+                    <div class="option-card p-4 rounded-xl flex flex-col items-center justify-center min-w-[150px]" data-value="5">
+                        <span class="text-4xl">⏱️</span> <span class="font-bold text-xl mt-2">5 min/día</span> <span class="text-gray-400">Casual</span>
+                    </div>
+                    <div class="option-card p-4 rounded-xl flex flex-col items-center justify-center min-w-[150px]" data-value="10">
+                        <span class="text-4xl">💪</span> <span class="font-bold text-xl mt-2">10 min/día</span> <span class="text-gray-400">Regular</span>
+                    </div>
+                    <div class="option-card p-4 rounded-xl flex flex-col items-center justify-center min-w-[150px]" data-value="15">
+                        <span class="text-4xl">🔥</span> <span class="font-bold text-xl mt-2">15 min/día</span> <span class="text-gray-400">Intenso</span>
+                    </div>
+                </div>
+            `,
+            action: `<button id="onboardingNextBtn" class="btn-carlitos-primary w-full md:w-56 mt-6" disabled>CONTINUAR</button>`
+        },
+        // STEP 4: Nivel percibido y Prueba (Encuesta 3)
+        {
+            title: "¿Cuánto crees que sabes de finanzas?",
+            subtitle: "Esto nos ayuda a colocarte en el nivel de lección correcto.",
+            content: `
+                <div class="flex flex-col items-center space-y-4 max-w-md mx-auto">
+                    <div class="option-card w-full p-4 rounded-xl" data-value="principiante">
+                        <span class="font-semibold">Principiante (Nivel 0)</span> - Necesito empezar desde cero.
+                    </div>
+                    <div class="option-card w-full p-4 rounded-xl" data-value="intermedio">
+                        <span class="font-semibold">Intermedio (Nivel 1)</span> - Conozco lo básico pero quiero mejorar.
+                    </div>
+                    <div class="option-card w-full p-4 rounded-xl" data-value="experto">
+                        <span class="font-semibold">Avanzado (Nivel 2)</span> - Ya gestiono mi dinero, busco optimizar.
+                    </div>
+                    <div class="option-card w-full p-4 rounded-xl mt-6 border-cyan-400 bg-cyan-900/40 hover:bg-cyan-900/60 text-cyan-300" data-value="test">
+                        <span class="font-bold">✨ DESCUBRIR MI NIVEL (Prueba corta)</span>
+                    </div>
+                </div>
+            `,
+            action: `<button id="onboardingNextBtn" class="btn-carlitos-primary w-full md:w-56 mt-6" disabled>CONTINUAR</button>`
+        },
+        // STEP 5: Opt-in (Encuesta 4)
+        {
+            title: "¿Deseas que te mande notificaciones?",
+            subtitle: "¡No te preocupes! Solo te recordaré tus metas y te daré alertas importantes.",
+            content: `
+                <div class="flex flex-col md:flex-row justify-center space-y-4 md:space-y-0 md:space-x-4 max-w-xl mx-auto">
+                    <div class="option-card p-4 rounded-xl flex flex-col items-center justify-center min-w-[150px]" data-value="yes">
+                        <span class="text-4xl">🔔</span> <span class="font-bold text-xl mt-2">Sí, por favor</span>
+                    </div>
+                    <div class="option-card p-4 rounded-xl flex flex-col items-center justify-center min-w-[150px]" data-value="no">
+                        <span class="text-4xl">🔇</span> <span class="font-bold text-xl mt-2">No, gracias</span>
+                    </div>
+                </div>
+            `,
+            action: `<button id="onboardingNextBtn" class="btn-carlitos-primary w-full md:w-56 mt-6" disabled>CONTINUAR</button>`
+        },
+        // STEP 6: Final
+        {
+            title: "¡Todo listo para empezar!",
+            subtitle: "Tu mentor financiero te espera.",
+            content: `
+                <div class="flex flex-col items-center justify-center h-full space-y-8">
+                    ${CarlitosCharacter('w-40 h-40')}
+                    <div class="carlitos-bubble text-center">
+                        ¡Éxito! Tu camino está personalizado y listo.
+                    </div>
+                    <div class="text-center text-lg text-gray-300 max-w-md">
+                        A dominar tus finanzas con la guía experta de Carlitos.
+                    </div>
+                </div>
+            `,
+            action: `<button id="onboardingNextBtn" class="btn-carlitos-primary w-full md:w-56">IR AL TABLERO</button>`
+        }
+    ];
 
-const STORAGE_KEY = 'carlitos_entries_v1';
-const form = document.getElementById('entryForm');
-const entriesList = document.getElementById('entriesList');
-const sumIncomeEl = document.getElementById('sumIncome');
-const sumExpenseEl = document.getElementById('sumExpense');
-const ifpEl = document.getElementById('ifp');
-const healthEl = document.getElementById('health');
-const pieCtx = document.getElementById('pieChart').getContext('2d');
-const lineCtx = document.getElementById('lineChart').getContext('2d');
-const forecastCtx = document.getElementById('forecastChart').getContext('2d');
-const lessonText = document.getElementById('lessonText');
-const lessonAction = document.getElementById('lessonAction');
-const levelBadge = document.getElementById('levelBadge');
-const suggestionsEl = document.getElementById('suggestions');
-const insightEl = document.getElementById('insight');
-const typeSelect = document.getElementById('type');
-const categorySelect = document.getElementById('category');
+    function renderOnboarding() {
+        const step = onboardingSteps[appState.onboardingStep];
+        if (!step) return renderDashboard();
 
-let entries = loadEntries();
-let pieChart, lineChart, forecastChart;
+        // Ensure mobile nav is hidden during onboarding
+        document.getElementById('mobileNav')?.classList.add('hidden');
 
-/* Categorías por tipo */
-const CATS = {
-  expense: ['Alimentación','Transporte','Ocio','Salud','Educación','Otros'],
-  income: ['Sueldo','Trabajo freelance','Beca','Regalo','Otros ingresos']
-};
+        const progressPercent = (appState.onboardingStep / (onboardingSteps.length - 1)) * 100;
 
-function populateCategory(type){
-  categorySelect.innerHTML = '';
-  CATS[type].forEach(c=>{
-    const opt = document.createElement('option');
-    opt.value = c;
-    opt.textContent = c;
-    categorySelect.appendChild(opt);
-  });
-}
+        document.getElementById('appContainer').innerHTML = `
+            <div class="onboarding-container flex flex-col h-screen p-4">
+                <!-- Progress Bar (Visible only during survey steps 2-5) -->
+                <div class="h-2 bg-gray-700 rounded-full mb-8 ${appState.onboardingStep >= 2 && appState.onboardingStep <= 5 ? 'visible' : 'invisible'}">
+                    <div class="h-2" style="background:linear-gradient(90deg, var(--color-carlitos-accent), var(--color-carlitos-primary)); border-radius:10px; width: ${progressPercent}%;"></div>
+                </div>
+                
+                <!-- Header: Logo only on Step 0 -->
+                <div class="flex justify-start p-2 ${appState.onboardingStep === 0 ? 'visible' : 'invisible'}">
+                    ${CarlitosLogo('text-4xl')}
+                </div>
 
-/* inicializar select según tipo por defecto */
-populateCategory(typeSelect.value);
+                <!-- Main Content -->
+                <div class="flex-1 flex flex-col items-center justify-center text-center p-4">
+                    <div class="w-full max-w-4xl">
+                        <h2 class="text-3xl md:text-4xl font-extrabold mb-2 text-white">${step.title}</h2>
+                        <p class="text-lg md:text-xl text-gray-400 mb-8">${step.subtitle}</p>
+                        
+                        <div class="my-10">
+                            ${step.content}
+                        </div>
+                    </div>
+                </div>
 
-typeSelect.addEventListener('change', (e)=>{
-  populateCategory(e.target.value);
-});
+                <!-- Footer (Actions) -->
+                <div class="sticky bottom-0 left-0 right-0 p-4 bg-gray-900/80 backdrop-blur-sm border-t border-gray-700">
+                    <div class="max-w-4xl mx-auto flex justify-end">
+                        ${step.action}
+                    </div>
+                </div>
+            </div>
+        `;
 
-function loadEntries(){
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if(!raw) return [];
-  try { return JSON.parse(raw) } catch(e){ return [] }
-}
+        // Add Event Listeners for Step-specific logic
+        setTimeout(() => {
+            const nextBtn = document.getElementById('onboardingNextBtn');
+            const optionCards = document.querySelectorAll('.option-card');
 
-function saveEntries(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-}
+            if (nextBtn) {
+                nextBtn.addEventListener('click', () => {
+                    handleNextStep();
+                });
+            }
 
-function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6) }
+            if (optionCards.length > 0) {
+                optionCards.forEach(card => {
+                    card.addEventListener('click', () => {
+                        handleOptionSelection(card, nextBtn);
+                    });
+                });
+            }
 
-function addEntry(e){
-  e.preventDefault();
-  const type = document.getElementById('type').value;
-  const amount = parseFloat(document.getElementById('amount').value);
-  const category = document.getElementById('category').value;
-  const date = document.getElementById('date').value;
-  const note = document.getElementById('note').value || '';
-  if(!date || !amount) return alert('Completa monto y fecha');
-
-  entries.push({id:uid(), type, amount, category, date, note});
-  saveEntries();
-  form.reset();
-  populateCategory('expense'); // reset category to expenses default
-  typeSelect.value = 'expense';
-  renderAll();
-}
-
-form.addEventListener('submit', addEntry);
-
-// seed example
-document.getElementById('seedBtn').addEventListener('click', ()=>{
-  entries = [
-    {id:uid(),type:'income',amount:2000,category:'Sueldo',date:todayPlus(-7),note:'Sueldo mensual'},
-    {id:uid(),type:'expense',amount:25,category:'Alimentación',date:todayPlus(-6),note:'Desayuno'},
-    {id:uid(),type:'expense',amount:40,category:'Transporte',date:todayPlus(-6),note:'Taxi'},
-    {id:uid(),type:'expense',amount:120,category:'Ocio',date:todayPlus(-5),note:'Cena'},
-    {id:uid(),type:'expense',amount:50,category:'Alimentación',date:todayPlus(-4),note:'Almuerzo'},
-    {id:uid(),type:'expense',amount:80,category:'Educación',date:todayPlus(-3),note:'Curso'},
-    {id:uid(),type:'expense',amount:400,category:'Otros',date:todayPlus(-2),note:'Pago tarjeta'},
-    {id:uid(),type:'income',amount:300,category:'Trabajo freelance',date:todayPlus(-1),note:'Proyecto pequeño'}
-  ];
-  saveEntries(); renderAll();
-});
-document.getElementById('clearBtn').addEventListener('click', ()=>{
-  if(confirm('Borrar todos los datos locales?')){ entries=[]; saveEntries(); renderAll(); }
-});
-
-function todayPlus(offsetDays=0){
-  const d = new Date();
-  d.setDate(d.getDate()+offsetDays);
-  return d.toISOString().slice(0,10);
-}
-
-/* ---------- Render ---------- */
-function renderAll(){
-  renderList();
-  updateKPIs();
-  renderCharts();
-  updateLessons();
-  updateSuggestions();
-}
-
-function renderList(){
-  entriesList.innerHTML = '';
-  const latest = entries.slice().sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,30);
-  if(latest.length===0){ entriesList.innerHTML = '<div class="small">Sin movimientos aún</div>'; return; }
-  latest.forEach(item=>{
-    const div = document.createElement('div');
-    div.className='entry';
-    const left = document.createElement('div');
-    left.innerHTML = `<div><strong>${item.category}</strong> <span class="small"> · ${item.date}</span></div>
-                      <div class="small">${item.note || ''}</div>`;
-    const right = document.createElement('div');
-    const sign = item.type==='expense' ? '-' : '+';
-    right.innerHTML = `<div style="text-align:right"><span class="${item.type==='expense'?'danger':'ok'}">${sign} S/ ${item.amount.toFixed(2)}</span></div>
-                       <div style="text-align:right"><button class="btn-ghost" onclick="deleteEntry('${item.id}')">Eliminar</button></div>`;
-    div.appendChild(left); div.appendChild(right);
-    entriesList.appendChild(div);
-  });
-}
-
-function deleteEntry(id){
-  if(!confirm('Eliminar movimiento?')) return;
-  entries = entries.filter(e=>e.id!==id);
-  saveEntries(); renderAll();
-}
-
-/* ---------- KPIs and simple forecast ---------- */
-function updateKPIs(){
-  const incomes = entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
-  const expenses = entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
-  sumIncomeEl.textContent = `S/ ${incomes.toFixed(2)}`;
-  sumExpenseEl.textContent = `S/ ${expenses.toFixed(2)}`;
-  const ifp = incomes - expenses;
-  ifpEl.textContent = `S/ ${ifp.toFixed(2)}`;
-
-  // health score simple: baseline 100 minus normalized expense/income ratio
-  let health = 50;
-  if(incomes>0){
-    const ratio = expenses / incomes;
-    health = Math.max(10, Math.round(100 - ratio*100));
-  } else {
-    health = expenses===0 ? 100 : 10;
-  }
-  healthEl.textContent = `${health}/100`;
-
-  // forecast: promedio diario * días en mes left
-  const daily = avgDailyExpense();
-  const today = new Date();
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth()+1, 0).getDate();
-  const remaining = Math.max(0, daysInMonth - today.getDate());
-  const proj = (daily * daysInMonth);
-  // show on forecast chart later
-  renderForecastChart(proj, daily);
-}
-
-/* average daily expense over last 30 days */
-function avgDailyExpense(){
-  const now = new Date();
-  const past30 = new Date(); past30.setDate(now.getDate()-29);
-  const filtered = entries.filter(e=>{
-    if(e.type!=='expense') return false;
-    const d = new Date(e.date);
-    return d>=past30 && d<=now;
-  });
-  const total = filtered.reduce((s,e)=>s+e.amount,0);
-  return filtered.length>0 ? total/30 : 0;
-}
-
-/* ---------- Charts ---------- */
-function renderCharts(){
-  // Pie by category (only expenses)
-  const expenses = entries.filter(e=>e.type==='expense');
-  const byCat = {};
-  expenses.forEach(e=> byCat[e.category] = (byCat[e.category]||0)+e.amount);
-  const labels = Object.keys(byCat);
-  const data = labels.map(l=> byCat[l]);
-  if(pieChart) pieChart.destroy();
-  pieChart = new Chart(pieCtx, {
-    type:'doughnut',
-    data:{labels, datasets:[{data, backgroundColor:generateColors(labels.length)}]},
-    options:{plugins:{legend:{display:true,position:'bottom'},tooltip:{mode:'index'}}}
-  });
-
-  // Line chart daily expenses last 30 days
-  const days = [];
-  const amounts = [];
-  for(let i=29;i>=0;i--){
-    const d = new Date(); d.setDate(d.getDate()-i);
-    const key = d.toISOString().slice(0,10);
-    days.push(key);
-    const sum = entries.filter(en=>en.type==='expense' && en.date===key).reduce((s,e)=>s+e.amount,0);
-    amounts.push(sum);
-  }
-  if(lineChart) lineChart.destroy();
-  lineChart = new Chart(lineCtx, {
-    type:'line',
-    data:{labels:days, datasets:[{label:'Gasto diario (S/)', data:amounts, fill:true, tension:0.25}]},
-    options:{scales:{x:{display:false}}}
-  });
-}
-
-function renderForecastChart(proj, daily){
-  if(forecastChart) forecastChart.destroy();
-  forecastChart = new Chart(forecastCtx, {
-    type:'bar',
-    data:{labels:['Proy mes'], datasets:[{label:'Gasto proyectado S/',data:[proj],barThickness:30}]},
-    options:{plugins:{legend:{display:false},tooltip:{enabled:true}}}
-  });
-  // small insight
-  document.getElementById('forecastChart').style.maxWidth='100%';
-}
-
-/* ---------- Small recommender and lessons ---------- */
-function updateLessons(){
-  const count = entries.length;
-  let level = 0;
-  if(count>=15) level = 3;
-  else if(count>=7) level = 2;
-  else if(count>=3) level = 1;
-
-  levelBadge.textContent = `Nivel ${level} • ${levelName(level)}`;
-  // lesson content
-  if(level===0){
-    lessonText.textContent = 'Registra tus primeros 3 movimientos para desbloquear la lección 1: "Ahorra primero".';
-    lessonAction.innerHTML = '';
-  } else if(level===1){
-    lessonText.innerHTML = 'Lección 1 — Principio: <strong>Ahorra primero</strong>. Acción sugerida: aparta S/ 10 semanales. <div class="small hint">Empieza con poco: lo importante es hábito.</div>';
-    lessonAction.innerHTML = `<button class="btn-ghost" onclick="applyRule('savings_small')">Simular activar ahorro S/10 sem/ (probar)</button>`;
-  } else if(level===2){
-    lessonText.innerHTML = 'Lección 2 — Principio: <strong>Presupuestar por categorías</strong>. Acción: define top 3 categorías y establece límites semanales.';
-    lessonAction.innerHTML = `<button class="btn-ghost" onclick="applyRule('budget_top3')">Simular regla presupuesto</button>`;
-  } else {
-    lessonText.innerHTML = 'Lección 3 — Principio: <strong>Atacar deudas</strong>. Acción: prueba plan "bola de nieve" para pagar tarjeta más rápido.';
-    lessonAction.innerHTML = `<button class="btn-ghost" onclick="applyRule('debt_avalanche')">Simular plan deuda</button>`;
-  }
-}
-
-function levelName(l){
-  return ['Comienza','Ahorro','Control','Deuda'][l]||'Comienza';
-}
-
-function applyRule(key){
-  // Simulamos una regla: esto no mueve dinero real, solo demuestra la acción integrada.
-  if(key==='savings_small'){
-    alert('Regla simulada: apartar S/10 semanal. Se aplicará como sugerencia en el panel.');
-    localStorage.setItem('carlitos_rule_savings','active');
-  } else if(key==='budget_top3'){
-    alert('Regla simulada: top3 categorías con límites semanales. Verás alertas cuando te acerques al límite.');
-    localStorage.setItem('carlitos_rule_budget','active');
-  } else if(key==='debt_avalanche'){
-    alert('Regla simulada: plan bola de nieve activado (simulación).');
-    localStorage.setItem('carlitos_rule_debt','active');
-  }
-  renderAll();
-}
-
-/* suggestions based on simple heuristics */
-function updateSuggestions(){
-  suggestionsEl.innerHTML = '';
-  insightEl.textContent = '';
-  const incomes = entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
-  const expenses = entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
-  if(incomes>0){
-    const ratio = expenses / incomes;
-    if(ratio>0.6){
-      pushSuggestion('Estás gastando más del 60% de tus ingresos. Principio: prioriza necesidades. ¿Quieres empezar con la lección "Ahorra primero"?');
-      insightEl.textContent = 'Sugerencia: Prueba reducir ocio o delivery 30% por 7 días.';
-    } else if(ratio<0.25){
-      pushSuggestion('Buen manejo: tus gastos son bajos respecto a ingresos. Principio: invierte en I (tu educación/activo)');
-      insightEl.textContent = 'Sugerencia: Considera destinar un % pequeño a cursos o herramienta que aumenten ingresos.';
-    } else {
-      pushSuggestion('Balance estable. Principio: mantén hábitos, revisa monthly. Desbloquea misiones para mejorar.');
-      insightEl.textContent = 'Sugerencia: desbloquea lecciones del Camino Carlitos.';
+            // Auto-enable for steps 0, 1 and 6 (splash, welcome, final)
+            if (appState.onboardingStep === 0 || appState.onboardingStep === 1 || appState.onboardingStep === 6) {
+                nextBtn.disabled = false;
+            }
+        }, 50); // Small delay to ensure DOM is updated
     }
-  } else {
-    pushSuggestion('Aún no registras ingresos. Si eres estudiante, registra al menos un ingreso (aunque sea pequeño) para poder calcular ratios.');
-  }
-  // show applied rules
-  if(localStorage.getItem('carlitos_rule_savings')) pushSuggestion('Regla activa (simulación): Ahorro semanal S/10');
-  if(localStorage.getItem('carlitos_rule_budget')) pushSuggestion('Regla activa (simulación): Presupuesto top3');
-  if(localStorage.getItem('carlitos_rule_debt')) pushSuggestion('Regla activa (simulación): Plan deuda activo');
 
-  function pushSuggestion(text){
-    const li = document.createElement('li');
-    li.innerHTML = `<div class="small">${text}</div>`;
-    suggestionsEl.appendChild(li);
-  }
-}
+    function skipOnboarding() {
+        appState.onboardingComplete = true;
+        localStorage.setItem(ONBOARDING_KEY, 'true');
+        // Set defaults if user skips
+        appState.onboardingData.goal = appState.onboardingData.goal || 'base';
+        appState.onboardingData.time = appState.onboardingData.time || '10';
+        appState.onboardingData.level = appState.onboardingData.level || 'principiante';
+        saveEntries(); // Save defaults
+        renderDashboard();
+    }
 
-/* ---------- Utils ---------- */
-function generateColors(n){
-  const palette = ['#06b6d4','#7dd3fc','#60a5fa','#f97316','#f43f5e','#34d399','#a78bfa','#f59e0b'];
-  const out=[];
-  for(let i=0;i<n;i++) out.push(palette[i%palette.length]);
-  return out;
-}
+    function handleOptionSelection(selectedCard, nextBtn) {
+        const value = selectedCard.getAttribute('data-value');
+        // Map index to data key: Step 2 (goal), Step 3 (time), Step 4 (level), Step 5 (notifications)
+        const keys = ['goal', 'time', 'level', 'notifications'];
+        const keyIndex = appState.onboardingStep - 2; 
+        const key = keys[keyIndex];
 
-/* ---------- initial render ---------- */
-renderAll();
+        // Single selection logic
+        document.querySelectorAll('.option-card').forEach(card => card.classList.remove('selected'));
+        selectedCard.classList.add('selected');
 
+        appState.onboardingData[key] = value;
+        saveEntries();
+
+        if (nextBtn) {
+            nextBtn.disabled = false;
+        }
+
+        if (value === 'test') {
+            // Use a custom message/modal UI instead of alert()
+            console.log('Simulación: Serías redirigido a una prueba de nivel al estilo Duolingo. Por ahora, ¡continuemos!');
+        }
+    }
+
+    function handleNextStep() {
+        appState.onboardingStep++;
+        if (appState.onboardingStep >= onboardingSteps.length) {
+            // Final step complete
+            appState.onboardingComplete = true;
+            localStorage.setItem(ONBOARDING_KEY, 'true');
+            
+            // Set defaults if user somehow missed a step (safety)
+            appState.onboardingData.goal = appState.onboardingData.goal || 'base';
+            appState.onboardingData.time = appState.onboardingData.time || '10';
+            appState.onboardingData.level = appState.onboardingData.level || 'principiante';
+            appState.onboardingData.notifications = appState.onboardingData.notifications || 'no';
+
+            saveEntries(); // Save final data
+            renderDashboard();
+        } else {
+            renderOnboarding();
+        }
+    }
+
+
+    /* ----------------------- DASHBOARD IMPLEMENTATION ----------------------- */
+
+    function renderDashboard() {
+        // Show mobile nav once dashboard loads
+        document.getElementById('mobileNav')?.classList.remove('hidden');
+        document.getElementById('appContainer').innerHTML = `
+            <div class="main-content-grid lg:grid h-full w-full">
+                <!-- Sidebar Navigation (Desktop Only) -->
+                <aside class="hidden lg:flex flex-col bg-gray-900 border-r border-gray-700 p-4 sticky top-0 h-screen">
+                    <div class="p-2 mb-8">
+                        ${CarlitosLogo('text-2xl')}
+                    </div>
+                    <nav class="flex flex-col space-y-2">
+                        <!-- Navigation links here -->
+                        <button onclick="setModule('Aprender')" class="nav-button flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors" data-module="Aprender">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+                            <span class="font-semibold">Aprender (Cursos)</span>
+                        </button>
+                        <button onclick="setModule('Carlitos')" class="nav-button flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors" data-module="Carlitos">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12H3M18 5l3 7-3 7M6 5l-3 7 3 7"></path></svg>
+                            <span class="font-semibold">Carlitos (Registros)</span>
+                        </button>
+                        <button onclick="setModule('Microaprendizaje')" class="nav-button flex items-center space-x-3 p-3 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors" data-module="Microaprendizaje">
+                            <svg class="w-6 h-6" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="22" height="18" rx="2" ry="2"></rect><path d="M9 12V9l-2 3"></path></svg>
+                            <span class="font-semibold">Microaprendizaje (Clips)</span>
+                        </button>
+                    </nav>
+
+                    <div class="mt-auto p-2 text-center text-xs text-gray-500 border-t border-gray-700 pt-4">
+                        <p>Meta: ${appState.onboardingData.goal || 'Base'}</p>
+                        <p>Dedicación: ${appState.onboardingData.time || '10'} min/día</p>
+                    </div>
+                </aside>
+
+                <!-- Main Content Area -->
+                <main class="flex-1 p-4 lg:p-8 pb-20 lg:pb-8">
+                    <header class="flex justify-between items-center mb-6">
+                        <h1 class="text-3xl font-bold">${appState.isLessonActive ? 'Lección' : appState.activeModule}</h1>
+                        <div class="flex items-center space-x-2 text-sm text-gray-400">
+                            <span>Nivel: ${appState.onboardingData.level || 'Principiante'}</span>
+                            <!-- Profile Icon using Carlitos image (updated style) -->
+                            <img src="${CarlitosImage}" alt="Carlitos Icon" 
+                                class="w-10 h-10 object-cover rounded-full p-0.5" 
+                                style="border: 2px solid var(--color-carlitos-primary);"
+                                onerror="this.src='https://placehold.co/40x40/37A35E/ffffff?text=Llama'" />
+                        </div>
+                    </header>
+                    
+                    <div id="moduleContent">
+                        <!-- Content of the active module goes here -->
+                    </div>
+                </main>
+            </div>
+        `;
+
+        setModule(appState.activeModule);
+        updateNavStyles();
+        
+        // Initial setup for the Carlitos/Dashboard module components
+        if (appState.activeModule === 'Carlitos') {
+             setupDashboardModule();
+        }
+    }
+
+    function setModule(moduleName) {
+        appState.activeModule = moduleName;
+        appState.isLessonActive = false; // Reset lesson flag when changing modules
+        const contentDiv = document.getElementById('moduleContent');
+
+        if (!contentDiv) {
+            return; 
+        }
+
+        // --- Render content based on active module ---
+        if (moduleName === 'Aprender') {
+            contentDiv.innerHTML = renderLearningModule();
+        } else if (moduleName === 'Carlitos') {
+            contentDiv.innerHTML = renderCarlitosDashboard();
+            // Re-render charts and lists once the DOM elements are present
+            setupDashboardModule();
+        } else if (moduleName === 'Microaprendizaje') {
+            contentDiv.innerHTML = renderMicrolearningModule();
+        }
+
+        updateNavStyles();
+    }
+
+    function updateNavStyles() {
+        // Desktop nav
+        document.querySelectorAll('.main-content-grid .nav-button').forEach(btn => {
+            const module = btn.getAttribute('data-module');
+            btn.classList.remove('bg-gray-700', 'text-cyan-400');
+            btn.classList.add('text-gray-300');
+            if (module === appState.activeModule) {
+                btn.classList.add('bg-gray-700', 'text-cyan-400');
+                btn.classList.remove('text-gray-300');
+                btn.style.backgroundColor = '#3b3b5c';
+                btn.style.color = 'var(--color-carlitos-primary)';
+            } else {
+                btn.style.backgroundColor = 'transparent';
+                btn.style.color = '#a3a3a3';
+            }
+        });
+
+        // Mobile nav
+        document.querySelectorAll('#mobileNav .nav-button').forEach(btn => {
+            const module = btn.getAttribute('data-module');
+            btn.classList.remove('text-cyan-400');
+            btn.classList.add('text-gray-400');
+            if (module === appState.activeModule) {
+                btn.classList.add('text-cyan-400');
+                btn.classList.remove('text-gray-400');
+            }
+        });
+        
+        // Update header title based on lesson status
+        const headerTitle = document.querySelector('header h1');
+        if (headerTitle) {
+             headerTitle.textContent = appState.isLessonActive ? appState.lessonData.title : appState.activeModule;
+        }
+    }
+
+    /* ----------------------- LEARNING MODULE IMPLEMENTATION ----------------------- */
+    
+    // Lección 1: Principio de la Escasez (Basado en el guion del usuario)
+    const lessons = {
+        'lesson1': {
+            id: 'lesson1',
+            title: 'Lección 1: El Principio de la Escasez',
+            nextLessonId: 'lesson2',
+            content: `
+                <div class="text-lg text-gray-300 mb-6 border-b border-gray-700 pb-4">
+                    <p class="mb-3">🎙️<strong>"¿Te apuesto a que hoy aplicaste la economía y ni te diste cuenta? Te lo explico clarito."</strong></p>
+                    <p>A veces te han hecho creer que la economía es solo para expertos, políticos o gente con corbata… Y sí, existe una carrera llamada Economía —yo la estudio—, pero la verdad es que **todos vivimos la economía todos los días**.</p>
+                    <p class="mt-3">Economía no es solo dinero. Es decidir qué hacer cuando no puedes tenerlo todo. Tus recursos —tu tiempo, tu energía, tu plata— **siempre son limitados**.</p>
+                </div>
+                <div class="p-4 rounded-xl mb-6 flex items-center justify-center text-center text-white font-bold text-xl" style="background-color: var(--color-carlitos-accent);">
+                    <span class="text-4xl mr-3">💡</span>
+                    Ejemplo: Hoy puedes comprar una hamburguesa 🍔 o ir al cine 🎬. Tal vez tienes el dinero para ambas, pero no el tiempo. Elegir es economía.
+                </div>
+                <div class="text-xl font-bold mb-6" style="color:var(--color-carlitos-secondary)">
+                    Conclusión clave:
+                </div>
+                <p class="text-lg text-white">
+                    Acabamos de aprender un principio fundamental que te ayudará en tus finanzas: <strong>Tus recursos son limitados. Tus deseos no.</strong> Eso crea un problema: no puedes tenerlo todo. Entonces, necesitas aprender a decidir bien. Esa es la base de la economía y la base para tomar el control de tu dinero.
+                </p>
+            `,
+            quiz: {
+                question: 'Según Carlitos, ¿cuál es la mejor definición de Economía a nivel personal?',
+                options: [
+                    { text: 'A) Estudiar los mercados bursátiles y la bolsa de valores.', isCorrect: false },
+                    { text: 'B) Decidir cómo gestionar recursos (tiempo, energía, dinero) que son limitados.', isCorrect: true },
+                    { text: 'C) Asegurar que siempre tienes suficiente dinero para comprar lo que quieres.', isCorrect: false },
+                ],
+                explanation: '¡Correcto! La economía es la ciencia de la elección bajo la escasez. Se trata de elegir lo mejor para ti cuando no puedes tenerlo todo, porque tus recursos son limitados.',
+                failed_explanation: 'Incorrecto. La Economía a nivel personal se trata de **decidir cómo gestionar tus recursos limitados**. No se trata solo de la bolsa, ni de tener siempre todo, sino de elegir bien.',
+            }
+        },
+        'lesson2': { id: 'lesson2', title: 'Lección 2: La Deuda Buena vs. Mala', content: 'Contenido Lección 2...', quiz: {} }
+        // ... more lessons
+    };
+    
+    function startLesson(lessonId) {
+        const lesson = lessons[lessonId];
+        if (!lesson) return;
+        
+        appState.isLessonActive = true;
+        appState.lessonData = {
+            id: lessonId,
+            title: lesson.title,
+            step: 'content', // 'content' or 'quiz' or 'summary'
+            quizAttempted: false,
+            quizPassed: false
+        };
+        updateNavStyles(); // Update header title
+        renderActiveLesson();
+    }
+
+    function handleQuizSelection(optionIndex) {
+        if (appState.lessonData.quizAttempted) return;
+
+        const lesson = lessons[appState.lessonData.id];
+        const selectedOption = lesson.quiz.options[optionIndex];
+        const optionCards = document.querySelectorAll('#quizOptions .option-card');
+        const nextButton = document.getElementById('lessonNextBtn');
+        const feedbackDiv = document.getElementById('quizFeedback');
+        
+        appState.lessonData.quizAttempted = true;
+        
+        optionCards.forEach((card, index) => {
+            card.removeEventListener('click', () => handleQuizSelection(index));
+            if (index === optionIndex) {
+                if (selectedOption.isCorrect) {
+                    card.classList.add('correct');
+                    appState.lessonData.quizPassed = true;
+                    feedbackDiv.innerHTML = `<span class="font-bold text-xl" style="color:var(--color-carlitos-secondary)">✅ ¡Increíble!</span> <p>${lesson.quiz.explanation}</p>`;
+                } else {
+                    card.classList.add('incorrect');
+                    feedbackDiv.innerHTML = `<span class="font-bold text-xl" style="color:var(--color-danger)">❌ ¡Casi!</span> <p>${lesson.quiz.failed_explanation}</p>`;
+                }
+            } else if (lesson.quiz.options[index].isCorrect) {
+                 // Highlight the correct answer if the user failed
+                 card.classList.add('correct');
+            }
+        });
+
+        // Show feedback and enable next button
+        feedbackDiv.classList.remove('hidden');
+        nextButton.disabled = false;
+        nextButton.textContent = 'CONTINUAR';
+    }
+
+    function advanceLessonStep() {
+        if (appState.lessonData.step === 'content') {
+            appState.lessonData.step = 'quiz';
+            renderActiveLesson();
+        } else if (appState.lessonData.step === 'quiz') {
+            appState.lessonData.step = 'summary';
+            renderActiveLesson();
+        } else if (appState.lessonData.step === 'summary') {
+            // Lesson completion logic
+            if (appState.lessonData.quizPassed) {
+                 appState.lessonsCompleted[appState.lessonData.id] = true;
+            }
+            saveEntries();
+            setModule('Aprender'); // Return to Learning Module home
+        }
+    }
+
+    function renderActiveLesson() {
+        const contentDiv = document.getElementById('moduleContent');
+        if (!contentDiv || !appState.isLessonActive) return;
+
+        const lesson = lessons[appState.lessonData.id];
+        
+        let contentHTML = '';
+        let actionHTML = '';
+        
+        if (appState.lessonData.step === 'content') {
+            contentHTML = `
+                <div class="p-6 rounded-xl shadow-xl space-y-4" style="background-color: var(--color-card-dark);">
+                    ${lesson.content}
+                </div>
+            `;
+            actionHTML = `<button id="lessonNextBtn" class="btn-carlitos-primary w-full md:w-56" onclick="advanceLessonStep()">EMPEZAR QUIZ</button>`;
+        
+        } else if (appState.lessonData.step === 'quiz') {
+            contentHTML = `
+                <div class="p-6 rounded-xl shadow-xl space-y-6" style="background-color: var(--color-card-dark);">
+                    <h3 class="text-2xl font-bold" style="color:var(--color-carlitos-primary)">${lesson.quiz.question}</h3>
+                    <div id="quizOptions" class="grid grid-cols-1 gap-4">
+                        ${lesson.quiz.options.map((opt, index) => `
+                            <div class="option-card p-4 rounded-xl transition-all" data-index="${index}" onclick="handleQuizSelection(${index})">
+                                <span class="font-semibold">${opt.text}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div id="quizFeedback" class="p-4 mt-4 rounded-lg hidden text-white" style="background-color: var(--color-bg-dark);"></div>
+                </div>
+            `;
+            actionHTML = `<button id="lessonNextBtn" class="btn-carlitos-primary w-full md:w-56" disabled>Ver Resultado</button>`;
+
+        } else if (appState.lessonData.step === 'summary') {
+            const resultIcon = appState.lessonData.quizPassed ? '🎉' : '🤔';
+            const resultText = appState.lessonData.quizPassed ? '¡Lección 1 Completada con Éxito!' : 'Revisa de nuevo, ¡casi lo tienes!';
+            const color = appState.lessonData.quizPassed ? 'var(--color-carlitos-secondary)' : 'var(--color-danger)';
+            
+            contentHTML = `
+                <div class="p-8 rounded-xl shadow-xl space-y-6 text-center" style="background-color: var(--color-card-dark);">
+                    <div class="text-6xl">${resultIcon}</div>
+                    <h3 class="text-3xl font-extrabold" style="color:${color}">${resultText}</h3>
+                    <p class="text-gray-300">Has desbloqueado el Nivel 1. Ahora aplica este principio a tus registros diarios.</p>
+                    <div class="flex justify-center mt-4">
+                         ${CarlitosCharacter('w-24 h-24')}
+                    </div>
+                </div>
+            `;
+            actionHTML = `<button id="lessonNextBtn" class="btn-carlitos-primary w-full md:w-56" onclick="advanceLessonStep()">VOLVER AL TABLERO</button>`;
+        }
+
+        contentDiv.innerHTML = `
+            <div class="flex flex-col h-full">
+                <div class="flex-1 overflow-y-auto pb-4">
+                    ${contentHTML}
+                </div>
+                <div class="sticky bottom-0 left-0 right-0 p-4 bg-gray-900/80 backdrop-blur-sm border-t border-gray-700 mt-4">
+                    <div class="max-w-4xl mx-auto flex justify-end">
+                        ${actionHTML}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderLearningModule() {
+        const isCompleted = appState.lessonsCompleted.lesson1;
+        const icon1 = isCompleted ? '✅' : '🎓';
+        const buttonText = isCompleted ? 'REVISAR LECCIÓN' : '¡COMENZAR LECCIÓN 1!';
+        
+        return `
+            <div class="flex flex-col items-center p-4 lg:p-8 rounded-xl shadow-lg h-96 justify-center" style="background-color: var(--color-card-dark);">
+                <h3 class="text-3xl font-extrabold mb-8" style="color:var(--color-carlitos-primary)">Tu Camino de Aprendizaje</h3>
+                
+                <!-- Lesson Path Simulation -->
+                <div class="flex flex-col items-center space-y-4">
+                    
+                    <!-- Lesson 1 -->
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-full flex items-center justify-center text-3xl text-white font-bold border-4 ${isCompleted ? 'border-green-400' : 'border-cyan-300'}" style="background-color:${isCompleted ? 'var(--color-carlitos-secondary)' : 'var(--color-carlitos-primary)'}">${icon1}</div>
+                        <div class="flex flex-col text-left min-w-[200px]">
+                            <span class="font-bold text-lg">Lección 1: El Principio de la Escasez</span>
+                            <span class="text-sm text-gray-400">La base de tus decisiones financieras.</span>
+                        </div>
+                        <button onclick="startLesson('lesson1')" class="btn-carlitos-primary px-4 py-2 text-sm">${buttonText}</button>
+                    </div>
+
+                    <!-- Path Connector -->
+                    <div class="w-1 h-6 bg-gray-700"></div>
+
+                    <!-- Lesson 2 (Locked/Next) -->
+                    <div class="flex items-center space-x-4 opacity-50 ${isCompleted ? 'hover:opacity-100 transition-opacity duration-300' : ''}">
+                        <div class="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center text-3xl text-gray-300 font-bold border-4 border-gray-700">🔒</div>
+                        <div class="flex flex-col text-left min-w-[200px]">
+                            <span class="font-bold text-lg">Lección 2: Deuda Buena vs. Mala</span>
+                            <span class="text-sm text-gray-500">Desbloquea al completar la Lección 1.</span>
+                        </div>
+                        <button class="btn-carlitos-primary px-4 py-2 text-sm opacity-50 cursor-not-allowed" disabled>Bloqueado</button>
+                    </div>
+
+                </div>
+            </div>
+        `;
+    }
+
+    function renderMicrolearningModule() {
+        return `
+            <div class="flex flex-col items-center p-8 rounded-xl shadow-lg h-96 justify-center" style="background-color: var(--color-card-dark);">
+                <h3 class="text-2xl font-bold mb-4" style="color:var(--color-carlitos-primary)">Módulo: Clips de Carlitos</h3>
+                <p class="text-gray-400 text-center mb-6">Videos cortos y pedagógicos para aprender un concepto en 60 segundos.</p>
+                <!-- Mock Video Clips List -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-2xl">
+                    <div class="h-32 rounded-lg flex flex-col items-center justify-center text-sm font-bold p-2 text-white" style="background-color:var(--color-carlitos-accent)">
+                        <span class="text-xl mb-1">🟣</span>
+                        Clip: Interés Compuesto
+                    </div>
+                    <div class="h-32 bg-blue-500 rounded-lg flex flex-col items-center justify-center text-sm font-bold p-2 text-white" style="background-color:var(--color-carlitos-primary)">
+                        <span class="text-xl mb-1">🔵</span>
+                        Clip: Deuda Buena vs Mala
+                    </div>
+                    <div class="h-32 bg-yellow-500 rounded-lg flex flex-col items-center justify-center text-sm font-bold p-2 text-white" style="background-color:var(--color-carlitos-secondary)">
+                        <span class="text-xl mb-1">🟢</span>
+                        Clip: ¿Qué es la Inflación?
+                    </div>
+                    <div class="h-32 bg-red-500 rounded-lg flex flex-col items-center justify-center text-sm font-bold p-2 text-white">
+                        <span class="text-xl mb-1">🔴</span>
+                        Clip: Presupuesto 50/30/20
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+
+    /* ----------------------- CARLITOS DASHBOARD MODULE - REORGANIZED ----------------------- */
+    
+    function renderCarlitosDashboard() {
+        // Reorganización: Registro y Movimientos PRIMERO, luego Estadísticas/Gráficos
+        return `
+            <div class="dashboard-grid grid gap-4">
+                <!-- Top/Left: REGISTRATION & RECENT MOVEMENTS (Priority) -->
+                <div class="lg:col-span-2 registration-panel"> 
+                    <div class="p-4 rounded-xl shadow-xl space-y-4" style="background-color: var(--color-card-dark);">
+                        <div class="text-xl font-extrabold mb-3" style="color:var(--color-carlitos-primary)">Registrar Movimiento</div>
+                        
+                        <!-- Formulario de Registro -->
+                        <form id="entryForm" class="space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <select id="type" required class="dashboard-form-select">
+                                    <option value="expense">Gasto</option>
+                                    <option value="income">Ingreso</option>
+                                </select>
+                                <input id="amount" type="number" step="0.01" placeholder="Monto (S/)" required class="dashboard-form-input">
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <select id="category" required class="dashboard-form-select">
+                                    <!-- Dynamic categories loaded by JS -->
+                                </select>
+                                <input id="date" type="date" required class="dashboard-form-input">
+                            </div>
+                            <div class="flex space-x-3">
+                                <input id="note" placeholder="Nota (opcional)" class="dashboard-form-input flex-1">
+                                <button type="submit" class="btn-carlitos-primary w-1/4 min-w-[100px]">Registrar</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Movimientos recientes (Vista de Tabla/Lista) -->
+                    <div class="p-4 rounded-xl shadow-xl mt-4" style="background-color: var(--color-card-dark);">
+                        <div class="flex justify-between items-center mb-3">
+                            <strong class="text-xl">Movimientos Recientes</strong>
+                            <div class="flex space-x-2 text-sm">
+                                <button id="clearBtn" class="px-3 py-1 text-gray-400 hover:text-red-400 transition-colors">Limpiar Datos</button>
+                                <button id="seedBtn" class="px-3 py-1 text-gray-400 hover:text-cyan-400 transition-colors">Cargar Ejemplo</button>
+                            </div>
+                        </div>
+                        <div id="entriesList" class="max-h-80 overflow-y-auto space-y-2">
+                            <div class="text-sm text-gray-500">Cargando movimientos...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom/Right: STATS PANEL (KPIs, Charts, and Tips) -->
+                
+                <!-- Columna de Métricas Clave (Mobile: Full Width | Desktop: Left side of Stats Panel) -->
+                <div class="lg:col-span-1">
+                    <div class="p-4 rounded-xl shadow-xl space-y-4" style="background-color: var(--color-card-dark);">
+                         <strong class="text-xl">Métricas Clave</strong>
+                         
+                        <!-- Balance & Forecast KPI -->
+                        <div class="flex flex-col justify-between items-start p-3 rounded-lg border border-gray-600/50" style="background-color: var(--color-bg-dark);">
+                            <div>
+                                <div class="text-sm text-gray-400">Balance Estimado (Ingresos - Gastos)</div>
+                                <div id="ifp" class="text-4xl font-extrabold" style="color:var(--color-carlitos-primary)">S/ 0.00</div>
+                                <div class="text-xs text-gray-500 mt-1">Tu "Producto Interno Bruto" Personal</div>
+                            </div>
+                        </div>
+
+                        <!-- Quick KPIs -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="p-3 rounded-lg text-center border border-gray-600/50" style="background-color: var(--color-bg-dark);">
+                                <div class="text-xs text-gray-400">Ingreso total</div>
+                                <div id="sumIncome" class="font-bold text-xl" style="color:var(--color-carlitos-secondary)">S/0</div>
+                            </div>
+                            <div class="p-3 rounded-lg text-center border border-gray-600/50" style="background-color: var(--color-bg-dark);">
+                                <div class="text-xs text-gray-400">Gasto total</div>
+                                <div id="sumExpense" class="font-bold text-xl text-danger" style="color:var(--color-danger)">S/0</div>
+                            </div>
+                            <div class="p-3 rounded-lg text-center border border-gray-600/50" style="background-color: var(--color-bg-dark);">
+                                <div class="text-xs text-gray-400">Proyección Gasto (30 días)</div>
+                                <div id="projText" class="font-bold text-xl text-yellow-400">S/ 0</div>
+                            </div>
+                            <div class="p-3 rounded-lg text-center border border-gray-600/50" style="background-color: var(--color-bg-dark);">
+                                <div class="text-xs text-gray-400">Salud Financiera</div>
+                                <div id="health" class="font-bold text-xl text-yellow-400">0/100</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Columna de Gráficos y Carlitos (Mobile: Full Width | Desktop: Right side of Stats Panel) -->
+                <div class="lg:col-span-1 flex flex-col space-y-4">
+                    <!-- Distribución por categoría -->
+                    <div class="p-4 rounded-xl shadow-xl" style="background-color: var(--color-card-dark);">
+                        <strong class="text-lg">Distribución (Gastos por Categoría)</strong>
+                        <canvas id="pieChart" height="200" class="mt-2"></canvas>
+                        <div id="insight" class="text-sm text-gray-400 mt-4 p-2 rounded-lg" style="background-color: var(--color-bg-dark);">
+                            Registra movimientos para obtener este análisis estadístico.
+                        </div>
+                    </div>
+                    
+                    <!-- Carlitos Way - Lecciones y Sugerencias -->
+                    <div class="p-4 rounded-xl shadow-xl" style="background-color: var(--color-card-dark);">
+                        <div class="flex justify-between items-center mb-2">
+                            <strong class="text-lg">Sugerencias Carlitos</strong>
+                            <div id="levelBadge" class="px-3 py-1 rounded-full text-sm font-semibold" style="background-color: var(--color-carlitos-accent); color: white;">Nivel 0</div>
+                        </div>
+                        <ul id="suggestions" class="mt-2 space-y-2 text-sm">
+                            <li class="flex items-start space-x-2 text-gray-400"><span style="color:var(--color-carlitos-primary)">💡</span> Registra tu primer ingreso para empezar.</li>
+                        </ul>
+                        
+                        <div id="lessonBox" class="mt-4 border-t border-gray-700 pt-4">
+                            <div id="lessonText" class="mt-2 p-3 rounded-lg text-gray-300" style="background-color: var(--color-bg-dark);">
+                                Lección actual: Registra tus movimientos para desbloquear la primera lección.
+                            </div>
+                            <div style="margin-top:8px" id="lessonAction"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    /* ----------------------- DASHBOARD CORE LOGIC (Utilities) ----------------------- */
+
+    let pieChart, forecastChart;
+    const CATS = {
+        expense: ['Alimentación','Transporte','Ocio','Salud','Educación','Hogar','Tecnología','Otros'],
+        income: ['Sueldo','Trabajo freelance','Beca','Regalo','Intereses','Ventas','Otros ingresos']
+    };
+
+    function setupDashboardModule() {
+        const form = document.getElementById('entryForm');
+        const typeSelect = document.getElementById('type');
+        const categorySelect = document.getElementById('category');
+        const clearBtn = document.getElementById('clearBtn');
+        const seedBtn = document.getElementById('seedBtn');
+        
+        if (!form || !typeSelect) return; 
+
+        // Destroy previous chart instances if they exist
+        if (pieChart) pieChart.destroy();
+
+        function populateCategory(type){
+            categorySelect.innerHTML = '';
+            CATS[type].forEach(c=>{
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                opt.className = 'bg-gray-900'; 
+                categorySelect.appendChild(opt);
+            });
+        }
+
+        // Set up category dropdown based on initial selection (Expense)
+        populateCategory(typeSelect.value); 
+        typeSelect.addEventListener('change', (e)=>{
+            populateCategory(e.target.value);
+        });
+
+        function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6) }
+
+        function addEntry(e){
+            e.preventDefault();
+            const amountInput = document.getElementById('amount');
+            const dateInput = document.getElementById('date');
+            
+            const type = typeSelect.value;
+            const amount = parseFloat(amountInput.value);
+            const category = categorySelect.value;
+            const date = dateInput.value;
+            const note = document.getElementById('note').value || '';
+            
+            if (!date || isNaN(amount) || amount <= 0) {
+                console.error('Completa monto y fecha correctamente.');
+                return;
+            }
+
+            appState.entries.push({id:uid(), type, amount, category, date, note});
+            saveEntries();
+            form.reset();
+            // Reset type and category selection to default expense after submission
+            typeSelect.value = 'expense';
+            populateCategory('expense');
+            renderAll();
+        }
+
+        form.addEventListener('submit', addEntry);
+
+        // Seed Data for demonstration
+        seedBtn.addEventListener('click', ()=>{
+            appState.entries = [
+                {id:uid(),type:'income',amount:2500,category:'Sueldo',date:todayPlus(-10),note:'Pago de nómina'},
+                {id:uid(),type:'expense',amount:350,category:'Hogar',date:todayPlus(-8),note:'Alquiler'},
+                {id:uid(),type:'expense',amount:150,category:'Alimentación',date:todayPlus(-7),note:'Supermercado semanal'},
+                {id:uid(),type:'expense',amount:40,category:'Transporte',date:todayPlus(-6),note:'Combustible'},
+                {id:uid(),type:'expense',amount:80,category:'Ocio',date:todayPlus(-5),note:'Cena con amigos'},
+                {id:uid(),type:'expense',amount:120,category:'Educación',date:todayPlus(-3),note:'Mensualidad curso'},
+                {id:uid(),type:'expense',amount:20,category:'Alimentación',date:todayPlus(-2),note:'Almuerzo en la calle'},
+                {id:uid(),type:'income',amount:500,category:'Trabajo freelance',date:todayPlus(-1),note:'Proyecto Web'}
+            ];
+            saveEntries(); renderAll();
+        });
+
+        clearBtn.addEventListener('click', ()=>{
+            const customConfirm = (message, callback) => {
+                // Using standard browser confirm for simplicity in prototype
+                const result = window.confirm(message); 
+                if (result) callback();
+            };
+            customConfirm('¿Estás seguro de que quieres borrar todos los movimientos? Esta acción no se puede deshacer.', () => {
+                appState.entries=[]; 
+                // Also clear rules and lessons for a fresh start
+                localStorage.removeItem('carlitos_rule_savings');
+                localStorage.removeItem('carlitos_rule_budget');
+                localStorage.removeItem('carlitos_rule_debt');
+                appState.lessonsCompleted = {};
+                saveEntries(); 
+                renderAll(); 
+            });
+        });
+        
+        renderAll();
+    }
+
+    function todayPlus(offsetDays=0){
+        const d = new Date();
+        d.setDate(d.getDate()+offsetDays);
+        return d.toISOString().slice(0,10);
+    }
+
+    function renderAll(){
+        // Renders all dynamic parts of the Carlitos Dashboard
+        if (document.getElementById('entriesList')) {
+            renderList();
+            updateKPIs();
+            renderCharts();
+            updateLessons();
+            updateSuggestions();
+        }
+    }
+
+    function renderList(){
+        const entriesList = document.getElementById('entriesList');
+        if(!entriesList) return;
+
+        entriesList.innerHTML = '';
+        // Sort by date (descending) and limit to 30 latest entries
+        const latest = appState.entries.slice().sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,30);
+        
+        if(latest.length===0){ 
+            entriesList.innerHTML = '<div class="text-sm text-gray-500 p-2">Sin movimientos registrados. ¡Añade uno!</div>'; 
+            return; 
+        }
+
+        latest.forEach(item=>{
+            const sign = item.type==='expense' ? '-' : '+' ;
+            const color = item.type==='expense' ? 'var(--color-danger)' : 'var(--color-success)';
+            
+            const entryHTML = `
+                <div class="flex justify-between items-center p-2 rounded-lg transition-colors border-b border-gray-700/50 last:border-b-0 hover:bg-gray-700/50">
+                    <div class="flex-1 min-w-0 mr-4">
+                        <div class="font-semibold text-white truncate">${item.category} <span class="text-xs text-gray-500"> · ${item.date}</span></div>
+                        <div class="text-xs text-gray-500 truncate">${item.note || 'Sin nota'}</div>
+                    </div>
+                    <div class="flex items-center space-x-2 flex-shrink-0">
+                        <span class="font-bold text-lg" style="color:${color}">${sign} S/ ${item.amount.toFixed(2)}</span>
+                        <button class="text-sm text-gray-500 hover:text-red-500 transition-colors" onclick="deleteEntry('${item.id}')" title="Eliminar">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            `;
+            entriesList.innerHTML += entryHTML;
+        });
+    }
+
+    function deleteEntry(id){
+        const customConfirm = (message, callback) => {
+            const result = window.confirm(message); 
+            if (result) callback();
+        };
+        customConfirm('¿Estás seguro de que quieres eliminar este movimiento?', () => {
+            appState.entries = appState.entries.filter(e=>e.id!==id);
+            saveEntries(); renderAll();
+        });
+    }
+
+    function updateKPIs(){
+        const sumIncomeEl = document.getElementById('sumIncome');
+        const sumExpenseEl = document.getElementById('sumExpense');
+        const ifpEl = document.getElementById('ifp');
+        const healthEl = document.getElementById('health');
+        const projTextEl = document.getElementById('projText');
+        
+        if (!sumIncomeEl) return; 
+
+        // Filter entries for the current period (e.g., last 30 days) for a more relevant KPI view
+        const now = new Date();
+        const past30 = new Date(); past30.setDate(now.getDate()-29); 
+        const recentEntries = appState.entries.filter(e => new Date(e.date) >= past30);
+
+        const incomes = recentEntries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
+        const expenses = recentEntries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+        
+        sumIncomeEl.textContent = `S/ ${incomes.toFixed(2)}`;
+        sumExpenseEl.textContent = `S/ ${expenses.toFixed(2)}`;
+        const ifp = incomes - expenses;
+        ifpEl.textContent = `S/ ${ifp.toFixed(2)}`;
+        ifpEl.style.color = ifp >= 0 ? 'var(--color-carlitos-primary)' : 'var(--color-danger)';
+
+
+        // Calculate Financial Health 
+        let health = 50;
+        if(incomes>0){
+            const ratio = expenses / incomes;
+            // Cap health score between 10 and 100
+            health = Math.max(10, Math.min(100, Math.round(100 - ratio*100))); 
+        } else {
+            health = expenses===0 ? 100 : 10;
+        }
+        healthEl.textContent = `${health}/100`;
+        if (health >= 80) healthEl.style.color = 'var(--color-success)';
+        else if (health >= 50) healthEl.style.color = '#facc15'; // yellow-400
+        else healthEl.style.color = 'var(--color-danger)';
+
+        // Calculate daily average expense for forecast
+        const daily = avgDailyExpense();
+        const daysInMonth = 30; // Standard 30 day projection
+        const proj = daily * daysInMonth;
+        projTextEl.textContent = `S/ ${proj.toFixed(2)}`;
+        
+        // Update Insight element for forecast
+        const insightEl = document.getElementById('insight');
+        if (insightEl && proj > 0 && incomes > 0) {
+            insightEl.textContent = `Tu gasto promedio diario es de S/ ${daily.toFixed(2)}. Proyección mensual: S/ ${proj.toFixed(2)}.`;
+        }
+    }
+
+    function avgDailyExpense(){
+        const now = new Date();
+        const past30 = new Date(); past30.setDate(now.getDate()-29); 
+        const filtered = appState.entries.filter(e=>{
+            if(e.type!=='expense') return false;
+            const d = new Date(e.date);
+            return d>=past30 && d<=now;
+        });
+        const total = filtered.reduce((s,e)=>s+e.amount,0);
+        const uniqueDays = new Set(filtered.map(e => e.date)).size;
+        
+        // Use the number of unique days with expenses to calculate the average
+        return uniqueDays > 0 ? total / uniqueDays : 0; 
+    }
+
+    function renderCharts(){
+        // PIE CHART: Expense Distribution by Category
+        const pieCtx = document.getElementById('pieChart')?.getContext('2d');
+        
+        if (!pieCtx) return; 
+
+        const expenses = appState.entries.filter(e=>e.type==='expense');
+        const byCat = {};
+        expenses.forEach(e=> byCat[e.category] = (byCat[e.category]||0)+e.amount);
+        const labels = Object.keys(byCat);
+        const data = labels.map(l=> byCat[l]);
+        
+        if(pieChart) pieChart.destroy();
+        pieChart = new Chart(pieCtx, {
+            type:'doughnut',
+            data:{labels, datasets:[{data, backgroundColor:generateColors(labels.length)}]},
+            options:{
+                responsive: true,
+                plugins:{
+                    legend:{display:true,position:'bottom', labels: {color: '#a3a3a3'}},
+                    tooltip:{mode:'index'}
+                }
+            }
+        });
+    }
+
+    function updateLessons(){
+        const lessonText = document.getElementById('lessonText');
+        const lessonAction = document.getElementById('lessonAction');
+        const levelBadge = document.getElementById('levelBadge');
+        if(!lessonText) return;
+
+        // Simple Gamification Level based on number of entries
+        const count = appState.entries.length;
+        let level = 0;
+        if(appState.lessonsCompleted.lesson1) level = 1; // Level 1 is unlocked by completing Lesson 1 Quiz
+        if(count>=15) level = 3; // Example: Future level up based on activity
+        else if(count>=7 && level < 2) level = 2; // Example: Future level up based on activity
+
+        levelBadge.textContent = `Nivel ${level} • ${levelName(level)}`;
+        
+        const goal = appState.onboardingData.goal;
+
+        // Lesson Status Management
+        if(appState.lessonsCompleted.lesson1){
+            lessonText.innerHTML = `<strong>¡Lección 1 Completada!</strong> El Principio de la Escasez ya es parte de ti.`;
+            
+            // Suggest applying the next rule
+            let actionText = goal === 'deudas' ? 'apartar S/ 20 para deuda' : 'apartar S/ 10 semanales';
+            lessonText.innerHTML += `<div class="text-sm text-gray-500 mt-1">Siguiente paso: aplica la lección a tu registro. ¿Qué tal ${actionText}?</div>`;
+            if(!localStorage.getItem('carlitos_rule_savings')){
+                 lessonAction.innerHTML = `<button class="px-3 py-1 text-sm rounded-lg transition-colors btn-carlitos-primary" onclick="applyRule('savings_small')">Simular acción de ${actionText}</button>`;
+            } else {
+                 lessonAction.innerHTML = '';
+            }
+           
+        } else if(count>=3){
+            // If user has enough entries to suggest lesson 1
+            lessonText.innerHTML = `<strong>✨ ¡NUEVA LECCIÓN!</strong> Tu actividad desbloqueó la Lección 1: "El Principio de la Escasez".`;
+            lessonAction.innerHTML = `<button class="px-3 py-1 text-sm rounded-lg transition-colors btn-carlitos-outline" onclick="setModule('Aprender')">IR A LECCIÓN 1</button>`;
+        }
+         else {
+            lessonText.innerHTML = `Lección actual: Registra tus movimientos (${3-count} restantes) para desbloquear la primera lección.`;
+            lessonAction.innerHTML = '';
+        }
+    }
+
+    function levelName(l){
+        return ['Novato','Bases','Hábito','Control','Maestro'][l]||'Novato';
+    }
+
+    function applyRule(key){
+        let msg = '';
+        if(key==='savings_small'){
+            msg = 'Regla simulada: Ahorro semanal activado. ¡A por ese primer hábito!';
+            localStorage.setItem('carlitos_rule_savings','active');
+        } else if(key==='budget_top3'){
+            msg = 'Regla simulada: Presupuesto por categorías activado. ¡A controlar esos gastos!';
+            localStorage.setItem('carlitos_rule_budget','active');
+        } else if(key==='debt_avalanche'){
+            msg = 'Regla simulada: Plan de ataque a deuda activado. ¡A liquidar lo pendiente!';
+            localStorage.setItem('carlitos_rule_debt','active');
+        }
+        
+        console.log(`[Notificación Carlitos] ${msg}`);
+        const customAlert = (message) => {
+             const alertDiv = document.createElement('div');
+             alertDiv.className = 'fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[9999]';
+             alertDiv.innerHTML = `
+                <div class="bg-gray-800 p-6 rounded-xl shadow-2xl max-w-sm text-center border-t-4 border-cyan-400">
+                    <p class="text-lg font-bold mb-4 text-white">${message}</p>
+                    <button class="btn-carlitos-primary px-4 py-2" onclick="this.closest('.fixed').remove()">Entendido</button>
+                </div>
+             `;
+             document.body.appendChild(alertDiv);
+        };
+        customAlert(msg);
+        renderAll();
+    }
+
+    function updateSuggestions(){
+        const suggestionsEl = document.getElementById('suggestions');
+        const insightEl = document.getElementById('insight');
+        if(!suggestionsEl) return;
+
+        suggestionsEl.innerHTML = '';
+        // If no entries, use the initial suggestion set in the HTML template
+        if (appState.entries.length === 0) return;
+
+        const incomes = appState.entries.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
+        const expenses = appState.entries.filter(e=>e.type==='expense').reduce((s,e)=>s+e.amount,0);
+        const dailyAvg = avgDailyExpense();
+
+        function pushSuggestion(text){
+            const li = document.createElement('li');
+            li.className = 'flex items-start space-x-2 text-gray-300';
+            li.innerHTML = `<span style="color:var(--color-carlitos-primary)">💡</span> <span class="flex-1">${text}</span>`;
+            suggestionsEl.appendChild(li);
+        }
+
+        if(incomes>0){
+            const ratio = expenses / incomes;
+            if(ratio>0.6){
+                pushSuggestion('¡Alerta! Estás gastando más del 60% de tus ingresos. Enfócate en reducir la categoría más alta.');
+            } else if(ratio<0.25){
+                pushSuggestion('¡Felicidades! Tienes un bajo ratio de gasto. Considera invertir o aumentar tu ahorro meta.');
+            } else {
+                pushSuggestion('Balance estable. Utiliza la sección "Aprender" para planificar tu próxima meta.');
+            }
+        } else {
+            pushSuggestion('No has registrado ingresos en los últimos 30 días. Regístra tu fuente principal para calcular tu salud financiera.');
+        }
+
+        // Add rule status to suggestions
+        if(localStorage.getItem('carlitos_rule_savings')) pushSuggestion('Regla activa: Ahorro programado semanal.');
+        if(localStorage.getItem('carlitos_rule_budget')) pushSuggestion('Regla activa: Presupuesto por categorías definido.');
+        
+        // Add suggestion based on lesson status
+        if (!appState.lessonsCompleted.lesson1 && appState.entries.length>=3) {
+            pushSuggestion('¡Tu primera lección de Economía está lista! Ve a "Aprender".');
+        }
+
+        // Update insight with current stats 
+        insightEl.textContent = `Tu gasto total es S/ ${expenses.toFixed(2)}. El promedio diario de gasto es S/ ${dailyAvg.toFixed(2)}.`;
+    }
+
+    function generateColors(n){
+        // Usando la paleta 3D Celestes/Púrpuras/Verdes
+        const palette = ['var(--color-carlitos-primary)','var(--color-carlitos-accent)','var(--color-carlitos-secondary)','#f97316','#ff4757','#a78bfa','#06b6d4','#34d399'];
+        const out=[];
+        for(let i=0;i<n;i++) out.push(palette[i%palette.length]);
+        return out;
+    }
+
+
+    /* ---------- Initial Setup ---------- */
+    window.onload = function() {
+        if (appState.onboardingComplete) {
+            renderDashboard();
+        } else {
+            renderOnboarding();
+        }
+    }
 </script>
 </body>
 </html>
