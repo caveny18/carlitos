@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Carlitos Onboarding</title>
+
+    <!-- Tailwind (dev). En producción compila Tailwind en CSS. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="icon" href="favicon.ico">
+
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+      body { font-family: 'Inter', sans-serif; }
+
+      /* Tema oscuro ligero como en tu diseño original */
+      body {
+        background-color: #0d0a1b;
+        color: #e4e6eb;
+      }
+      #onboarding-container { background-color: #1a1628; }
+      .text-gradient { background-image: linear-gradient(90deg,#6b46c1,#9f7aea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+      .step-button-control { border-radius: 9999px; transition: all .3s ease; box-shadow: 0 4px 15px rgba(0,0,0,.5); font-weight:700; }
+      .option-card, .discipline-card { background-color: #2a243d; border: 2px solid transparent; transition: all .2s ease; box-shadow: 0 2px 8px rgba(0,0,0,.4); cursor: pointer; }
+      .option-card:hover, .discipline-card:hover { background-color: #3f3954; transform: translateY(-2px); }
+      .option-card.selected, .discipline-card.selected { border-color: #9f7aea; background-color: #3f3954; transform: scale(1.02); }
+      #fixed-footer { position: fixed; bottom: 0; left: 0; right: 0; background-color: #0d0a1b; border-top: 1px solid #2a243d; padding: 1rem; z-index: 10; }
+      @keyframes subtle-float { 0%,100%{transform:translateY(0) scale(1);}50%{transform:translateY(-3px) scale(1.01);} }
+      #tutor-image { animation: subtle-float 3s ease-in-out infinite; border-radius:50%; border:3px solid #6b46c1; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-start min-h-screen pt-12 pb-24">
+
+  <!-- Barra de progreso (oculta en primer y ultimo paso) -->
+  <div id="progress-bar" class="w-full max-w-xl fixed top-0 left-1/2 transform -translate-x-1/2 p-4 pt-6 transition-opacity duration-500 opacity-0 pointer-events-none">
+    <div class="h-2 bg-gray-700 rounded-full shadow-inner">
+      <div id="progress-indicator" class="h-full bg-purple-500 rounded-full transition-all duration-500" style="width:0%"></div>
+    </div>
+  </div>
+
+  <div id="onboarding-container" class="rounded-3xl w-full max-w-xl transition-all duration-300 transform border border-gray-700 min-h-[400px] p-6 sm:p-8 shadow-2xl">
+    <h1 id="main-title" class="text-3xl sm:text-4xl font-extrabold text-center mb-10 mt-4">
+      <span class="text-gradient">Carlitos - Perfil de Mentoría</span>
+    </h1>
+
+    <!-- Mensaje cargando -->
+    <div id="loading-message" class="text-center p-12">
+      <svg class="animate-spin h-10 w-10 text-purple-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p class="mt-4 text-base text-gray-400">Cargando perfil...</p>
+    </div>
+
+    <!-- ERROR MESSAGE -->
+    <div id="error-message" class="hidden bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-xl relative mb-6 shadow-xl" role="alert">
+      <strong class="font-bold">Error:</strong>
+      <span id="error-text" class="block sm:inline">Ocurrió un error.</span>
+    </div>
+
+    <!-- --------------------
+         STEP 1: Nombre y Rol + Login Google
+         -------------------- -->
+    <div id="step-1" class="step-content hidden">
+      <h2 class="text-3xl font-bold mb-8 text-gray-100">Paso 1: Cuéntanos sobre ti</h2>
+
+     <div class="mb-6">
+       <label for="userName" class="block text-lg font-medium text-gray-300 mb-2">
+         Tu Nombre o Apodo:
+       </label>
+       <input 
+         type="text" 
+         id="userName" 
+         class="w-full p-4 bg-gray-800 border border-purple-500/30 text-white rounded-xl 
+                focus:ring-purple-500 focus:border-purple-500 transition duration-150 shadow-lg"
+         placeholder="Primero inicia sesión con Google..."
+         required
+        disabled
+       >
+     </div>
+
+
+      <div class="mb-6">
+        <label for="userRole" class="block text-lg font-medium text-gray-300 mb-2">Tu Rol principal:</label>
+        <select id="userRole" class="w-full p-4 bg-gray-800 border border-purple-500/30 text-white rounded-xl focus:ring-purple-500 focus:border-purple-500 transition duration-150 shadow-lg appearance-none">
+            <option class="bg-gray-800 text-white" value="Estudiante">Estudiante</option>
+            <option class="bg-gray-800 text-white" value="Profesional">Profesional</option>
+            <option class="bg-gray-800 text-white" value="Emprendedor">Emprendedor</option>
+            <option class="bg-gray-800 text-white" value="Otro">Otro</option>
+        </select>
+      </div>
+
+      <div class="mb-6">
+        <button id="googleLogin" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold step-button-control">Continuar con Google</button>
+      </div>
+    </div>
+
+    <!-- --------------------
+         STEP 2: Propósito financiero + Conocimiento
+         -------------------- -->
+    <div id="step-2" class="step-content hidden">
+      <h2 class="text-3xl font-bold mb-3 text-gray-100">Paso 2: ¿Cuál es tu principal propósito?</h2>
+      <p class="text-gray-400 text-sm mb-6">Carlitos adaptará tu camino según tu meta más importante.</p>
+
+      <div id="goalPriorityContainer" class="grid grid-cols-2 gap-4">
+        <button type="button" data-question="primaryGoal" data-value="Deudas" class="option-card p-4 rounded-xl text-center flex flex-col items-center justify-center h-28">
+          <span class="text-3xl mb-1">💸</span>
+          <span class="text-sm font-semibold text-gray-200">Salir de deudas</span>
+        </button>
+        <button type="button" data-question="primaryGoal" data-value="Ahorrar" class="option-card p-4 rounded-xl text-center flex flex-col items-center justify-center h-28">
+          <span class="text-3xl mb-1">🏛️</span>
+          <span class="text-sm font-semibold text-gray-200">Ahorrar para meta</span>
+        </button>
+        <button type="button" data-question="primaryGoal" data-value="Invertir" class="option-card p-4 rounded-xl text-center flex flex-col items-center justify-center h-28">
+          <span class="text-3xl mb-1">📈</span>
+          <span class="text-sm font-semibold text-gray-200">Aprender a invertir</span>
+        </button>
+        <button type="button" data-question="primaryGoal" data-value="Presupuesto" class="option-card p-4 rounded-xl text-center flex flex-col items-center justify-center h-28">
+          <span class="text-3xl mb-1">🌱</span>
+          <span class="text-sm font-semibold text-gray-200">Establecer base financiera</span>
+        </button>
+      </div>
+
+      <div class="mt-8">
+        <label for="financialKnowledge" class="block text-lg font-medium text-gray-300 mb-2">Tu Nivel de Conocimiento Financiero:</label>
+        <select id="financialKnowledge" class="w-full p-4 bg-gray-800 border border-purple-500/30 text-white rounded-xl focus:ring-purple-500 focus:border-purple-500 transition duration-150 shadow-lg appearance-none">
+          <option value="Basico" class="bg-gray-800 text-white">Básico (Necesito empezar de cero)</option>
+          <option value="Intermedio" class="bg-gray-800 text-white">Intermedio (Conozco conceptos)</option>
+          <option value="Avanzado" class="bg-gray-800 text-white">Avanzado (Ya invierto o tengo experiencia)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- --------------------
+         STEP 3: Sentimiento
+         -------------------- -->
+    <div id="step-3" class="step-content hidden">
+      <h2 class="text-3xl font-bold mb-8 text-gray-100">Paso 3: ¿Cómo te sientes con tus finanzas?</h2>
+      <div id="feelingContainer">
+        <button type="button" data-question="feeling" data-value="Empezando" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">🐒</span> No entiendo mucho de finanzas
+        </button>
+        <button type="button" data-question="feeling" data-value="Aprendiendo" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">🐿️</span> Sé un poquito y quiero experimentar
+        </button>
+        <button type="button" data-question="feeling" data-value="Mejorando" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">🦅</span> Ya manejo lo básico, busco mejorar mi estrategia
+        </button>
+        <button type="button" data-question="feeling" data-value="Optimizando" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">🐱</span> Me siento con experiencia y quiero optimizar resultados
+        </button>
+      </div>
+    </div>
+
+    <!-- --------------------
+         STEP 4: Estilo de Aprendizaje
+         -------------------- -->
+    <div id="step-4" class="step-content hidden">
+      <h2 class="text-3xl font-bold mb-8 text-gray-100">Paso 4: Tu Enfoque de Aprendizaje</h2>
+      <h3 class="text-xl font-semibold mb-4 text-gray-200">¿Qué prefieres al aprender?</h3>
+      <div id="learningStyleContainer" class="mb-8">
+        <button type="button" data-question="learningStyle" data-value="Juegos" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">🎮</span> Retos cortos, juegos o videos simples
+        </button>
+        <button type="button" data-question="learningStyle" data-value="Videos" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">🎥</span> Videos rápidos y consejos prácticos
+        </button>
+        <button type="button" data-question="learningStyle" data-value="Ejemplos" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">📚</span> Superar retos semanales y visión a mediano plazo
+        </button>
+        <button type="button" data-question="learningStyle" data-value="Practico" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">🤝</span> Explicaciones profundas y ejemplos reales
+        </button>
+      </div>
+    </div>
+
+    <!-- --------------------
+         STEP 5: Disciplina
+         -------------------- -->
+    <div id="step-5" class="step-content hidden">
+      <h2 class="text-3xl font-bold mb-8 text-gray-100">Paso 5: Disciplina con el Dinero</h2>
+      <h3 class="text-xl font-semibold mb-4 text-gray-200">¿Qué tan constante eres con gastos y ahorros?</h3>
+      <div id="disciplineContainer" class="grid grid-cols-2 gap-4">
+        <button type="button" data-question="discipline" data-value="Baja" class="discipline-card p-4 rounded-xl text-center h-28">
+          <span class="text-xl font-bold text-red-400">Poca</span>
+          <span class="text-sm text-gray-400 mt-1 block">Me cuesta seguir un plan.</span>
+        </button>
+        <button type="button" data-question="discipline" data-value="Intermedia" class="discipline-card p-4 rounded-xl text-center h-28">
+          <span class="text-xl font-bold text-yellow-400">Regular</span>
+          <span class="text-sm text-gray-400 mt-1 block">Lo intento, pero a veces fallo.</span>
+        </button>
+        <button type="button" data-question="discipline" data-value="Constante" class="discipline-card p-4 rounded-xl text-center h-28">
+          <span class="text-xl font-bold text-green-400">Constante</span>
+          <span class="text-sm text-gray-400 mt-1 block">Soy bueno siguiendo metas.</span>
+        </button>
+        <button type="button" data-question="discipline" data-value="Alta" class="discipline-card p-4 rounded-xl text-center h-28">
+          <span class="text-xl font-bold text-blue-400">Mucha</span>
+          <span class="text-sm text-gray-400 mt-1 block">Tengo el control total.</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- --------------------
+         STEP 6: Motivación
+         -------------------- -->
+    <div id="step-6" class="step-content hidden">
+      <h2 class="text-3xl font-bold mb-8 text-gray-100">Paso 6: Tu Motor de Motivación</h2>
+      <div id="motivationContainer" class="mb-8">
+        <button type="button" data-question="motivation" data-value="LogrosCortos" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">🎁</span> Logros con humor (celebrar lo pequeño)
+        </button>
+        <button type="button" data-question="motivation" data-value="Guia" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">🧭</span> Explorar y probar nuevas herramientas
+        </button>
+        <button type="button" data-question="motivation" data-value="Retos" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">🏆</span> Superar retos semanales y ver el panorama completo
+        </button>
+        <button type="button" data-question="motivation" data-value="LargoPlazo" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">🌎</span> Ver cómo crecen mis resultados a largo plazo
+        </button>
+      </div>
+    </div>
+
+    <!-- --------------------
+         STEP 7: Tiempo y Prioridad Actual
+         -------------------- -->
+    <div id="step-7" class="step-content hidden">
+      <h2 class="text-3xl font-bold mb-8 text-gray-100">Paso 7: Compromiso Diario</h2>
+
+      <div class="mb-8">
+        <h3 class="text-xl font-semibold mb-4 text-gray-200">¿Cuánto tiempo al día piensas dedicarle?</h3>
+        <select id="dailyTime" class="w-full p-4 bg-gray-800 border border-purple-500/30 text-white rounded-xl focus:ring-purple-500 focus:border-purple-500 transition duration-150 shadow-lg appearance-none">
+          <option value="5">5 minutos (Micro dosis)</option>
+          <option value="10">10 minutos (Un café rápido)</option>
+          <option value="15">15 minutos (Lección completa)</option>
+          <option value="30">30+ minutos (Dedicación profunda)</option>
+        </select>
+      </div>
+
+      <h3 class="text-xl font-semibold mb-4 text-gray-200">¿Cuál es tu prioridad actual?</h3>
+      <div id="priorityContainer">
+        <button type="button" data-question="currentPriority" data-value="ControlarGastos" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">📉</span> Necesito el control básico: Presupuesto y Gastos
+        </button>
+        <button type="button" data-question="currentPriority" data-value="Ahorrar" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">💰</span> Explorar hábitos de ahorro y gestión de deudas
+        </button>
+        <button type="button" data-question="currentPriority" data-value="Invertir" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">📈</span> Definir metas claras (ahorro, inversiones)
+        </button>
+        <button type="button" data-question="currentPriority" data-value="MetasGrandes" class="option-card flex items-center p-5 rounded-2xl mb-4 text-lg font-semibold w-full">
+          <span class="emoji text-3xl mr-6">🎯</span> Analizar y optimizar inversiones avanzadas
+        </button>
+      </div>
+    </div>
+
+    <!-- --------------------
+         STEP 8: Finalización y Tutor
+         -------------------- -->
+    <div id="step-8" class="step-content hidden text-center">
+      <h2 class="text-3xl font-bold mb-4 text-gradient">Paso 8: ¡Tu Mentor está Listo!</h2>
+      <p class="text-gray-400 text-lg mb-8">Hemos terminado la configuración. Carlitos ha creado tu <strong>Plan Personalizado</strong> y te ha asignado un Mentor:</p>
+
+      <div id="tutor-card" class="p-6 rounded-2xl mb-8 mx-auto text-left shadow-2xl max-w-sm border-2 border-purple-500/50" style="background-color:#2a243d;">
+        <h3 class="text-2xl font-extrabold text-white mb-2 flex items-center">
+          <div class="mr-4 h-16 w-16 flex items-center justify-center">
+            <img id="tutor-image" src="https://placehold.co/80x80/2a243d/e4e6eb?text=Mentor" alt="Tutor Carlitos" class="h-16 w-16" />
+          </div>
+          <span id="tutor-name" class="flex-grow text-gradient"></span>
+        </h3>
+        <p id="tutor-role" class="text-sm font-semibold mb-3 text-gray-400"></p>
+        <p id="tutor-description" class="text-gray-200 leading-relaxed text-sm"></p>
+      </div>
+
+      <p class="text-sm text-gray-500 mt-6">Presiona "¡Empezar Carlitos!" para iniciar tu viaje financiero.</p>
+    </div>
+
+    <!-- Indicadores -->
+    <div class="flex justify-center mt-8 space-x-2">
+      <div id="indicator-1" class="step-indicator w-3 h-3 rounded-full bg-gray-700"></div>
+      <div id="indicator-2" class="step-indicator w-3 h-3 rounded-full bg-gray-700"></div>
+      <div id="indicator-3" class="step-indicator w-3 h-3 rounded-full bg-gray-700"></div>
+      <div id="indicator-4" class="step-indicator w-3 h-3 rounded-full bg-gray-700"></div>
+      <div id="indicator-5" class="step-indicator w-3 h-3 rounded-full bg-gray-700"></div>
+      <div id="indicator-6" class="step-indicator w-3 h-3 rounded-full bg-gray-700"></div>
+      <div id="indicator-7" class="step-indicator w-3 h-3 rounded-full bg-gray-700"></div>
+      <div id="indicator-8" class="step-indicator w-3 h-3 rounded-full bg-gray-700"></div>
+    </div>
+
+  </div>
+
+<!-- Footer controls (CORREGIDO) -->
+<div id="fixed-footer" class="flex justify-between w-full max-w-xl mx-auto py-4">
+  <button
+    id="backButton"
+    class="text-gray-400 hover:text-purple-400 font-medium py-3 px-6 transition duration-150 step-button-control border border-transparent bg-transparent disabled:opacity-50 pl-4 sm:pl-8"
+    disabled
+    aria-label="Atrás"
+  >
+    ← Atrás
+  </button>
+
+  <button
+    id="nextButton"
+    class="flex items-center bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md transition transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+    disabled
+    aria-live="polite"
+    aria-label="Continuar"
+  >
+    <span id="btn-continuar-text">Continuar</span>
+
+    <!-- Spinner (oculto por defecto) -->
+    <svg id="next-spinner" class="animate-spin h-5 w-5 ml-3 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+    </svg>
+  </button>
+</div>
+
+
+  <!-- IMPORTS: firebase-config.js (módulo), y onboarding.js (módulo) -->
+  <!-- Nota: firebase-config.js exporta { db, auth, provider } -->
+  <script type="module" src="./firebase-config.js"></script>
+  <script type="module" src="./onboarding.js"></script>
+</body>
+</html>

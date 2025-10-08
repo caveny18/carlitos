@@ -1,0 +1,120 @@
+<script>
+    /**
+     * Función principal que se llama desde dashboard.html para inicializar el módulo.
+     * Esta función EVALÚA la plantilla de JavaScript para insertar los datos personalizados.
+     */
+    window.setupModule = function() {
+        // Accede al appState global (definido en dashboard.html)
+        const onboardingData = window.appState.onboardingData || {};
+        const lessonsCompleted = window.appState.lessonsCompleted || {};
+
+        // 1. Define la PLANTILLA DE JAVASCRIPT con las variables dinámicas
+        const moduleTemplate = (data) => `
+            <div class="space-y-8 p-4">
+                
+                <h1 class="text-3xl font-bold border-b pb-3" style="color:var(--color-carlitos-primary)">
+                    🎓 Mi Camino de Aprendizaje
+                </h1>
+
+                <div class="bg-indigo-900/40 p-6 rounded-xl shadow-lg border border-indigo-700/50">
+                    <h2 class="text-xl font-semibold mb-2 text-white">Tu Plan Personalizado Carlitos</h2>
+                    <p class="text-gray-300">Tu meta principal es: 
+                        <span class="font-bold text-lg" style="color:var(--color-carlitos-primary)">
+                            ${data.goal ? data.goal.toUpperCase() : 'NO DEFINIDA'}
+                        </span>
+                    </p>
+                    <p class="text-gray-300">Tu nivel percibido es: 
+                        <span class="font-bold text-lg" style="color:var(--color-carlitos-secondary)">
+                            ${data.level ? data.level.toUpperCase() : 'NO DEFINIDO'}
+                        </span>
+                    </p>
+                    <p class="text-gray-400 mt-3">¡Avanza en las rutas para alcanzar tu objetivo!</p>
+                </div>
+                
+                <h2 class="text-2xl font-bold pt-4 text-white">Ruta 1: Fundamentos Esenciales</h2>
+
+                ${renderLessonCard(1, 'presupuesto', 'El Arte de Presupuestar 📊', 
+                    'Aprende a crear tu primer presupuesto, clasificar gastos y encontrar dinero que ni sabías que tenías.', 
+                    4, lessonsCompleted)}
+                
+                ${renderLessonCard(2, 'ahorro', 'El Secreto del Ahorro 🧠', 
+                    'Técnicas probadas para automatizar el ahorro y construir tu fondo de emergencia.', 
+                    3, lessonsCompleted)}
+                
+                <h2 class="text-2xl font-bold pt-6 text-white">Ruta 2: Creciendo tu Dinero</h2>
+                ${renderLessonCard(3, 'inversion', 'Primeros Pasos para Invertir 🚀', 
+                    'Conceptos clave para empezar a invertir con bajo riesgo (e.g., ETFs, Fondos Mutuos).', 
+                    5, lessonsCompleted)}
+            </div>
+        `;
+        
+        // 2. OBTENER el contenedor del módulo y reemplazar su contenido
+        const contentContainer = document.getElementById('moduleContent');
+
+        if (contentContainer) {
+            contentContainer.innerHTML = moduleTemplate(onboardingData);
+        }
+    }
+    
+    /**
+     * Función auxiliar para generar la tarjeta de cada módulo de aprendizaje (HTML con datos).
+     */
+    function renderLessonCard(moduleId, key, title, description, totalLessons, completedLessons) {
+        const completedCount = completedLessons[key] || 0;
+        const progress = Math.round((completedCount / totalLessons) * 100);
+        const nextLesson = completedCount < totalLessons ? `Lección ${completedCount + 1}` : '¡Completado!';
+        
+        return `
+            <div class="bg-card-dark p-6 rounded-xl shadow-lg border border-gray-700/50" 
+                 style="background-color: var(--color-card-dark);">
+                <h3 class="text-xl font-semibold mb-3 flex items-center" style="color:var(--color-carlitos-primary)">
+                    Módulo ${moduleId}: ${title}
+                </h3>
+                <p class="text-gray-300 mb-4">${description}</p>
+
+                <div class="mb-4">
+                    <label class="text-sm font-medium text-gray-400">
+                        Progreso: <span class="text-white">${progress}% (${completedCount}/${totalLessons})</span>
+                    </label>
+                    <div class="w-full bg-gray-700 rounded-full h-2.5 mt-1">
+                        <div class="h-2.5 rounded-full" style="width: ${progress}%; background-color: var(--color-carlitos-secondary);"></div>
+                    </div>
+                </div>
+                
+                <button class="btn-carlitos-primary text-sm mt-3" 
+                        onclick="startLesson('${key}', ${completedCount + 1})" 
+                        ${progress === 100 ? 'disabled' : ''}>
+                    ${progress === 100 ? 'Módulo Completado 🎉' : `Iniciar ${nextLesson}`}
+                </button>
+            </div>
+        `;
+    }
+
+    /**
+     * Simula el inicio de una lección, actualiza el progreso y re-renderiza.
+     */
+    function startLesson(key, lessonNumber) {
+        // En un entorno real, esto abriría una página o modal de lección.
+        alert(`Iniciando ${key.toUpperCase()} - Lección ${lessonNumber}. Simulación: Completa la lección.`);
+        
+        // Simular la finalización (Avanza el contador)
+        const completedLessons = window.appState.lessonsCompleted;
+        if (!completedLessons[key] || completedLessons[key] < lessonNumber) {
+             completedLessons[key] = lessonNumber;
+        }
+        
+        // Actualizar estado y guardar
+        window.appState.lessonsCompleted = completedLessons;
+        window.saveEntries(); 
+        
+        // Re-renderizar el módulo para mostrar el nuevo progreso
+        window.setupModule();
+    }
+    
+    // Ejecutar la función de configuración inmediatamente para que el contenido se renderice
+    window.setupModule(); 
+</script>
+
+<div id="module-aprender-content">
+    <div class="text-center p-10">Generando tu ruta de aprendizaje personalizada...</div>
+</div>

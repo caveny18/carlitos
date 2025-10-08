@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carlitos - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Base Configuration - Carlitos 3D Llama Theme (Se mantiene igual) */
+        :root {
+            --color-carlitos-primary: #52B6C8;
+            --color-carlitos-secondary: #37A35E;
+            --color-carlitos-accent: #8A6FC8;
+            --color-bg-dark: #1A1A2E;
+            --color-card-dark: #2C2C45;
+            --color-sidebar: #222238; /* Color para el sidebar */
+            --color-text-light: #ffffff; 
+            --color-text-muted: #a3a3a3;
+            --color-danger: #ff4757; 
+            --color-success: var(--color-carlitos-secondary); 
+            font-family: 'Inter', system-ui, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--color-bg-dark);
+            color: var(--color-text-light);
+            min-height: 100vh;
+            display: flex;
+            /* Se cambia a flex-row si se usa el grid, pero lo mantengo por simplicidad */
+            flex-direction: row; 
+        }
+
+        /* Custom scrollbar, buttons, input styles (Se mantienen iguales) */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-thumb { background: #4a4a66; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: var(--color-bg-dark); }
+        .dashboard-form-input, .dashboard-form-select { background-color: #3b3b5c; border: 1px solid #4a4a66; color: var(--color-text-light); padding: 0.75rem; border-radius: 8px; transition: border-color 0.2s; }
+        .dashboard-form-input:focus, .dashboard-form-select:focus { outline: none; border-color: var(--color-carlitos-primary); }
+        .nav-item { color: var(--color-text-muted); transition: all 0.2s; cursor: pointer; }
+        .nav-item:hover { color: var(--color-text-light); background-color: var(--color-card-dark); }
+        .nav-item.active { color: var(--color-carlitos-primary); background-color: #3b3b5c; font-weight: 600; border-left: 4px solid var(--color-carlitos-primary); }
+        .mobile-nav-item { padding: 0.5rem; text-align: center; color: var(--color-text-muted); transition: all 0.2s; }
+        .mobile-nav-item.active { color: var(--color-carlitos-primary); font-weight: 600; }
+        
+        /* Layout adjustments for better control */
+        .sidebar {
+            width: 250px; /* Ancho fijo para el sidebar */
+            z-index: 50; /* Para asegurar que esté por encima del contenido */
+        }
+        .content-area {
+            flex-grow: 1; /* El área de contenido toma el espacio restante */
+            margin-left: 250px; /* Crea el espacio para el sidebar fijo */
+        }
+        @media (max-width: 1023px) { /* Móvil (lg) */
+            .content-area {
+                margin-left: 0; /* Sin margen en móvil */
+            }
+        }
+    </style>
+</head>
+<body class="selection:bg-cyan-500 selection:text-black flex"> <script>
+    // Se mantienen todas las variables de estado y funciones de persistencia
+    const CarlitosImage = 'WhatsApp Image 2025-09-27 at 12.13.18 PM.jpeg'; 
+    const STORAGE_KEY = 'carlitos_entries_v3';
+    const ONBOARDING_KEY = 'carlitos_onboarding_v3';
+    const LESSON_KEY = 'carlitos_lessons_v1';
+
+    // Global App State (Se mantiene igual)
+    const appState = {
+        onboardingComplete: localStorage.getItem(ONBOARDING_KEY) === 'true',
+        onboardingStep: 0,
+        entries: loadEntries(),
+        onboardingData: JSON.parse(localStorage.getItem('carlitos_onboarding_data_v3') || '{}'),
+        lessonsCompleted: JSON.parse(localStorage.getItem(LESSON_KEY) || '{}'),
+        activeModule: localStorage.getItem('carlitos_active_module') || 'Carlitos', 
+        isLessonActive: false, 
+        lessonData: {} 
+    };
+
+    function loadEntries() { /* ... */ return [] } // Implementación abreviada
+    function saveEntries() { /* ... */ } // Implementación abreviada
+
+    // Funciones Carlitos (Se mantienen igual)
+    const CarlitosCharacter = (size='w-24 h-24') => `
+        <div class="flex flex-col items-center">
+            <img src="${CarlitosImage}" alt="Carlitos la Llama Financiera 3D" 
+                class="${size} object-contain p-1 shadow-2xl transition-transform duration-300 hover:scale-105" 
+                style="border-radius: 50%; border: 3px solid var(--color-carlitos-primary);"
+                onerror="this.src='https://placehold.co/100x100/37A35E/ffffff?text=Llama'" />
+            <div class="text-xs text-gray-400 mt-2">Tu mentor llama</div>
+        </div>
+    `;
+
+    const CarlitosLogo = (size='text-xl') => `
+        <div class="flex items-center space-x-2">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                 <path d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2ZM12 4C16.418 4 20 7.582 20 12C20 16.418 16.418 20 12 20C7.582 20 4 16.418 4 12C4 7.582 7.582 4 12 4ZM10 8V16L16 12L10 8Z" fill="url(#gradient-logo)"/>
+                 <defs>
+                     <linearGradient id="gradient-logo" x1="0%" y1="0%" x2="100%" y2="100%">
+                         <stop offset="0%" style="stop-color:var(--color-carlitos-primary);stop-opacity:1" />
+                         <stop offset="100%" style="stop-color:var(--color-carlitos-secondary);stop-opacity:1" />
+                     </linearGradient>
+                 </defs>
+             </svg>
+            <span class="${size} font-extrabold" style="color:var(--color-carlitos-primary)">CARLITOS</span>
+        </div>
+    `;
+    
+    /* ----------------------- DASHBOARD NAVIGATION LOGIC (Se mantiene igual) ----------------------- */
+    
+    function setModule(moduleName) {
+        // ... (Lógica de carga y fetch se mantiene igual) ...
+        appState.activeModule = moduleName;
+        saveEntries(); 
+        
+        const moduleMap = {
+            'Carlitos': 'carlitos.html',
+            'Aprender': 'aprender.html',
+            'Microaprendizaje': 'microaprendizaje.html'
+        };
+        
+        const contentDiv = document.getElementById('moduleContent');
+        const moduleFile = moduleMap[moduleName];
+
+        if (moduleFile && contentDiv) {
+            fetch(moduleFile)
+                .then(response => {
+                    if (!response.ok) { throw new Error(`Error al cargar ${moduleFile}: ${response.statusText}`); }
+                    return response.text();
+                })
+                .then(html => {
+                    // Carga el HTML
+                    contentDiv.innerHTML = html;
+                    
+                    // Ejecuta scripts (La lógica de ejecución de scripts es correcta y se mantiene)
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const scripts = doc.querySelectorAll('script');
+                    
+                    scripts.forEach(script => { new Function(script.textContent)(); });
+
+                    if (moduleName === 'Carlitos' && window.setupCarlitosDashboard && typeof window.setupCarlitosDashboard === 'function') {
+                        window.setupCarlitosDashboard();
+                    } else if (window.setupModule && typeof window.setupModule === 'function') {
+                        window.setupModule();
+                    }
+                })
+                .catch(error => {
+                    contentDiv.innerHTML = `<div class="p-8 text-red-400">Error al cargar el módulo ${moduleName}: ${error.message}</div>`;
+                    console.error('Error loading module:', error);
+                });
+        }
+        updateNavStyles();
+    }
+
+    function updateNavStyles() {
+        document.querySelectorAll('[data-module]').forEach(item => {
+            if (item.getAttribute('data-module') === appState.activeModule) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+
+
+    /* ----------------------- INITIALIZATION ----------------------- */
+    
+    window.onload = () => {
+        if (!appState.onboardingComplete) {
+            window.location.href = 'index.html'; 
+            return;
+        }
+
+        // Inicializar listeners de navegación móvil
+        document.querySelectorAll('.mobile-nav-item').forEach(item => {
+            item.addEventListener('click', () => setModule(item.getAttribute('data-module')));
+        });
+        
+        // Inicializar listeners de navegación de escritorio
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => setModule(item.getAttribute('data-module')));
+        });
+        
+        // Cargar el módulo activo
+        setModule(appState.activeModule);
+    };
+</script>
+
+<div class="main-content-grid w-full">
+    
+    <aside class="sidebar hidden lg:flex flex-col p-4 space-y-6 shadow-2xl fixed top-0 bottom-0 overflow-y-auto" style="background-color: var(--color-sidebar);">
+        
+        <div class="p-2 mb-4">
+             <div class="flex items-center space-x-2">
+                <span class="text-2xl font-extrabold" style="color:var(--color-carlitos-primary)">CARLITOS</span>
+            </div>
+        </div>
+        
+        <nav class="flex-1 space-y-1">
+            <a onclick="setModule('Carlitos')" data-module="Carlitos" class="nav-item flex items-center p-3 rounded-lg border-l-4 border-transparent">
+                <span class="text-xl mr-3">💰</span>
+                <span class="text-white">Dashboard Finanzas</span>
+            </a>
+            <a onclick="setModule('Aprender')" data-module="Aprender" class="nav-item flex items-center p-3 rounded-lg border-l-4 border-transparent">
+                <span class="text-xl mr-3">🎓</span>
+                <span class="text-white">Camino de Aprendizaje</span>
+            </a>
+            <a onclick="setModule('Microaprendizaje')" data-module="Microaprendizaje" class="nav-item flex items-center p-3 rounded-lg border-l-4 border-transparent">
+                <span class="text-xl mr-3">⚡</span>
+                <span class="text-white">Microaprendizaje</span>
+            </a>
+            <a onclick="alert('Funcionalidad de Perfil en desarrollo')" class="nav-item flex items-center p-3 rounded-lg border-l-4 border-transparent">
+                <span class="text-xl mr-3">👤</span>
+                <span class="text-white">Perfil & Metas</span>
+            </a>
+        </nav>
+        
+        <div id="carlitos-sidebar-character" class="p-4 text-center">
+             <div class="flex flex-col items-center">
+                 <img src="${CarlitosImage}" alt="Carlitos la Llama Financiera 3D" 
+                     class="w-20 h-20 object-contain p-1 shadow-2xl" 
+                     style="border-radius: 50%; border: 3px solid var(--color-carlitos-primary);"
+                     onerror="this.src='https://placehold.co/100x100/37A35E/ffffff?text=Llama'" />
+                 <p class="text-xs text-gray-400 mt-2">¡A ahorrar!</p>
+             </div>
+        </div>
+    </aside>
+
+    <div class="hidden lg:block sidebar shrink-0"></div> 
+    
+    <main class="content-area p-4 sm:p-6 lg:p-8 flex-1 pb-20 lg:pb-8">
+        <div id="moduleContent">
+            <div class="text-center p-10">Cargando módulo...</div>
+        </div>
+    </main>
+</div>
+
+<div id="mobileNav" class="fixed bottom-0 left-0 right-0 lg:hidden p-2 z-50 shadow-2xl" style="background-color: var(--color-sidebar);">
+    <div class="flex justify-around items-center">
+        <a onclick="setModule('Carlitos')" data-module="Carlitos" class="mobile-nav-item">
+            <span class="block text-2xl">💰</span>
+            <span class="text-xs block">Finanzas</span>
+        </a>
+        <a onclick="setModule('Aprender')" data-module="Aprender" class="mobile-nav-item">
+            <span class="block text-2xl">🎓</span>
+            <span class="text-xs block">Aprender</span>
+        </a>
+        <a onclick="setModule('Microaprendizaje')" data-module="Microaprendizaje" class="mobile-nav-item">
+            <span class="block text-2xl">⚡</span>
+            <span class="text-xs block">Clips</span>
+        </a>
+        <a onclick="alert('Funcionalidad de Perfil en desarrollo')" class="mobile-nav-item">
+            <span class="block text-2xl">👤</span>
+            <span class="text-xs block">Perfil</span>
+        </a>
+    </div>
+</div>
+
+</body>
+</html>

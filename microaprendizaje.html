@@ -1,119 +1,387 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Carlitos — Microaprendizaje (Reels)</title>
-  <style>
-    :root{
-      --bg:#071426; --card:#071a2a; --accent:#06b6d4; --muted:#9fb0c1;
-      font-family: Inter, system-ui, Arial; color:#e8f3fb;
-    }
-    html,body{height:100%;margin:0;background:linear-gradient(180deg,var(--bg),#04111b);overflow:hidden}
-    .app{height:100%;display:flex;flex-direction:column}
-    header{padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
-    h1{font-size:16px;margin:0;color:#fff}
-    .main{flex:1;position:relative;display:flex;align-items:center;justify-content:center;touch-action:pan-y}
-    .reel{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:92%;max-width:420px;height:78%;background:#000;border-radius:18px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
-    .reel iframe{width:100%;height:100%;border:none}
-    .controls{position:absolute;right:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:10px;z-index:10}
-    .ctrl-btn{background:rgba(255,255,255,0.08);border:none;padding:8px;border-radius:10px;color:#fff;cursor:pointer}
-    .bottom{padding:12px;display:flex;justify-content:space-between;align-items:center}
-    .bottom .nav-inner{width:100%;max-width:720px;background:rgba(3,7,18,0.9);padding:10px;border-radius:14px;margin:0 18px;display:flex;justify-content:space-around}
-    .nav{color:var(--muted);text-decoration:none;font-size:13px}
-    #counter{color:var(--muted);font-size:13px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feed de Shorts Estilo TikTok</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos para el scroll snap que simula el feed de TikTok */
+        .snap-container {
+            scroll-snap-type: y mandatory;
+            height: 100vh;
+            overflow-y: scroll;
+            overscroll-behavior-y: contain;
+        }
+        .snap-item {
+            scroll-snap-align: start;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Ocultar la barra de desplazamiento */
+        .snap-container::-webkit-scrollbar { display: none; }
+        .snap-container { scrollbar-width: none; }
+
+        /* Estilo para el iframe del video */
+        .video-iframe {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+        }
+
+        /* -------------------------------------- */
+        /* ESTILOS DEL MENÚ DE NAVEGACIÓN FIJO (NUEVOS) */
+        /* -------------------------------------- */
+        .nav-menu {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background-color: #12101b; /* Fondo oscuro sólido */
+            box-shadow: 0 -4px 6px -1px rgba(0, 0, 0, 0.1), 0 -2px 4px -2px rgba(0, 0, 0, 0.06);
+            padding: 4px 0; /* Un poco de espacio vertical */
+        }
+        
+        /* Estilos base para cada ítem de navegación */
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 4px;
+            color: #6b7280; /* Gris para inactivo */
+            transition: color 0.2s;
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 500;
+            text-align: center;
+            width: 25%; 
+        }
+
+        /* Estilo para el ítem activo (Microaprendizaje es el activo aquí) */
+        .nav-item.active {
+            color: #ec4899; /* Pink-500 para activo */
+            font-weight: 600;
+        }
+
+        /* Para dispositivos de escritorio, centrar el menú */
+        @media (min-width: 640px) {
+            .nav-menu > div {
+                max-width: 42rem;
+            }
+        }
+        /* Ajuste para el contenido no sea tapado por la barra */
+        #feed-container {
+            padding-bottom: 72px; 
+        }
+    </style>
 </head>
-<body>
-  <div class="app" id="app">
-    <header>
-      <h1>Carlitos • Microaprendizaje</h1>
-      <div id="counter">0 / 0</div>
-    </header>
+<body class="bg-black text-white font-sans">
 
-    <div class="main" id="main">
-      <!-- Reel cards se insertan aquí -->
-      <div class="controls">
-        <button id="prevBtn" class="ctrl-btn">▲</button>
-        <button id="nextBtn" class="ctrl-btn">▼</button>
-      </div>
+    <!-- Contenedor Principal del Feed -->
+    <div id="feed-container" class="snap-container">
+        <!-- Los videos se insertarán aquí por JavaScript -->
     </div>
 
-    <div class="bottom">
-      <div class="nav-inner">
-        <a class="nav" href="index.html">Home</a>
-        <a class="nav" href="microaprendizaje.html">Microaprendizaje</a>
-        <a class="nav" href="camino.html">Camino</a>
-      </div>
+    <!-- UI de Navegación Fija (Superior) -->
+    <div class="fixed top-0 left-0 w-full z-20 pointer-events-none">
+        <div class="p-4 flex justify-between items-center pointer-events-auto">
+            <!-- Título actualizado a "CarlitosShorts" -->
+            <h1 class="text-xl font-bold italic text-white">CarlitosShorts</h1>
+            <button id="search-btn" class="bg-gray-800/50 p-2 rounded-full hover:bg-gray-700/80 transition-all shadow-lg text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            </button>
+        </div>
     </div>
-  </div>
+    
+    <!-- Modal de Búsqueda (Flotante) -->
+    <div id="search-modal" class="fixed inset-0 bg-black/95 z-30 hidden p-6 flex flex-col">
+        <div class="flex justify-between items-center mb-6 text-white">
+            <h2 class="text-3xl font-bold">Buscador de Temas</h2>
+            <button id="close-modal-btn" class="text-3xl font-light leading-none">&times;</button>
+        </div>
+        
+        <div class="mb-6 flex space-x-2">
+            <input type="text" id="search-input" placeholder="Escribe tu tema..."
+                   class="flex-grow p-3 rounded-xl bg-gray-800 border border-gray-700 text-white focus:ring-pink-500 focus:border-pink-500 transition-colors shadow-inner">
+            <button id="execute-search-btn"
+                    class="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-3 px-6 rounded-xl transition-colors shadow-lg">
+                Buscar
+            </button>
+        </div>
 
-<script>
-const shorts = [
-  "https://www.youtube.com/shorts/JP2pCDTIcLY",
-  "https://www.youtube.com/shorts/yC4sLk3EaFI",
-  "https://www.youtube.com/shorts/tgxMqy4pmMM",
-  "https://www.youtube.com/shorts/sxdpWemIKuM",
-  "https://www.youtube.com/shorts/RHAhOJiRXUk",
-  "https://www.youtube.com/shorts/67fThtCYq-Y",
-  "https://www.youtube.com/shorts/YqR-3tHIUAw"
-];
+        <div id="search-results" class="flex-grow overflow-y-auto p-4 rounded-xl bg-gray-900/70 border border-gray-800 text-white">
+            <p id="search-placeholder" class="text-gray-400 text-center mt-10">Usa el buscador para obtener información sobre cualquier tema usando Gemini.</p>
+            <div id="loading-indicator" class="hidden text-center text-pink-500">
+                <p class="animate-pulse">Cargando resultados...</p>
+            </div>
+            <div id="search-content" class="text-left space-y-4">
+                <!-- Resultados del LLM se insertarán aquí -->
+            </div>
+        </div>
+    </div>
 
-const main = document.getElementById('main');
-const counter = document.getElementById('counter');
-const prevBtn = document.getElementById('prevBtn');
-const nextBtn = document.getElementById('nextBtn');
 
-let currentIndex = 0;
+    <!-- Menú de Navegación Fijo Inferior -->
+    <nav class="nav-menu">
+        <div class="flex justify-around max-w-2xl mx-auto">
+            <!-- Dashboard -->
+            <a href="./dashboard.html" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 10.5h19.5m-4.5 4.5h-10.5m10.5 0a1.5 1.5 0 0 1 1.5 1.5v3.75a1.5 1.5 0 0 1-1.5 1.5h-10.5a1.5 1.5 0 0 1-1.5-1.5V16.5m1.5-6.042V4.5a1.5 1.5 0 0 1 1.5-1.5h7.5" />
+                </svg>
+                Dashboard
+            </a>
+            <!-- Aprender -->
+            <a href="./Aprender.html" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 21.5L4 17.5V7.5L12 3.5L20 7.5V17.5L12 21.5Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 12L20 7.5M12 12V21.5M12 12L4 7.5M4 17.5L12 12M20 17.5L12 12" />
+                </svg>
+                Aprender
+            </a>
+            <!-- Microaprendizaje (ACTIVO en esta página) -->
+            <a href="./Microaprendizaje.html" class="nav-item active">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25A2.25 2.25 0 0 1 8.25 10.5H6A2.25 2.25 0 0 1 3.75 8.25V6ZM15.75 6A2.25 2.25 0 0 1 18 3.75h2.25A2.25 2.25 0 0 1 22.5 6v2.25A2.25 2.25 0 0 1 20.25 10.5H18A2.25 2.25 0 0 1 15.75 8.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25v-2.25ZM15.75 15.75A2.25 2.25 0 0 1 18 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25v2.25a2.25 2.25 0 0 1-2.25 2.25H18a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" />
+                </svg>
+                Micro
+            </a>
+            <!-- Perfil (Carlitos) -->
+            <a href="./Carlitos.html" class="nav-item">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                </svg>
+                Perfil
+            </a>
+        </div>
+    </nav>
 
-function getIdFromUrl(url){
-  try{
-    const u = new URL(url);
-    if(u.pathname.includes('/shorts/')){
-      return u.pathname.split('/shorts/')[1];
-    }
-    if(u.searchParams.get('v')) return u.searchParams.get('v');
-    return null;
-  }catch(e){return null;}
-}
+    <script type="module">
+        // Datos de los videos (IDs de YouTube Shorts)
+        const videoData = [
+            { id: 'vJUkfL1JD0o', user: '@ViajesCool', caption: 'Playas increíbles para visitar este verano. 🏝️ #viajes' },
+            { id: 'ynJVkf3jrfE', user: '@RecetasFaciles', caption: 'Tostadas francesas en 5 minutos. ¡Perfectas para el desayuno! 🍳 #comida' },
+            { id: '1qj8pyNZaNQ', user: '@GymMotivation', caption: 'Rutina de pierna para principiantes. No te rindas. 💪 #fitness' },
+            { id: 'B6jZRWCVClA', user: '@MemesDiarios', caption: 'Cuando intentas seguir la dieta pero hay pastel. 😂 #humor' },
+            { id: 'Yh7emVLHtug', user: '@TechReviews', caption: 'Unboxing del nuevo smartphone. ¿Vale la pena? 📱 #tecnología' },
+            { id: 'AluoQda9GP4', user: '@MascotasFelices', caption: 'Mi gato descubriendo su nuevo juguete. ¡Qué adorable! 😻 #mascotas' }
+        ];
 
-function renderReel(){
-  main.querySelectorAll('.reel').forEach(r=>r.remove());
-  if(shorts.length===0){
-    counter.textContent = "0 / 0";
-    return;
-  }
-  if(currentIndex < 0) currentIndex = 0;
-  if(currentIndex >= shorts.length) currentIndex = shorts.length-1;
-  const id = getIdFromUrl(shorts[currentIndex]);
-  const card = document.createElement('div');
-  card.className = 'reel';
-  card.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?rel=0&playsinline=1" allowfullscreen></iframe>`;
-  main.appendChild(card);
-  counter.textContent = `${currentIndex+1} / ${shorts.length}`;
-}
+        const feedContainer = document.getElementById('feed-container');
+        const searchModal = document.getElementById('search-modal');
+        const searchInput = document.getElementById('search-input');
+        const searchContent = document.getElementById('search-content');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const searchPlaceholder = document.getElementById('search-placeholder');
 
-function next(){ if(currentIndex < shorts.length-1){ currentIndex++; renderReel(); } }
-function prev(){ if(currentIndex > 0){ currentIndex--; renderReel(); } }
+        // IMPORTANTE: Dejé el código de la API de Gemini para la funcionalidad de búsqueda.
+        const apiKey = ""; 
+        const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
-nextBtn.addEventListener('click', next);
-prevBtn.addEventListener('click', prev);
+        function renderVideoFeed() {
+            feedContainer.innerHTML = ''; // Limpiar contenedor
+            videoData.forEach((video, index) => {
+                const videoElement = document.createElement('div');
+                videoElement.className = 'snap-item bg-gray-900 relative';
+                videoElement.id = `video-${video.id}`;
 
-let startY=0,endY=0;
-main.addEventListener('touchstart', e=>{ startY=e.touches[0].clientY; }, {passive:true});
-main.addEventListener('touchend', e=>{ endY=e.changedTouches[0].clientY; handleSwipe(); }, {passive:true});
-function handleSwipe(){
-  const diff = startY-endY;
-  if(Math.abs(diff)<40) return;
-  if(diff>0) next(); else prev();
-}
-document.addEventListener('keydown', e=>{
-  if(e.key==='ArrowDown') next();
-  if(e.key==='ArrowUp') prev();
-});
+                const embedUrl = `https://www.youtube.com/embed/${video.id}?autoplay=1&mute=1&loop=1&playlist=${video.id}&controls=0&disablekb=1&modestbranding=1&rel=0&playsinline=1`;
+                
+                videoElement.innerHTML = `
+                    <iframe 
+                        class="video-iframe" 
+                        src="${embedUrl}" 
+                        frameborder="0" 
+                        allow="autoplay; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen
+                    ></iframe>
+                    
+                    <div class="absolute inset-0 bg-black/10 z-10 pointer-events-none"></div>
 
-// inicial
-renderReel();
-</script>
+                    <div class="absolute bottom-20 left-4 right-20 z-10 text-shadow-lg">
+                        <p class="font-bold text-lg mb-1">${video.user}</p>
+                        <p class="text-sm">${video.caption}</p>
+                        <div class="flex items-center mt-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-music mr-1"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                            <span class="text-xs">Música original - ${video.user.substring(1)}</span>
+                        </div>
+                    </div>
+
+                    <div class="absolute bottom-28 right-4 z-10 flex flex-col space-y-6">
+                        <div class="text-center">
+                            <button class="text-3xl hover:text-red-500 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-heart"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                            </button>
+                            <span class="text-xs font-semibold mt-1 block">1.${index}M</span>
+                        </div>
+                        <div class="text-center">
+                            <button class="text-3xl hover:text-blue-400 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle"><path d="m3 21 1.9-5.7a8.5 8.5 0 1 1 3.8-3.8L21 3"/></svg>
+                            </button>
+                            <span class="text-xs font-semibold mt-1 block">15K</span>
+                        </div>
+                        <div class="text-center">
+                            <button class="text-3xl hover:text-green-400 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-share"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+                            </button>
+                            <span class="text-xs font-semibold mt-1 block">8.5K</span>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-10 h-10 bg-gray-700 rounded-full mx-auto flex items-center justify-center animate-spin-slow shadow-xl">
+                                <div class="w-4 h-4 bg-black rounded-full"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                feedContainer.appendChild(videoElement);
+            });
+            startPlaying(videoData[0].id);
+        }
+
+        function startPlaying(videoId) {
+            const currentIframe = document.querySelector(`#video-${videoId} iframe`);
+            if (currentIframe) {
+                const src = currentIframe.src;
+                if (!src.includes('autoplay=1')) {
+                     // Solo necesitamos asegurarnos de que el primer video se reproduzca y esté en mute
+                     currentIframe.src = currentIframe.src.replace('mute=1', 'mute=1&autoplay=1');
+                }
+            }
+        }
+
+        async function executeSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            searchPlaceholder.classList.add('hidden');
+            searchContent.innerHTML = '';
+            loadingIndicator.classList.remove('hidden');
+
+            const systemPrompt = "Actúa como un experto en el tema consultado. Proporciona un resumen informativo y útil de los hallazgos en español, usando formato Markdown (listas y negritas) para facilitar la lectura.";
+            
+            const payload = {
+                contents: [{ parts: [{ text: query }] }],
+                tools: [{ "google_search": {} }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                let response;
+                let success = false;
+                const maxRetries = 3;
+                let delay = 1000;
+
+                for (let i = 0; i < maxRetries; i++) {
+                    response = await fetch(geminiApiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        success = true;
+                        break;
+                    }
+                    if (i < maxRetries - 1) {
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        delay *= 2; 
+                    }
+                }
+
+                if (!success) {
+                    throw new Error(`Error en la solicitud: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const candidate = result.candidates?.[0];
+
+                if (candidate && candidate.content?.parts?.[0]?.text) {
+                    const text = candidate.content.parts[0].text;
+                    let sources = [];
+                    const groundingMetadata = candidate.groundingMetadata;
+
+                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                        sources = groundingMetadata.groundingAttributions
+                            .map(attribution => ({
+                                uri: attribution.web?.uri,
+                                title: attribution.web?.title,
+                            }))
+                            .filter(source => source.uri && source.title);
+                    }
+
+                    const markdownText = convertMarkdownToHtml(text);
+                    searchContent.innerHTML = `<h3 class="text-xl font-bold mb-3 text-pink-400">Resultados para "${query}"</h3>${markdownText}`;
+
+                    if (sources.length > 0) {
+                        let sourcesHtml = '<div class="mt-6 pt-4 border-t border-gray-700">';
+                        sourcesHtml += '<p class="font-semibold mb-2">Fuentes:</p>';
+                        sourcesHtml += '<ul class="list-disc list-inside text-sm space-y-1">';
+                        sources.slice(0, 3).forEach(source => { 
+                            sourcesHtml += `<li><a href="${source.uri}" target="_blank" class="text-blue-400 hover:text-blue-300 underline">${source.title}</a></li>`;
+                        });
+                        sourcesHtml += '</ul></div>';
+                        searchContent.innerHTML += sourcesHtml;
+                    }
+                } else {
+                    searchContent.innerHTML = '<p class="text-red-400">No se pudo obtener una respuesta para la búsqueda.</p>';
+                }
+
+            } catch (error) {
+                console.error("Error al buscar tema:", error);
+                searchContent.innerHTML = `<p class="text-red-400">Ocurrió un error: ${error.message}. Por favor, inténtalo de nuevo.</p>`;
+            } finally {
+                loadingIndicator.classList.add('hidden');
+                searchInput.value = '';
+            }
+        }
+
+        function convertMarkdownToHtml(markdown) {
+            let html = markdown;
+            // Reemplaza negritas Markdown a HTML
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Reemplaza listas no ordenadas (ajustado para que solo funcione con * al inicio de la línea)
+            html = html.replace(/^\* (.*)$/gm, '<li>$1</li>');
+            // Envuelve todos los <li> consecutivos en <ul>
+            if (html.includes('<li>')) {
+                html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
+            }
+            // Reemplaza saltos de línea con <br> fuera de la estructura de lista (simple aproximación)
+            html = html.replace(/\n(?!<)/g, '<br>');
+            return html;
+        }
+
+        document.getElementById('search-btn').addEventListener('click', () => {
+            searchModal.classList.remove('hidden');
+        });
+
+        document.getElementById('close-modal-btn').addEventListener('click', () => {
+            searchModal.classList.add('hidden');
+            searchContent.innerHTML = '';
+            searchPlaceholder.classList.remove('hidden');
+            loadingIndicator.classList.add('hidden');
+        });
+
+        document.getElementById('execute-search-btn').addEventListener('click', executeSearch);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                executeSearch();
+            }
+        });
+
+        window.onload = () => {
+            renderVideoFeed();
+        };
+    </script>
 </body>
 </html>
