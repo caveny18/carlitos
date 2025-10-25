@@ -4,7 +4,7 @@
 
 import { db, auth, provider } from './firebase-config.js';
 import { signInWithPopup } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
 // ---------------- CONFIG / ESTADO GLOBAL ----------------
 const PROFILE_KEY = 'carlitos_profile_data';
@@ -315,33 +315,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // listeners botones
     if (DOM.nextButton) DOM.nextButton.addEventListener('click', nextStep);
     if (DOM.backButton) DOM.backButton.addEventListener('click', prevStep);
-
 // --- Google Login ---
 if (DOM.googleLoginBtn) {
   DOM.googleLoginBtn.addEventListener('click', async () => {
     try {
       const res = await signInWithPopup(auth, provider);
       const user = res.user;
-      console.log("✅ Usuario autenticado:", user.displayName, user.email);
+      console.log("✅ Usuario autenticado:", user.email);
 
-      // 🔓 Habilitar el campo de apodo (userName)
-      if (DOM.userName) {
-        DOM.userName.disabled = false;
-        DOM.userName.placeholder = "Elige tu apodo para usar en la app ✨";
-        if (!DOM.userName.value && user.displayName) {
-          DOM.userName.value = user.displayName.split(" ")[0]; // Sugerencia inicial
+      // 🔍 Verificar si el usuario ya existe en Firestore
+      const userRef = doc(db, "usuarios", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const confirmar = confirm("Ya tienes una cuenta registrada. ¿Deseas ir a tu cuenta?");
+        if (confirmar) {
+          window.location.href = "Carlitos.html";
+          return; // detener flujo
         }
+      }
+
+      // 🧠 Generar apodo automático basado en el correo
+      let autoNickname = "Usuario";
+      if (user.email) {
+        const localPart = user.email.split("@")[0];
+        autoNickname = localPart.replace(/[^a-zA-Z0-9]/g, "").substring(0, 12);
+        autoNickname = autoNickname.charAt(0).toUpperCase() + autoNickname.slice(1);
+      } else if (user.displayName) {
+        autoNickname = user.displayName.split(" ")[0];
+      }
+
+      // ✅ Asignar apodo automáticamente sin pedirlo
+      if (DOM.userName) {
+        DOM.userName.disabled = true;
+        DOM.userName.value = autoNickname;
       }
 
       // Guardar datos mínimos de sesión
       localStorage.setItem('userUID', user.uid);
       localStorage.setItem('userEmail', user.email);
 
-      // Mostrar mensaje amigable
-      alert(`¡Hola ${user.displayName || "usuario"}! Ahora elige tu apodo antes de continuar.`);
+      // Mensaje amigable
+      alert(`¡Hola ${autoNickname}! Hemos generado tu apodo automáticamente 🎉`);
 
-      // 👇 IMPORTANTE: ya NO avanzamos de paso automáticamente
-      // Se espera a que el usuario elija su apodo y presione "Continuar"
     } catch (err) {
       console.error("❌ Error al iniciar sesión con Google:", err);
       showError("No se pudo iniciar sesión con Google. Intenta nuevamente.");
@@ -424,3 +440,71 @@ if (DOM.googleLoginBtn) {
     // inicializa botón
     updateNextButtonState(1);
 }); // end DOMContentLoaded
+// === Guardar mentor seleccionado y perfil general ===
+function guardarMentorSeleccionado(mentor) {
+  const mentorData = {
+    nombre: mentor.nombre,
+    especie: mentor.especie,
+    color: mentor.color,
+    descripcion: mentor.descripcion,
+    imagenes: {
+      normal: `${mentor.especie}normal.png`,
+      ensenando: `${mentor.especie}enseñando.png`,
+      riendo: `${mentor.especie}riendo.png`,
+      confundido: `${mentor.especie}confundido.png`
+    },
+    icono: `icono${mentor.especie}.png`
+  };
+
+  // Guardamos también el nombre del usuario y XP si lo tienes
+  const usuarioData = {
+    nombre: document.getElementById("nombreUsuario")?.value || "Usuario",
+    mentor: mentorData,
+    xp: 0,
+    coins: 0
+  };
+
+  localStorage.setItem("carlitos_profile_data", JSON.stringify(usuarioData));
+  console.log("✅ Mentor guardado en localStorage:", usuarioData);
+}
+
+// Ejemplo de uso (cuando finaliza el onboarding)
+document.getElementById("btnIrDashboard").addEventListener("click", () => {
+  const mentorSeleccionado = {
+    nombre: "Ardilla",
+    especie: "ardilla",
+    color: "#f4a261",
+    descripcion: "Energética, rápida y siempre lista para ayudarte."
+  };
+  guardarMentorSeleccionado(mentorSeleccionado);
+  window.location.href = "dashboard.html";
+});
+// onboarding.js
+document.addEventListener('DOMContentLoaded', () => {
+  const intro = document.getElementById('intro-carlitos');
+  const step1 = document.getElementById('step-1');
+  const nextButton = document.getElementById('nextButton');
+  const backButton = document.getElementById('backButton');
+  const progressBar = document.getElementById('progress-bar');
+  const progressIndicator = document.getElementById('progress-indicator');
+
+  const introBtn = document.getElementById('btnIntroContinuar');
+  const introText = document.getElementById('intro-text');
+  let introStep = 0;
+
+  if (introBtn) {
+    introBtn.addEventListener('click', () => {
+      introStep++;
+      if (introStep === 1) {
+        introText.textContent = "Responde unas preguntas breves antes de empezar en Carlitos. Esto será muy importante para personalizar tu experiencia.";
+        introBtn.textContent = "Empezar ahora";
+      } else {
+        // Oculta intro y muestra Step 2 directamente
+        intro.classList.add('hidden');
+        step1.classList.remove('hidden');
+        progressBar.classList.remove('opacity-0', 'pointer-events-none');
+        nextButton.disabled = false;
+      }
+    });
+  }
+});

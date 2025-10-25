@@ -1,3 +1,4 @@
+<!-- === PARTE 1 DE 3 === -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -7,41 +8,69 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-    body { font-family: 'Inter', sans-serif; background-color: #0d0a1b; color: #e4e6eb; padding-bottom: 100px; }
-    .card { background-color: #1a1628; box-shadow: 0 8px 15px rgba(0,0,0,.4); border: 1px solid #2a243d; }
-    .text-gradient { background-image: linear-gradient(90deg,#6b46c1,#9f7aea); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    :root{
+      --accent-1: #6b46c1;
+      --accent-2: #9f7aea;
+      --accent-cyan: #06b6d4;
+      --text: #0f172a;
+      --muted: #475569;
+    }
+
+    html,body{height:100%}
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #ffffff; /* toda la pagina blanca */
+      color: var(--text);
+      padding-bottom: 100px;
+    }
+
+    /* Cards & general */
+    .card {
+      background-color: #ffffff;
+      border: 1px solid rgba(99,102,241,0.08);
+      box-shadow: 0 8px 20px rgba(15,23,42,0.04);
+    }
+    .text-gradient {
+      background-image: linear-gradient(90deg,var(--accent-1),var(--accent-2));
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+    }
 
     /* Mentor floating (idle) */
-    @keyframes floaty { 0% { transform: translateY(0); } 50% { transform: translateY(-8px); } 100% { transform: translateY(0); } }
+    @keyframes floaty { 0% { transform: translateY(0); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0); } }
     .mentor-float { animation: floaty 3s ease-in-out infinite; border-radius: 12px; }
 
-    /* Mentor movement transitions (we'll update left/top via JS) */
     .mentor-image-tour {
       width: 120px; height: 120px; border-radius: 12px; overflow: hidden;
       display:flex; align-items:center; justify-content:center; background: transparent;
-      border: 3px solid #6b46c1; position: fixed; z-index: 9999;
-      transition: transform 700ms cubic-bezier(.22,.9,.32,1), left 700ms cubic-bezier(.22,.9,.32,1), top 700ms cubic-bezier(.22,.9,.32,1);
-      box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+      border: 3px solid rgba(111,66,193,0.12); position: fixed; z-index: 10090;
+      transition: transform 700ms cubic-bezier(.22,.9,.32,1), left 700ms cubic-bezier(.22,.9,.32,1), top 700ms cubic-bezier(.22,.9,.32,1), opacity 250ms;
+      box-shadow: 0 20px 50px rgba(6,8,15,0.08);
+      background-color: #fff;
+      pointer-events: none; /* mentor image shouldn't block clicks — bubble handles interactions */
     }
 
     /* speech bubble anchored to mentor */
     .mentor-bubble {
       position: fixed;
-      z-index: 9998;
-      max-width: 360px;
-      background: linear-gradient(180deg,#0f0b19,#161023);
-      border:1px solid rgba(159,122,234,.12);
-      color: #e6e7ea;
+      z-index: 10095; /* above mentor image */
+      max-width: 420px;
+      background: linear-gradient(180deg,#f8fafc,#f1f5f9);
+      border:1px solid rgba(159,122,234,0.12);
+      color: var(--text);
       padding: 12px 14px;
       border-radius: 12px;
-      box-shadow: 0 12px 40px rgba(0,0,0,.6);
+      box-shadow: 0 18px 50px rgba(2,6,23,0.08);
       transition: left 700ms cubic-bezier(.22,.9,.32,1), top 700ms cubic-bezier(.22,.9,.32,1), transform 300ms;
+      font-size: 14px;
+      pointer-events: auto; /* bubble must receive clicks */
     }
+    .mentor-bubble strong { display:block; color:var(--accent-1); margin-bottom:6px; font-weight:700; }
     .mentor-bubble:after {
       content: '';
       position: absolute;
       width: 16px; height: 16px;
-      background: linear-gradient(180deg,#0f0b19,#161023);
+      background: linear-gradient(180deg,#f8fafc,#f1f5f9);
       border-left:1px solid rgba(159,122,234,.12);
       border-bottom:1px solid rgba(159,122,234,.12);
       transform: rotate(45deg);
@@ -49,22 +78,100 @@
       bottom: -8px;
     }
 
-    /* highlighted target */
-    .tour-highlight { position: relative; box-shadow: 0 0 0 6px rgba(159,122,234,.08), 0 18px 40px rgba(0,0,0,.6) !important; border-radius: .75rem !important; z-index: 9997; }
-
-    /* Tour overlay (dim) */
-    .tour-overlay { position: fixed; inset: 0; background: rgba(3,3,7,0.5); z-index: 9995; }
-
-    /* bubble controls & style */
+    /* bubble tiny helper for controls */
     .tour-controls { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
-    .btn-ghost { background: transparent; border: 1px solid rgba(255,255,255,.06); padding:8px 12px; border-radius: 10px; color: #e6e7ea; }
-    .btn-primary { background: linear-gradient(90deg,#9f7aea,#6b46c1); color: white; padding:8px 14px; border-radius: 10px; font-weight:700; }
+    .btn-ghost { background: transparent; border: 1px solid rgba(15,23,42,0.06); padding:8px 12px; border-radius: 10px; color: var(--text); cursor:pointer; }
+    .btn-primary { background: linear-gradient(90deg,var(--accent-2),var(--accent-1)); color: white; padding:8px 14px; border-radius: 10px; font-weight:700; cursor:pointer; }
 
-    /* responsive */
-    @media (max-width:640px) {
-      .mentor-image-tour { width: 96px; height: 96px; }
-      .mentor-bubble { max-width: 280px; padding: 10px 12px; }
+    /* Spotlight overlay (circular by default) */
+    .tour-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10050;
+      pointer-events: auto;
+      transition: background 400ms ease;
+      /* default center & radius (will be set via JS) */
+      --spot-x: 50px;
+      --spot-y: 50px;
+      --spot-r: 80px;
+      background:
+        radial-gradient(circle at var(--spot-x) var(--spot-y), rgba(0,0,0,0) calc(var(--spot-r) - 6px), rgba(0,0,0,0.55) calc(var(--spot-r) - 6px + 8px));
+      backdrop-filter: blur(0.3px);
     }
+
+    /* highlighted target (gives it higher z so it shows above overlay) */
+    .tour-highlight {
+      position: relative;
+      z-index: 10080; /* above overlay but below bubble (10095) and mentor image (10090) */
+      box-shadow: 0 0 0 12px rgba(111,66,193,0.04), 0 20px 40px rgba(15,23,42,0.06);
+      border-radius: .75rem;
+      transition: box-shadow 300ms, transform 300ms;
+      transform-origin: center;
+    }
+
+    /* small responsive tweaks */
+    @media (max-width:640px) {
+      .mentor-image-tour { width: 92px; height: 92px; }
+      .mentor-bubble { max-width: 260px; padding: 10px 12px; }
+    }
+
+    /* XP bar styling example */
+    #xp-bar-container { width:100%; height:12px; background:#f1f5f9; border-radius:999px; overflow:hidden; margin-top:6px; }
+    #xp-bar-fill { height:100%; width:0%; background: linear-gradient(90deg,var(--accent-2),var(--accent-1)); transition: width 700ms ease; }
+
+    /* Tutor icon circle */
+    #tutor-icon-container { border-radius: 999px; overflow:hidden; color:white; font-weight:700; display:flex; align-items:center; justify-content:center; }
+
+    .muted { color: var(--muted); }
+
+    /* small color badges for tutor description (set via JS inline style for flexibility) */
+    .tutor-desc { font-size: 14px; margin-top: 6px; line-height: 1.3; }
+    .tutor-role { font-weight:700; margin-bottom:6px; }
+/* 🌟 Ajustes generales del tour (para todos los dispositivos) */
+.spotlight-content,
+.shepherd-content,
+.introjs-tooltip {
+  max-width: 400px;
+  border-radius: 1rem;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  transition: all 0.3s ease-in-out;
+}
+
+/* 📱 Mejoras exclusivas para pantallas móviles */
+@media (max-width: 768px) {
+  .spotlight-content,
+  .shepherd-content,
+  .introjs-tooltip {
+    position: fixed !important;
+    bottom: 10% !important;
+    left: 5% !important;
+    right: 5% !important;
+    top: auto !important;
+    transform: none !important;
+    max-width: 90vw !important;
+    background: rgba(0, 0, 0, 0.9) !important;
+    color: #fff !important;
+    text-align: center;
+    font-size: 0.9rem !important;
+    line-height: 1.4rem;
+    padding: 1.2rem 1rem !important;
+    border-radius: 1rem;
+    z-index: 9999 !important;
+  }
+
+  .spotlight-overlay,
+  .shepherd-modal-overlay-container,
+  .introjs-overlay {
+    background: rgba(0, 0, 0, 0.7) !important;
+  }
+
+  .shepherd-button,
+  .introjs-button {
+    font-size: 0.8rem !important;
+    padding: 0.4rem 0.8rem !important;
+  }
+}
+
   </style>
 </head>
 <body class="p-4 sm:p-8 flex justify-center min-h-screen">
@@ -74,7 +181,7 @@
     <header class="flex items-start justify-between">
       <div>
         <h1 class="text-5xl font-extrabold text-gradient">Carlitos Home</h1>
-        <p id="welcome-message" class="text-xl text-gray-300 mt-2">¡Bienvenido a tu viaje financiero!</p>
+        <p id="welcome-message" class="text-xl muted mt-2">¡Bienvenido a tu viaje financiero!</p>
       </div>
       <div class="flex items-start gap-3">
         <button id="repeat-tour-btn" class="btn-ghost" title="Repetir Tour">🎓 Repetir Tour Guiado</button>
@@ -84,22 +191,22 @@
 
     <!-- Profile + XP -->
     <section id="progress-card" class="card rounded-2xl p-6 sm:p-8 space-y-5">
-      <div class="flex flex-col sm:flex-row items-center justify-between border-b pb-4 border-gray-700/50">
+      <div class="flex flex-col sm:flex-row items-center justify-between border-b pb-4 border-gray-100">
         <div class="flex items-center space-x-4">
-          <div id="user-avatar" class="w-16 h-16 bg-purple-600/50 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-xl flex-shrink-0">
+          <div id="user-avatar" class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-xl flex-shrink-0">
             <span id="name-initial">C</span>
           </div>
           <div>
-            <p class="text-2xl font-bold text-white" id="user-name-display"></p>
-            <p class="text-sm font-semibold text-gray-400" id="user-role-display"></p>
+            <p class="text-2xl font-bold" id="user-name-display"></p>
+            <p class="text-sm font-semibold muted" id="user-role-display"></p>
           </div>
         </div>
 
-        <div class="flex items-center space-x-3 mt-4 sm:mt-0 bg-gray-800/50 px-4 py-2 rounded-full border border-gray-700">
-          <span class="text-xl text-yellow-400">💰</span>
+        <div class="flex items-center space-x-3 mt-4 sm:mt-0 bg-white px-4 py-2 rounded-full border border-gray-100">
+          <span class="text-xl" style="color: #f59e0b">💰</span>
           <div class="text-right">
             <p class="text-xs text-yellow-500 font-medium uppercase">Mi CarlitosCoin</p>
-            <p class="text-xl font-bold text-white" id="user-coins">0</p>
+            <p class="text-xl font-bold" id="user-coins">0</p>
           </div>
           <div class="ml-4">
             <button id="coins-details" class="btn-ghost">Ver más detalles</button>
@@ -109,20 +216,20 @@
 
       <div>
         <div class="flex justify-between items-end mb-2">
-          <p class="text-lg font-bold text-purple-400" id="user-level-title">Nivel: Novato</p>
-          <p class="text-sm text-gray-400">XP: <span id="user-xp-current">0</span>/<span id="user-xp-next">100</span></p>
+          <p class="text-lg font-bold" id="user-level-title">Nivel: Novato</p>
+          <p class="text-sm muted">XP: <span id="user-xp-current">0</span>/<span id="user-xp-next">100</span></p>
         </div>
         <div id="xp-bar-container">
           <div id="xp-bar-fill" style="width:0%"></div>
         </div>
-        <p class="text-xs text-gray-500 mt-2 text-center" id="next-level-message">Sigue completando misiones para alcanzar el siguiente nivel.</p>
+        <p class="text-xs muted mt-2 text-center" id="next-level-message">Sigue completando misiones para alcanzar el siguiente nivel.</p>
       </div>
     </section>
 
     <!-- Tools -->
     <section id="tools-section" class="card rounded-2xl p-6 sm:p-8">
-      <h2 class="text-2xl font-bold mb-5 flex items-center text-cyan-400">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-3 text-cyan-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11.42 15.17L17.25 21 21 17.25M12 1.5l8.69 8.69a1.688 1.688 0 0 1 .286 1.15l-.675 6.471a1.5 1.5 0 0 1-1.472 1.393H9.866a1.5 1.5 0 0 1-1.472-1.393L7.72 12.01l-5.694-5.694a1.875 1.875 0 0 1 2.652-2.652L10.5 10.5M4.125 15.875a1.875 1.875 0 1 0 0-3.75 1.875 1.875 0 0 0 0 3.75Z"/></svg>
+      <h2 class="text-2xl font-bold mb-5 flex items-center" style="color:var(--accent-cyan)">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11.42 15.17L17.25 21 21 17.25M12 1.5l8.69 8.69a1.688 1.688 0 0 1 .286 1.15l-.675 6.471a1.5 1.5 0 0 1-1.472 1.393H9.866a1.5 1.5 0 0 1-1.472-1.393L7.72 12.01l-5.694-5.694a1.875 1.875 0 0 1 2.652-2.652L10.5 10.5M4.125 15.875a1.875 1.875 0 1 0 0-3.75 1.875 1.875 0 0 0 0 3.75Z"/></svg>
         Mi Caja de Herramientas
       </h2>
 
@@ -130,21 +237,21 @@
         <!-- populated by JS -->
       </div>
 
-      <p class="text-xs text-gray-500 mt-4 text-center">¡Sigue aprendiendo en la sección "Aprender" para desbloquear más herramientas!</p>
+      <p class="text-xs muted mt-4 text-center">Las herramientas se irán desbloqueando conforme avances en tus sesiones de aprendizaje — úsalas luego desde el Dashboard para registrar ingresos/gastos y ver tu flujo de dinero.</p>
     </section>
-
+<!-- === PARTE 2 DE 3 === -->
     <!-- Goals -->
     <section id="goals-section" class="card rounded-2xl p-6 sm:p-8">
-      <h2 class="text-2xl font-bold mb-5 flex items-center text-pink-400">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-3 text-pink-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.079 0-2.157.26-3.228.784-0.124.057-0.209.18-0.209.311v11.977c0 0.285.231.516.516.516h13.048c.285 0 .516-.231.516-.516V4.845c0-.131-.085-.254-.209-.311A8.967 8.967 0 0 0 18 3.75c1.079 0 2.157.26 3.228.784"/></svg>
+      <h2 class="text-2xl font-bold mb-5 flex items-center" style="color:#db2777">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.079 0-2.157.26-3.228.784-0.124.057-0.209.18-0.209.311v11.977c0 0.285.231.516.516.516h13.048c.285 0 .516-.231.516-.516V4.845c0-.131-.085-.254-.209-.311A8.967 8.967 0 0 0 18 3.75c1.079 0 2.157.26 3.228.784"/></svg>
         Tus Metas Financieras
       </h2>
 
-      <div id="user-goals-summary" class="text-gray-400 space-y-3">
+      <div id="user-goals-summary" class="muted space-y-3">
         <!-- metas renderizadas por JS -->
       </div>
 
-      <div class="pt-4 border-t border-gray-700/40 flex justify-between items-center">
+      <div class="pt-4 border-t border-gray-100 flex justify-between items-center">
         <p class="text-xs text-pink-300">Gestiona y crea metas desde el Dashboard.</p>
         <div class="flex gap-3">
           <button id="add-goal-btn" class="btn-primary">Agregar nueva meta</button>
@@ -155,24 +262,24 @@
 
     <!-- Mentor card -->
     <section id="mentor-section" class="card rounded-2xl p-6 sm:p-8">
-      <h2 class="text-2xl font-bold mb-5 flex items-center text-purple-400">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-3 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h3.75M9 15h3.75M9 18h3.75m-4.5 0A2.25 2.25 0 0 1 7.5 21h4.5a2.25 2.25 0 0 1 2.25-2.25m3.75-9a4.5 4.5 0 1 1-9 0"/></svg>
-        Tu Carlitos Mentor: <span class="text-white ml-1" id="tutor-name">Kantu</span>
+      <h2 class="text-2xl font-bold mb-5 flex items-center" style="color:var(--accent-1)">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h3.75M9 15h3.75M9 18h3.75m-4.5 0A2.25 2.25 0 0 1 7.5 21h4.5a2.25 2.25 0 0 1 2.25-2.25m3.75-9a4.5 4.5 0 1 1-9 0"/></svg>
+        Tu Carlitos Mentor:
       </h2>
 
-      <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 bg-gray-800/30 p-4 rounded-xl border border-purple-500/20">
+      <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 bg-white p-4 rounded-xl border border-gray-100">
         <div class="w-20 h-20 flex-shrink-0">
-          <div id="tutor-icon-container" class="w-full h-full tutor-image-active flex items-center justify-center text-4xl" style="background-color:#2a243d; border-radius:50%;">
-            <!-- svg or emoji -->
+          <div id="tutor-icon-container" class="w-full h-full tutor-image-active flex items-center justify-center text-4xl" style="background:linear-gradient(90deg,var(--accent-1),var(--accent-2)); border-radius:50%;">
+            <!-- here we place only the mentor image (no text) -->
           </div>
         </div>
 
         <div class="text-center sm:text-left">
-          <p class="text-lg font-semibold text-purple-300" id="tutor-role"></p>
-          <p class="text-base text-gray-300 mt-2" id="tutor-description"></p>
-          <div class="pt-4 mt-4 border-t border-gray-700/50">
-            <p class="text-lg font-semibold text-white">Próxima Misión:</p>
-            <p class="text-purple-400 font-medium" id="first-mission-text"></p>
+          <p id="tutor-role-display" class="tutor-role"></p>
+          <p id="tutor-description" class="tutor-desc"></p>
+          <div class="pt-4 mt-4 border-t border-gray-100">
+            <p class="text-lg font-semibold">Próxima Misión:</p>
+            <p class="text-purple-500 font-medium" id="first-mission-text"></p>
           </div>
         </div>
       </div>
@@ -184,28 +291,28 @@
   </div>
 
   <!-- Nav -->
-  <nav class="nav-menu fixed bottom-0 left-0 right-0 bg-[#100c1d] border-t border-gray-800 z-40">
+  <nav id="bottom-nav" class="nav-menu fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40">
     <div class="flex justify-around max-w-2xl mx-auto py-2">
       <a href="./dashboard.html" class="nav-item text-center">
-        <div class="nav-item inline-flex flex-col items-center text-gray-400">
+        <div class="nav-item inline-flex flex-col items-center muted">
           <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 10.5h19.5m-4.5 4.5h-10.5m10.5 0a1.5 1.5 0 0 1 1.5 1.5v3.75a1.5 1.5 0 0 1-1.5 1.5h-10.5a1.5 1.5 0 0 1-1.5-1.5V16.5m1.5-6.042V4.5a1.5 1.5 0 0 1 1.5-1.5h7.5" /></svg>
           <span class="text-xs">Dashboard</span>
         </div>
       </a>
       <a href="./Aprender.html" class="nav-item text-center">
-        <div class="inline-flex flex-col items-center text-gray-400">
+        <div class="inline-flex flex-col items-center muted">
           <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21.5L4 17.5V7.5L12 3.5L20 7.5V17.5L12 21.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 12L20 7.5M12 12V21.5M12 12L4 7.5M4 17.5L12 12M20 17.5L12 12" /></svg>
           <span class="text-xs">Aprender</span>
         </div>
       </a>
       <a href="./Microaprendizaje.html" class="nav-item text-center">
-        <div class="inline-flex flex-col items-center text-gray-400">
+        <div class="inline-flex flex-col items-center muted">
           <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="m15 10.5 4.793-4.793a1 1 0 0 0 0-1.414l-2.06-2.06a1 1 0 0 0-1.414 0L12 7.086 8.707 3.793a1 1 0 0 0-1.414 0l-2.06 2.06a1 1 0 0 0 0 1.414L9 10.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span class="text-xs">Micro</span>
         </div>
       </a>
       <a href="./Carlitos.html" class="nav-item active text-center">
-        <div class="inline-flex flex-col items-center text-purple-400">
+        <div class="inline-flex flex-col items-center" style="color:var(--accent-1)">
           <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span class="text-xs">Perfil</span>
         </div>
@@ -213,14 +320,50 @@
     </div>
   </nav>
 
-  <!-- TOUR elements are created by JS -->
-
+  <!-- TOUR overlay + mentor UI are created by JS -->
+<!-- === PARTE 3 DE 3 === -->
   <script type="module">
+    // usa tu firebase-config.js (asegúrate de que existe en el mismo directorio)
     import { db, auth } from './firebase-config.js';
     import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
     import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
 
+    // LOCAL STORAGE KEY (coincide con onboarding.js)
     const PROFILE_KEY = 'carlitos_profile_data';
+
+    // IMG_PATH vacío porque las imágenes están en el mismo directorio (según lo confirmaste)
+    const IMG_PATH = '';
+
+    // Map de variantes de imagen por tutor (tratamos de cubrir nombres posibles que mencionaste)
+    const TUTOR_IMG_VARIANTS = {
+      'Mono': [
+        'mononormal.png','mononormal.webp','mononormal.jpg',
+        'monoenseñando.png','monoenseñando.webp','monoriendo.png','monoriendo.webp','iconomono.png'
+      ],
+      'Ardilla': [
+        'ardillanormal.png','ardillanormal.webp',
+        'ardillaenseñando.png','ardillaenseñando.webp',
+        'ardillariendo.png','ardillariendo.webp',
+        'ardillaconfundida.png','ardillaconfundida.webp',
+        'iconoardilla.png'
+      ],
+      'Condor': [
+        'condornormal.png','condornormal.webp',
+        'condorenseñando.png','condorenseñando.webp',
+        'condorriendo.png','condorriendo.webp',
+        'condorconfundido.png','condorconfundido.webp',
+        'iconocondor.png'
+      ],
+      'Gata': [
+        'gatanormal.png','gatanormal.webp',
+        'gataenseñando.png','gataenseñando.webp',
+        'gatariendo.png','gatariendo.webp',
+        'gataconfundida.png','gataconfundida.webp',
+        'iconoleopardo.png','iconogata.png',
+        // fallback legacy names
+        'leopardonormal.png','leopardoenselando.png','leopardoriendo.png','leopardoconfundido.png'
+      ]
+    };
 
     // DOM refs
     const DOM = {
@@ -239,17 +382,16 @@
       addGoalBtn: document.getElementById('add-goal-btn'),
       viewDashboardBtn: document.getElementById('view-dashboard-btn'),
       coinsDetailsBtn: document.getElementById('coins-details'),
-      tutorName: document.getElementById('tutor-name'),
-      tutorRole: document.getElementById('tutor-role'),
-      tutorDesc: document.getElementById('tutor-description'),
       tutorIcon: document.getElementById('tutor-icon-container'),
+      tutorRoleDisplay: document.getElementById('tutor-role-display'),
+      tutorDescriptionDisplay: document.getElementById('tutor-description'),
       tutorMission: document.getElementById('first-mission-text'),
       resetBtn: document.getElementById('reset-button'),
       repeatTourBtn: document.getElementById('repeat-tour-btn'),
       signoutBtn: document.getElementById('signout-btn'),
     };
 
-    // Levels & Tools
+    // Levels & Tools (las mismas)
     const LEVELS = [
       { name: "Novato", minXP: 0, maxXP: 100, title: "El Curioso", toolsRequired: 0 },
       { name: "Aprendiz", minXP: 100, maxXP: 350, title: "El Experimentador", toolsRequired: 1 },
@@ -264,39 +406,73 @@
       { id: 'control_deuda', name: 'Control de Deuda', requiredLevel: 4 },
     ];
 
-    // Tutor visuals
+    // Tutor info (roles & descriptions — ampliadas)
     const TUTOR_DATA = {
-      'Kantu': {
+      'Mono': {
         role: 'El Ilustrador (Empezando)',
-        description: 'Te motivará con humor y simplificará cualquier concepto difícil. Tu camino será paso a paso y sin presiones.',
-        mission: (goal) => `Comienza con el reto de presupuesto de 5 minutos para avanzar en **${goal || 'tu objetivo'}**.`,
-        svg: '<span class="text-5xl">🐒</span>',
-        teachImage: 'monoenseñando.png'
+        description: 'Alegre y cercano: te enseña con ejemplos cotidianos, pequeñas prácticas y humor para que lo aprendas paso a paso. Ideal si empiezas y quieres aprender jugando.',
+        mission: (goal) => `Haz el reto de presupuesto de 5 minutos para avanzar en ${goal || 'tu objetivo'}.`,
+        color: '#10b981' // verde
       },
-      'Saison': {
-        role: 'El Explorador (Aprendiendo)',
-        description: 'Te animará a experimentar con nuevas herramientas y hábitos, manteniendo viva tu curiosidad.',
-        mission: (goal) => `Explora métodos de ahorro rápido y crea un plan semanal para **${goal || 'tu meta'}**.`,
-        svg: '<span class="text-5xl">🐿️</span>',
-        teachImage: 'ardillaenseñando.png'
+      'Ardilla': {
+        role: 'La Ardilla (Emprendedora)',
+        description: 'Enérgica y práctica: te impulsa a probar nuevas rutinas de ahorro y recompensas rápidas. Perfecta para quienes quieren resultados inmediatos y mantener motivación.',
+        mission: (goal) => `Crea un plan semanal de ahorro para avanzar en ${goal || 'tu meta'}.`,
+        color: '#f97316' // naranja
       },
-      'Inti': {
+      'Condor': {
         role: 'El Estratega (Mejorando)',
-        description: 'Te dará estructura y visión a mediano plazo para optimizar tus finanzas.',
-        mission: (goal) => `Analiza tu flujo de caja y busca optimizaciones para **${goal || 'tu meta'}**.`,
-        svg: '<span class="text-5xl">🦅</span>',
-        teachImage: 'condorenseñando.png'
+        description: 'Analítico y visionario: te ayuda a planear a mediano/largo plazo, optimizar flujos y pensar en inversiones. Ideal si quieres estructura y metas ambiciosas.',
+        mission: (goal) => `Analiza tu flujo de caja y busca optimizaciones para ${goal || 'tu meta'}.`,
+        color: '#1e40af' // azul
       },
-      'Auki': {
-        role: 'El Optimizador (Avanzado)',
-        description: 'Actuará como consejero avanzado para estrategias de inversión.',
-        mission: (goal) => `Revisa o simula un portafolio para optimizar **${goal || 'tu meta'}**.`,
-        svg: '<span class="text-5xl">🐱</span>',
-        teachImage: 'leopardoenseñando.png'
+      'Gata': {
+        role: 'La Analítica (Avanzado)',
+        description: 'Precisa y práctica: te reta con datos, revisa detalles y te guía en simulaciones. Recomendada si buscas perfeccionar estrategias y entender números.',
+        mission: (goal) => `Revisa o simula un portafolio para optimizar ${goal || 'tu meta'}.`,
+        color: '#7c3aed' // violeta
       }
     };
 
-    // Utils
+    // ----------------- Utils -----------------
+    function normalizeTutorKey(raw) {
+      if (!raw) return 'Mono';
+      const s = raw.toString().toLowerCase();
+      if (s.includes('condor') || s.includes('cóndor') || s.includes('inti')) return 'Condor';
+      if (s.includes('ardilla') || s.includes('saison')) return 'Ardilla';
+      if (s.includes('gata') || s.includes('leopardo') || s.includes('auri') || s.includes('gato')) return 'Gata';
+      if (s.includes('mono') || s.includes('mono choro') || s.includes('kantu')) return 'Mono';
+      return 'Mono';
+    }
+
+    // Try a list of filenames until one loads (return the element and set onerror chain)
+    function createImgWithFallbacks(variants = [], onReady) {
+      const img = new Image();
+      img.style.width = '100%';
+      img.style.height = '100%';
+      img.style.objectFit = 'cover';
+      let i = 0;
+      function tryNext() {
+        if (i >= variants.length) {
+          if (onReady) onReady(img);
+          return;
+        }
+        const candidate = variants[i];
+        img.onerror = () => { i++; tryNext(); };
+        img.onload = () => { if (onReady) onReady(img); };
+        img.src = candidate.startsWith('http') || candidate.startsWith('/') ? candidate : (IMG_PATH + candidate);
+      }
+      tryNext();
+      return img;
+    }
+
+    function getFirstValidImage(variantList) {
+      return new Promise(resolve => {
+        createImgWithFallbacks(variantList, (el) => resolve(el));
+      });
+    }
+
+    // Progress util
     function calculateProgress(totalXp) {
       let currentLevel = LEVELS[0];
       let progressPercentage = 0;
@@ -313,6 +489,7 @@
       return { level: lastLevel, progressPercentage: 100, xpToNextLevel: lastLevel.maxXP, currentLevelXp: totalXp };
     }
 
+    // Rendering helpers
     function renderToolList(level) {
       const container = DOM.toolList;
       container.innerHTML = '';
@@ -320,13 +497,13 @@
       ALL_TOOLS.forEach(tool => {
         const isUnlocked = tool.requiredLevel <= userLevelNumber;
         const div = document.createElement('div');
-        div.className = `flex items-center justify-between p-3 rounded-lg transition ${isUnlocked ? 'bg-gray-800/30' : 'bg-gray-900/40 opacity-60'}`;
+        div.className = `flex items-center justify-between p-3 rounded-lg transition ${isUnlocked ? 'bg-white' : 'bg-gray-50 opacity-70'}`;
         div.innerHTML = `
-          <span class="${isUnlocked ? 'text-gray-300' : 'text-gray-500'} flex items-center">
-            ${isUnlocked ? '<span class="mr-3 text-xl text-green-400">✅</span>' : '<span class="mr-3 text-xl text-red-500">🔒</span>'}
+          <span class="${isUnlocked ? 'text-black' : 'text-gray-400'} flex items-center">
+            ${isUnlocked ? '<span class="mr-3 text-xl" style="color:#10b981">✅</span>' : '<span class="mr-3 text-xl text-red-400">🔒</span>'}
             ${tool.name}
           </span>
-          <span class="${isUnlocked ? 'text-green-400' : 'text-gray-500'} text-xs font-bold">Nivel ${tool.requiredLevel}</span>
+          <span class="${isUnlocked ? 'text-indigo-600' : 'text-gray-400'} text-xs font-bold">Nivel ${tool.requiredLevel}</span>
         `;
         container.appendChild(div);
       });
@@ -336,7 +513,7 @@
       const container = DOM.goalsSummary;
       container.innerHTML = '';
       if (!goals || goals.length === 0) {
-        container.innerHTML = `<p class="text-gray-400">Aún no tienes metas. Crea tu primera meta en el Dashboard.</p>`;
+        container.innerHTML = `<p class="muted">Aún no tienes metas. Crea tu primera meta en el Dashboard.</p>`;
         return;
       }
       goals.forEach((g, idx) => {
@@ -344,16 +521,16 @@
         const target = Number(g.target || 1);
         const pct = Math.min(100, Math.round((current / target) * 100));
         const goalDiv = document.createElement('div');
-        goalDiv.className = 'p-3 bg-gray-800/30 rounded-lg';
+        goalDiv.className = 'p-3 bg-white rounded-lg border border-gray-50';
         goalDiv.innerHTML = `
           <div class="flex justify-between items-start">
             <div>
-              <p class="font-semibold text-gray-200">${g.title || 'Meta #' + (idx+1)}</p>
-              <p class="text-xs text-gray-400">${(current).toLocaleString('es-CL')} / ${(target).toLocaleString('es-CL')}</p>
+              <p class="font-semibold text-black">${g.title || 'Meta #' + (idx+1)}</p>
+              <p class="text-xs muted">${(current).toLocaleString('es-CL')} / ${(target).toLocaleString('es-CL')}</p>
             </div>
-            <div class="text-xs text-pink-300 font-bold">${pct}%</div>
+            <div class="text-xs text-pink-500 font-bold">${pct}%</div>
           </div>
-          <div class="mt-2 w-full bg-gray-900/50 rounded-full h-3 overflow-hidden">
+          <div class="mt-2 w-full bg-gray-100 rounded-full h-3 overflow-hidden">
             <div style="width:${pct}%" class="h-3 bg-gradient-to-r from-pink-500 to-pink-300"></div>
           </div>
           <div class="mt-3 flex justify-end">
@@ -371,8 +548,8 @@
       });
     }
 
-    // Display profile
-    function displayProfile(profile = {}) {
+    // Display profile: fills UI and places tutor image + description with themed color
+    async function displayProfile(profile = {}) {
       profile.totalXP = Number(profile.totalXP || 0);
       profile.carlitosCoins = Number(profile.carlitosCoins || 0);
       profile.primaryGoal = profile.primaryGoal || 'tu objetivo';
@@ -393,14 +570,23 @@
       renderToolList(prog.level);
       renderGoals(profile.goals);
 
-      const tutorKey = profile.assignedTutor || 'Kantu';
-      const tutorInfo = TUTOR_DATA[tutorKey] || TUTOR_DATA['Kantu'];
-      DOM.tutorName.textContent = tutorKey;
-      DOM.tutorRole.textContent = tutorInfo.role;
-      DOM.tutorDesc.textContent = tutorInfo.description;
-      DOM.tutorIcon.innerHTML = tutorInfo.svg;
-      DOM.tutorMission.textContent = tutorInfo.mission(profile.primaryGoal);
+      // Tutor image and description with theme color
+      const rawAssigned = profile.assignedTutor || '';
+      const tutorKey = normalizeTutorKey(rawAssigned);
+      const variants = TUTOR_IMG_VARIANTS[tutorKey] || [];
+      DOM.tutorIcon.innerHTML = '';
+      const img = await getFirstValidImage(variants);
+      DOM.tutorIcon.appendChild(img);
 
+      // Set description & role and theme color
+      const tutorInfo = TUTOR_DATA[tutorKey] || TUTOR_DATA['Mono'];
+      DOM.tutorRoleDisplay.textContent = tutorInfo.role;
+      DOM.tutorDescriptionDisplay.textContent = tutorInfo.description;
+      DOM.tutorDescriptionDisplay.style.color = tutorInfo.color;
+      DOM.tutorRoleDisplay.style.color = tutorInfo.color;
+      DOM.tutorMission.textContent = tutorInfo.mission(profile.primaryGoal || '');
+
+      profile.assignedTutor = rawAssigned || tutorKey;
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
     }
 
@@ -421,7 +607,7 @@
                   carlitosCoins: data.carlitosCoins || data.coins || 0,
                   primaryGoal: data.primaryGoal || data.meta || '',
                   goals: data.goals || data.metas || [],
-                  assignedTutor: data.assignedTutor || data.mentor || 'Kantu',
+                  assignedTutor: data.assignedTutor || (data.profile && data.profile.assignedTutor) || 'Mono',
                   createdAt: data.createdAt || data.fecha || new Date().toISOString()
                 };
                 localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
@@ -429,7 +615,7 @@
               } else {
                 const local = localStorage.getItem(PROFILE_KEY);
                 if (local) resolve(JSON.parse(local));
-                else resolve({ name: user.displayName || 'Usuario', role: '', totalXP:0, carlitosCoins:0, goals: [], assignedTutor: 'Kantu', primaryGoal: '' });
+                else resolve({ name: user.displayName || 'Usuario', role: '', totalXP:0, carlitosCoins:0, goals: [], assignedTutor: 'Mono', primaryGoal: '' });
               }
             } catch (e) {
               console.error('Error leyendo Firestore:', e);
@@ -443,155 +629,260 @@
         });
       });
     }
+// 🌍 Configuración adaptativa del tour
+if (window.innerWidth < 768) {
+  // Cambia la posición de los tooltips para que aparezcan arriba del elemento
+  if (window.tourSteps) {
+    tourSteps.forEach(step => {
+      if (step.attachTo) step.attachTo.on = 'top';
+    });
+  }
+
+  // Si usas Spotlight:
+  if (window.Spotlight) {
+    Spotlight.config({
+      scrollTo: true,
+      scrollOffset: 120,
+    });
+  }
+
+  // Si usas Shepherd:
+  if (window.Shepherd) {
+    Shepherd.Tour.prototype.options.scrollTo = true;
+  }
+}
 
     /* -----------------------
-       TOUR: floating mentor + speech bubble + scroll + highlight
+       TOUR: floating mentor + speech bubble + scroll + spotlight (circular salvo nav)
        ----------------------- */
-    let tourState = { active: false, step: 0, steps: [] };
+    let tourState = { active: false, step: 0, steps: [], overlayEl: null, mentorEl: null, bubbleEl: null, typingLock: false };
 
     function buildTourSteps(profile) {
-      const tutorKey = profile.assignedTutor || 'Kantu';
-      const teachImg = (TUTOR_DATA[tutorKey] && TUTOR_DATA[tutorKey].teachImage) ? TUTOR_DATA[tutorKey].teachImage : 'monoenseñando.png';
+      const rawAssigned = profile.assignedTutor || '';
+      const tutorKey = normalizeTutorKey(rawAssigned);
+      const tutorVariants = TUTOR_IMG_VARIANTS[tutorKey] || [];
       return [
-        { sel: '#user-avatar', title: 'Tu perfil', text: `¡Hola! Soy ${tutorKey} y seré tu mentor. Aquí ves tu avatar, nombre y rol.` },
-        { sel: '#coins-details', title: 'Tus CarlitosCoins', text: 'Aquí está tu saldo. Pulsa "Ver más detalles" para ir al Dashboard y ver movimientos.' },
-        { sel: '#goals-section', title: 'Tus metas', text: 'Esta sección muestra tus metas con barras de progreso. Pulsa "Ver detalle" para ver más en el Dashboard.' },
-        { sel: '#tools-section', title: 'Herramientas', text: 'Aquí se muestran las herramientas que desbloqueas por nivel.' },
-        { sel: '#mentor-section', title: 'Tu Mentor', text: 'Aquí puedes ver la descripción y la próxima misión que te asigno.' },
-        { sel: '.nav-menu', title: 'Menú inferior', text: 'Este menú te permite navegar entre Dashboard, Aprender, Microaprendizaje y Perfil.' }
-      ].map(s => ({ ...s, teachImg }));
+        { sel: '#progress-card', title: 'Bienvenida', text: `¡Hola! Soy tu mentor. Te guiaré por Carlitos Home para que aproveches todas las funciones.`, imgVariantList: tutorVariants },
+        { sel: '#user-avatar', title: 'Tu perfil', text: `Aquí puedes ver tu avatar, nombre y rol. Personaliza tu apodo en el Dashboard.`, imgVariantList: tutorVariants },
+        { sel: '#coins-details', title: 'Tus CarlitosCoins', text: 'Tus CarlitosCoins se obtienen por cada sesión de aprendizaje registrada y por usar herramientas desbloqueadas. ¡Úsalos para recompensas!', imgVariantList: tutorVariants },
+        { sel: '#goals-section', title: 'Tus metas', text: 'En esta sección gestiona y revisa tus metas con barras de progreso. Pulsa "Ver detalle" para ir al Dashboard y editar la meta.', imgVariantList: tutorVariants },
+        { sel: '#tools-section', title: 'Herramientas', text: 'En el Dashboard encontrarás las herramientas que desbloqueas (registro de gastos, planificador, simulador). Úsalas para entender tu flujo de dinero.', imgVariantList: tutorVariants },
+        { sel: '#mentor-section', title: 'Tu Mentor', text: 'Aquí aparezco yo (imagen y descripción). Revisaré tu progreso y te asignaré misiones prácticas.', imgVariantList: tutorVariants },
+        { sel: '#bottom-nav', title: 'Menú inferior', text: 'Navega por: Dashboard (herramientas y registros), Aprender (lecciones de 5 min) y Micro (videos cortos, entretenidos y educativos).', imgVariantList: tutorVariants },
+        { sel: '#progress-card', title: 'Siguiente paso', text: '¡Listo! Si quieres repetir este recorrido, pulsa "🎓 Repetir Tour Guiado". ¡A aprender!', imgVariantList: tutorVariants }
+      ];
     }
 
     function createTourUI(profile) {
-      // overlay
-      let overlay = document.getElementById('tour-overlay');
-      if (overlay) overlay.remove();
-      overlay = document.createElement('div');
+      // cleanup existing
+      const old = document.getElementById('tour-overlay');
+      if (old) old.remove();
+      const oldMent = document.getElementById('tour-mentor-image');
+      if (oldMent) oldMent.remove();
+      const oldBubble = document.getElementById('tour-mentor-bubble');
+      if (oldBubble) oldBubble.remove();
+
+      // overlay (spotlight)
+      const overlay = document.createElement('div');
       overlay.className = 'tour-overlay';
       overlay.id = 'tour-overlay';
+      document.body.appendChild(overlay);
+      tourState.overlayEl = overlay;
 
-      // mentor image element
-      const tutorKey = profile.assignedTutor || 'Kantu';
-      const imgSrc = (TUTOR_DATA[tutorKey] && TUTOR_DATA[tutorKey].teachImage) ? TUTOR_DATA[tutorKey].teachImage : 'monoenseñando.png';
-
+      // mentor image element (pointer-events none)
       const mentorImg = document.createElement('img');
       mentorImg.id = 'tour-mentor-image';
       mentorImg.className = 'mentor-image-tour mentor-float';
-      mentorImg.src = imgSrc;
+      mentorImg.src = '';
       mentorImg.alt = 'Mentor';
-      mentorImg.onerror = () => { mentorImg.src = 'monoenseñando.png'; };
+      document.body.appendChild(mentorImg);
+      tourState.mentorEl = mentorImg;
 
       // speech bubble
       const bubble = document.createElement('div');
       bubble.id = 'tour-mentor-bubble';
       bubble.className = 'mentor-bubble';
-      bubble.style.left = '20px';
-      bubble.style.top = '20px';
-      bubble.innerHTML = `<div id="tour-bubble-content"><strong>Hola</strong><p></p></div><div class="tour-controls" style="margin-top:8px;"><button id="tour-skip" class="btn-ghost">Omitir</button><button id="tour-prev" class="btn-ghost">Atrás</button><button id="tour-next" class="btn-primary">Siguiente</button></div>`;
+      bubble.style.left = '24px';
+      bubble.style.top = '24px';
+      bubble.innerHTML = `<div id="tour-bubble-content"><strong>Hola</strong><div class="bubble-text" style="min-height:36px;"></div></div>
+        <div class="tour-controls" style="margin-top:10px;">
+          <button id="tour-skip" class="btn-ghost">Omitir</button>
+          <button id="tour-prev" class="btn-ghost">Atrás</button>
+          <button id="tour-next" class="btn-primary">Siguiente</button>
+        </div>`;
+      document.body.appendChild(bubble);
+      tourState.bubbleEl = bubble;
 
-      overlay.appendChild(mentorImg);
-      overlay.appendChild(bubble);
-      document.body.appendChild(overlay);
+      bubble.querySelector('#tour-skip').onclick = () => endTour(true);
+      bubble.querySelector('#tour-prev').onclick = () => { if (tourState.step > 0) { tourState.step--; showTourStep(); } };
+      bubble.querySelector('#tour-next').onclick = () => {
+        if (tourState.typingLock) { finishTypingNow(); return; }
+        tourState.step++;
+        if (tourState.step >= tourState.steps.length) return endTour();
+        showTourStep();
+      };
     }
 
-    // move mentor image & bubble to a target rect (mentor will sit to top-right of target)
+    // compute spotlight (circular) or rectangular for bottom nav
+    function setSpotlightForRect(rect) {
+      const overlay = tourState.overlayEl;
+      if (!overlay) return;
+
+      // detect nav bar: if selector height small and bottom area
+      const isNav = rect.top > (window.innerHeight - 160) || rect.id === 'bottom-nav' || rect.top > window.innerHeight - 160;
+      if (isNav) {
+        // rectangular spotlight covering the nav bar (soft edges)
+        const top = Math.max(0, rect.top - 12);
+        const bottom = Math.min(window.innerHeight, rect.bottom + 12);
+        const left = Math.max(0, rect.left - 12);
+        const right = Math.min(window.innerWidth, rect.right + 12);
+        // build a gradient that is transparent at the nav band and dark elsewhere (vertical)
+        overlay.style.background = `linear-gradient(to bottom,
+          rgba(0,0,0,0.55) 0%,
+          rgba(0,0,0,0.55) ${top}px,
+          rgba(0,0,0,0) ${top}px,
+          rgba(0,0,0,0) ${bottom}px,
+          rgba(0,0,0,0.55) ${bottom}px,
+          rgba(0,0,0,0.55) 100%)`;
+        return;
+      }
+
+      // else circular default: set CSS variables used by radial-gradient in CSS
+      const cx = Math.round(rect.left + rect.width / 2);
+      const cy = Math.round(rect.top + rect.height / 2);
+      const halfW = rect.width / 2;
+      const halfH = rect.height / 2;
+      const r = Math.ceil(Math.sqrt(halfW * halfW + halfH * halfH) + 28);
+      overlay.style.removeProperty('background');
+      overlay.style.setProperty('--spot-x', cx + 'px');
+      overlay.style.setProperty('--spot-y', cy + 'px');
+      overlay.style.setProperty('--spot-r', r + 'px');
+      overlay.style.background =
+        `radial-gradient(circle at ${cx}px ${cy}px, rgba(0,0,0,0) calc(${r}px - 6px), rgba(0,0,0,0.55) calc(${r}px - 6px + 8px))`;
+    }
+
     function moveMentorToTarget(targetRect) {
-      const mentor = document.getElementById('tour-mentor-image');
-      const bubble = document.getElementById('tour-mentor-bubble');
+      const mentor = tourState.mentorEl;
+      const bubble = tourState.bubbleEl;
       if (!mentor || !bubble) return;
 
-      // compute desired mentor position: top-right of target, but keep inside viewport
       const margin = 12;
-      const preferredLeft = targetRect.right + 12; // to the right
-      const preferredTop = targetRect.top - (mentor.offsetHeight / 2);
+      let preferredLeft = Math.min(window.innerWidth - mentor.offsetWidth - 16, targetRect.right + 12);
+      let preferredTop = targetRect.top + (targetRect.height / 2) - (mentor.offsetHeight / 2);
 
-      // fallback: if not enough space right, place to left
-      let left = preferredLeft;
-      if (preferredLeft + mentor.offsetWidth + margin > window.innerWidth) {
-        left = Math.max(margin, targetRect.left - mentor.offsetWidth - 12);
+      if (preferredLeft + mentor.offsetWidth + margin > window.innerWidth - 8) {
+        preferredLeft = Math.max(margin, targetRect.left - mentor.offsetWidth - 12);
       }
-      // clamp vertically
-      let top = preferredTop;
-      if (top < margin) top = margin + 20;
+      if (preferredLeft < margin) preferredLeft = margin;
+
+      let left = Math.round(preferredLeft);
+      let top = Math.round(preferredTop);
+      if (top < margin) top = margin + 16;
       if (top + mentor.offsetHeight + margin > window.innerHeight) top = window.innerHeight - mentor.offsetHeight - margin;
 
-      // animate by setting left/top
       mentor.style.left = `${left}px`;
       mentor.style.top = `${top}px`;
 
-      // position bubble close to mentor (above or left depending)
       const bubbleLeft = left - (bubble.offsetWidth / 2) + (mentor.offsetWidth / 2);
-      let bubbleTop = top - bubble.offsetHeight - 14;
-      if (bubbleTop < 12) bubbleTop = top + mentor.offsetHeight + 12; // put below if not enough above
+      let bubbleTop = top - bubble.offsetHeight - 12;
+      if (bubbleTop < 12) bubbleTop = top + mentor.offsetHeight + 12;
       bubble.style.left = `${Math.max(12, Math.min(window.innerWidth - bubble.offsetWidth - 12, bubbleLeft))}px`;
-      bubble.style.top = `${bubbleTop}px`;
+      bubble.style.top = `${Math.max(12, Math.min(window.innerHeight - bubble.offsetHeight - 12, bubbleTop))}px`;
     }
 
-    // scroll to target and highlight
     function focusOnSelector(selector) {
       const target = document.querySelector(selector);
       if (target) {
-        // scroll so the element is visible (center-ish)
         target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-        // compute rect after a small delay to allow scroll
         return new Promise((resolve) => {
           setTimeout(() => {
             const rect = target.getBoundingClientRect();
-            // add highlight class
+            document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
             target.classList.add('tour-highlight');
-            // remove after tour finishes
             resolve(rect);
-          }, 520); // should match animation timing nicely
+          }, 520);
         });
       } else {
-        // center on screen
         return new Promise((resolve) => {
-          setTimeout(() => resolve({ left: window.innerWidth / 2 - 60, top: window.innerHeight / 2 - 60, right: window.innerWidth / 2 + 60 }), 350);
+          setTimeout(() => resolve({ left: window.innerWidth / 2 - 60, top: window.innerHeight / 2 - 60, right: window.innerWidth / 2 + 60, width:120, height:120 }), 350);
         });
       }
     }
 
-    function showTourStep() {
+    // Typing effect ---------------------------------------------------------
+    let typingTimer = null;
+    function typeText(containerEl, text, speed = 18, cb) {
+      tourState.typingLock = true;
+      containerEl.innerHTML = '';
+      let i = 0;
+      const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
+      const tutorKey = normalizeTutorKey(profile.assignedTutor || '');
+      setMentorStateImage(tutorKey, 'enseñando');
+
+      typingTimer = setInterval(() => {
+        containerEl.innerHTML += text[i] === ' ' ? ' ' : text[i];
+        i++;
+        if (i >= text.length) {
+          clearInterval(typingTimer);
+          typingTimer = null;
+          tourState.typingLock = false;
+          setTimeout(() => {
+            setMentorStateImage(tutorKey, 'normal');
+          }, 350);
+          if (cb) cb();
+        }
+      }, speed);
+    }
+
+    function finishTypingNow() {
+      if (!tourState.typingLock) return;
+      clearInterval(typingTimer);
+      const bubbleTextEl = tourState.bubbleEl.querySelector('.bubble-text');
+      const step = tourState.steps[tourState.step];
+      bubbleTextEl.innerHTML = step ? step.text : '';
+      tourState.typingLock = false;
+      const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
+      const tutorKey = normalizeTutorKey(profile.assignedTutor || '');
+      setMentorStateImage(tutorKey, 'normal');
+    }
+    // ----------------------------------------------------------------------
+
+    async function setMentorStateImage(tutorKeyRaw, state = 'normal') {
+      const tutorKey = normalizeTutorKey(tutorKeyRaw);
+      const list = (TUTOR_IMG_VARIANTS[tutorKey] || []).slice();
+      const prioritized = [];
+      const stateLower = state.toLowerCase().replace('ñ','n');
+      list.forEach(fn => {
+        const lower = fn.toLowerCase();
+        if (lower.includes(stateLower) || lower.includes(stateLower.replace('n','ñ'))) prioritized.push(fn);
+      });
+      const combined = prioritized.concat(list.filter(x => !prioritized.includes(x)));
+      const img = await getFirstValidImage(combined);
+      if (img && tourState.mentorEl) tourState.mentorEl.src = img.src;
+    }
+
+    async function showTourStep() {
       const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
       const step = tourState.steps[tourState.step];
-      const bubble = document.getElementById('tour-mentor-bubble');
-      const mentor = document.getElementById('tour-mentor-image');
+      const bubble = tourState.bubbleEl;
+      const mentor = tourState.mentorEl;
       if (!step || !bubble || !mentor) return endTour();
 
-      // clear previous highlights
       document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
 
-      focusOnSelector(step.sel).then(rect => {
-        // move mentor to a nice place relative to rect
+      focusOnSelector(step.sel).then(async rect => {
+        setSpotlightForRect(rect);
         moveMentorToTarget(rect);
 
-        // set bubble text
-        const content = bubble.querySelector('#tour-bubble-content p');
         bubble.querySelector('#tour-bubble-content strong').textContent = step.title || '';
-        content.textContent = step.text || '';
+        const bubbleTextEl = bubble.querySelector('.bubble-text');
 
-        // set controls
-        const nextBtn = document.getElementById('tour-next');
-        const prevBtn = document.getElementById('tour-prev');
-        const skipBtn = document.getElementById('tour-skip');
+        await setMentorStateImage(profile.assignedTutor || '', 'enseñando');
 
+        typeText(bubbleTextEl, step.text || '', 18);
+
+        const nextBtn = bubble.querySelector('#tour-next');
         nextBtn.textContent = (tourState.step === tourState.steps.length - 1) ? 'Finalizar' : 'Siguiente';
-
-        nextBtn.onclick = () => {
-          // remove highlight for current target (so next highlight stands out)
-          document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
-          tourState.step++;
-          if (tourState.step >= tourState.steps.length) return endTour();
-          showTourStep();
-        };
-        prevBtn.onclick = () => {
-          if (tourState.step > 0) {
-            document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
-            tourState.step--;
-            showTourStep();
-          }
-        };
-        skipBtn.onclick = () => endTour(true);
       });
     }
 
@@ -601,16 +892,15 @@
       tourState.step = 0;
       createTourUI(profile);
       tourState.active = true;
-
-      // give a moment for DOM nodes to exist, then show first step
-      setTimeout(() => showTourStep(), 300);
+      setTimeout(() => showTourStep(), 350);
     }
 
     function endTour(skipSave = false) {
       document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
-      const overlay = document.getElementById('tour-overlay');
-      if (overlay) overlay.remove();
-      tourState.active = false;
+      if (tourState.overlayEl) tourState.overlayEl.remove();
+      if (tourState.mentorEl) tourState.mentorEl.remove();
+      if (tourState.bubbleEl) tourState.bubbleEl.remove();
+      tourState = { active: false, step: 0, steps: [], overlayEl: null, mentorEl: null, bubbleEl: null, typingLock: false };
       if (!skipSave) localStorage.setItem('tutorialCompleted', 'true');
     }
 
@@ -646,22 +936,34 @@
       }
     });
 
-    // goal detail navigation from goals list is wired in renderGoals
-
-    // Init: load profile and maybe auto-start tour
+    // Init: load profile and maybe auto-start tour AFTER firebase auth resolved
     (async function init() {
       const profile = await loadProfile();
       if (!profile) {
         window.location.href = './onboarding.html';
         return;
       }
-      displayProfile(profile);
+      await displayProfile(profile);
       const seen = localStorage.getItem('tutorialCompleted');
       if (!seen) {
         setTimeout(() => startTour(profile), 650);
       }
     })();
 
+    // keep overlay spotlight responsive on resize
+    window.addEventListener('resize', () => {
+      if (tourState.active && tourState.steps.length > 0) {
+        const step = tourState.steps[tourState.step];
+        const el = document.querySelector(step.sel);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          setSpotlightForRect(rect);
+          moveMentorToTarget(rect);
+        }
+      }
+    });
+
   </script>
 </body>
 </html>
+<!-- === FIN DEL ARCHIVO === -->

@@ -1,0 +1,588 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Carlitos — Aprende a dominar tu dinero</title>
+  <meta name="description" content="Carlitos te ayuda a entender el dinero, tomar decisiones financieras y construir hábitos sanos con microaprendizajes y mentoría interactiva." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root{
+      --bg1:#0ea5e9;
+      --bg2:#10b981;
+      --glass-bg: rgba(255,255,255,0.12);
+      --glass-border: rgba(255,255,255,0.18);
+      --accent1: #7dd3fc;
+      --accent2: #34d399;
+    }
+    html,body{height:100%}
+    body{
+      font-family: 'Poppins', Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: radial-gradient(1200px 400px at 10% 10%, rgba(255,255,255,0.03), transparent),
+                  linear-gradient(135deg,var(--bg1), var(--bg2));
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      color: #04243a;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .glass{
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(10px) saturate(120%);
+      -webkit-backdrop-filter: blur(10px) saturate(120%);
+      box-shadow: 0 10px 30px rgba(2,6,23,0.18);
+      border-radius: 14px;
+    }
+
+    .card { transition: transform .22s ease, box-shadow .22s ease; border-radius: 12px; overflow: hidden; }
+    .card:hover{ transform: translateY(-6px) scale(1.01); box-shadow:0 20px 40px rgba(2,6,23,0.2); }
+
+    .btn-accent{
+      background: linear-gradient(90deg,var(--accent1), var(--accent2));
+      color: white;
+      border-radius: 999px;
+      padding: 10px 20px;
+      font-weight: 600;
+      box-shadow: 0 8px 20px rgba(16,185,129,0.18);
+    }
+
+    .placeholder {
+      background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .countdown {
+      background: rgba(255,255,255,0.06);
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    @media (max-width: 768px){ .desktop-only{display:none} }
+  </style>
+</head>
+<body class="antialiased">
+
+  <div class="max-w-6xl mx-auto p-6">
+<header class="flex items-center justify-between mb-6">
+  <div class="flex items-center gap-3">
+    <h1 class="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-emerald-400 to-sky-400 bg-clip-text text-transparent drop-shadow-lg tracking-wide">
+      CARLITOS
+    </h1>
+  </div>
+
+  <nav class="hidden md:flex items-center gap-4 text-white/90">
+    <a href="#problem" class="hover:underline">Problema</a>
+    <a href="#features" class="hover:underline">Funcionalidades</a>
+    <a href="#how" class="hover:underline">Cómo</a>
+    <a href="#form" class="hover:underline">Encuesta</a>
+    <a href="#community" class="hover:underline">Comunidad</a>
+    <button id="openDemo" class="btn-accent ml-2 desktop-only">Ser parte de la comunidad</button>
+  </nav>
+</header>
+
+<!-- HERO -->
+<section class="grid md:grid-cols-2 gap-6 items-center mb-10">
+  <div class="space-y-4">
+    <h1 class="text-4xl md:text-5xl font-extrabold text-white leading-tight">Aprende, mejora y domina tu dinero — <span style="color: white">con <span style="background:linear-gradient(90deg,var(--accent1),var(--accent2)); -webkit-background-clip:text; color:transparent">Carlitos</span></span></h1>
+    <p class="text-white/90 max-w-2xl">Micro-sesiones, simuladores reales y mentoría guiada para quienes aún no empiezan, los que ya comenzaron y los que quieren optimizar. Empieza hoy a tener hábitos financieros saludables y entender el ¿Por qué? de las finanzas y economía.</p>
+
+    <div class="flex gap-3 items-center mt-3">
+      <button id="ctaDemo" class="btn-accent">Ser parte de la comunidad</button>
+      <div id="countdownTimer" class="countdown text-white/95 ml-2">Cargando temporizador...</div>
+      <a href="#features" class="text-white/80 hover:underline">Ver funcionalidades →</a>
+    </div>
+
+    <div class="mt-6 grid grid-cols-3 gap-3">
+      <button class="glass p-3 text-sm text-center" data-stage="no-start">🐣 Aún no empiezo</button>
+      <button class="glass p-3 text-sm text-center" data-stage="starting">🚀 Estoy empezando</button>
+      <button class="glass p-3 text-sm text-center" data-stage="progressing">🧭 Ya comencé</button>
+    </div>
+  </div>
+
+  <div class="flex justify-center">
+    <div class="glass card p-6 max-w-md w-full flex items-center justify-center">
+      <img src="bienvenida.png" alt="Carlitos hero" class="w-80 h-auto drop-shadow-2xl">
+    </div>
+  </div>
+</section>
+
+<!-- REFLECTION -->
+<section class="text-center mb-12">
+  <div class="glass p-6 inline-block">
+    <h3 class="text-2xl font-semibold mb-2">Si no sabes manejar 10 dólares hoy...</h3>
+    <p class="text-white/90">...mañana no podrás manejar más. Ahora es el momento de aprender. Pequeños hábitos generan grandes resultados. Carlitos te enseña cómo.</p>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section id="problem" class="mb-12">
+  <h2 class="text-2xl font-bold text-white mb-3">El problema 💸</h2>
+  <p class="text-white/90 max-w-3xl">Muchos jóvenes no reciben educación financiera práctica. Viven con sus familias, entran a la vida laboral sin hábitos financieros y toman decisiones por impulso. Otros ya empezaron pero necesitan estructura. Sin contexto, no hay progreso sostenible.</p>
+
+  <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="placeholder glass card p-4 text-white/90 text-sm text-left">
+      <strong>Gastos impulsivos</strong>
+      <p class="mt-2 text-xs">Sin presupuesto, el dinero se va sin objetivos.</p>
+    </div>
+    <div class="placeholder glass card p-4 text-white/90 text-sm text-left">
+      <strong>Sin ahorro consistente</strong>
+      <p class="mt-2 text-xs">No hay metas claras ni seguimiento.</p>
+    </div>
+    <div class="placeholder glass card p-4 text-white/90 text-sm text-left">
+      <strong>Miedo a invertir</strong>
+      <p class="mt-2 text-xs">Falta de contexto y confianza para dar el primer paso.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features" class="mb-12">
+  <h2 class="text-2xl font-bold text-white mb-4">Funcionalidades completas de Carlitos 🚀</h2>
+  <p class="text-white/90 mb-6 max-w-3xl">Carlitos combina educación, herramientas y motivación — todo en una experiencia gamificada y personalizada.</p>
+  <div class="grid md:grid-cols-3 gap-4">
+    <!-- algunos features (omitidos para brevedad visual) -->
+    <div class="glass card p-5">
+      <div class="flex items-start gap-3">
+        <div class="text-3xl">🧭</div>
+        <div>
+          <h4 class="font-semibold text-white">Mentor inteligente</h4>
+          <p class="text-white/80 text-sm mt-1">Consejos, recordatorios y rutas personalizadas según tu progreso.</p>
+        </div>
+      </div>
+    </div>
+    <!-- ... -->
+  </div>
+</section>
+
+<!-- HOW / CTA -->
+<section id="how" class="mb-12 text-center">
+  <h3 class="text-2xl font-bold text-white mb-3">Cómo funciona</h3>
+  <p class="text-white/90 mb-6 max-w-3xl mx-auto">1) Aprende con micro-lecciones → 2) Practica en simuladores → 3) Progresa con tu mentor y gana coins. Todo desde un mismo dashboard.</p>
+  <div class="flex items-center justify-center gap-3">
+    <button id="ctaDemo2" class="btn-accent">Ser parte de la comunidad</button>
+    <div id="countdownTimerSmall" class="countdown text-white/95">--:--:--</div>
+  </div>
+</section>
+
+<!-- SURVEY -->
+<section id="form" class="mb-12">
+  <h3 class="text-2xl font-bold text-white mb-3">¿Usarías Carlitos? 🧩</h3>
+  <p class="text-white/90 mb-4">Dinos para quién y tu edad — así podemos recomendártelo mejor.</p>
+
+  <form id="surveyForm" class="glass p-5 max-w-xl mx-auto space-y-3">
+    <label class="block text-sm font-semibold text-white">¿Para quién lo usarías?</label>
+    <div class="grid grid-cols-2 gap-2">
+      <button type="button" class="surveyOption glass p-3 text-sm" data-value="mio">Para mí</button>
+      <button type="button" class="surveyOption glass p-3 text-sm" data-value="hijos">Para mis hijos</button>
+      <button type="button" class="surveyOption glass p-3 text-sm" data-value="amigo">Para un amigo</button>
+      <button type="button" class="surveyOption glass p-3 text-sm" data-value="pareja">Para mi pareja</button>
+    </div>
+
+    <label class="block text-sm font-semibold text-white">Edad</label>
+    <input id="surveyAge" type="number" min="10" max="120" placeholder="Ej. 18" class="p-3 rounded-md">
+
+    <label class="block text-sm font-semibold text-white">¿Qué te interesa más?</label>
+    <select id="surveyFocus" class="p-3 rounded-md w-full">
+      <option value="ahorro">Ahorro y presupuesto</option>
+      <option value="inversion">Inversiones</option>
+      <option value="habitos">Hábitos financieros</option>
+      <option value="simulador">Simuladores (millonario, metas)</option>
+    </select>
+
+    <div class="flex gap-3 mt-2">
+      <button id="surveySend" class="btn-accent">Enviar</button>
+      <div id="surveyMsg" class="text-sm text-white/80 self-center"></div>
+    </div>
+  </form>
+</section>
+
+<!-- COMMUNITY: Likes + Comments + IG -->
+<section id="community" class="mb-12">
+  <h3 class="text-2xl font-bold text-white mb-3">Comunidad Carlitos 💬</h3>
+
+  <div class="glass p-5 max-w-4xl mx-auto space-y-4">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <button id="projectLike" class="bg-white/10 px-4 py-2 rounded-full flex items-center gap-2 hover:scale-105 transition">❤️ <span id="projectLikeCount" class="font-semibold">0</span></button>
+        <div class="text-white/80 text-sm">¿Te gusta la idea?</div>
+      </div>
+      <button id="openAuth" class="text-sm text-white/80">Entrar con Google</button>
+    </div>
+
+    <!-- Instagram highlight -->
+    <div class="glass p-3 flex items-center justify-between">
+      <div>
+        <div class="font-semibold text-white">Síguenos en Instagram</div>
+        <div class="text-white/80 text-sm">En <strong>@carlitos_finanzas</strong> publicaremos contenido, avances de la comunidad y pequeños cursos sobre finanzas y economía.</div>
+      </div>
+      <div>
+        <a href="https://www.instagram.com/carlitos_finanzas/" target="_blank" rel="noopener noreferrer" class="btn-accent">Ir a Instagram</a>
+      </div>
+    </div>
+
+    <!-- Comentarios + contacto: permite correo o teléfono y selector país -->
+    <form id="commentForm" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <input id="commentName" type="text" placeholder="Tu nombre" class="p-3 rounded-md md:col-span-1" required>
+      <input id="commentEmail" type="email" placeholder="Tu correo (opcional)" class="p-3 rounded-md md:col-span-1" inputmode="email" autocomplete="email">
+      <input id="commentPhone" type="tel" placeholder="Tu teléfono / celular (opcional)" class="p-3 rounded-md md:col-span-1" inputmode="tel" autocomplete="tel">
+      <select id="commentCountry" class="p-3 rounded-md md:col-span-1">
+        <option value="">Selecciona tu país</option>
+        <option value="Perú">Perú</option>
+        <option value="México">México</option>
+        <option value="Argentina">Argentina</option>
+        <option value="Ecuador">Ecuador</option>
+        <option value="Bolivia">Bolivia</option>
+        <option value="España">España</option>
+        <option value="Colombia">Colombia</option>
+        <option value="Venezuela">Venezuela</option>
+        <option value="Chile">Chile</option>
+        <option value="Brasil">Brasil</option>
+        <option value="EEUU">EEUU</option>
+        <option value="Otros">Otros</option>
+      </select>
+
+      <textarea id="commentText" placeholder="Tu comentario o pregunta..." class="p-3 rounded-md md:col-span-2" required></textarea>
+      <div class="md:col-span-3 flex gap-2">
+        <button id="sendComment" class="btn-accent">Enviar comentario</button>
+        <div id="commentMsg" class="text-sm text-white/80 self-center"></div>
+      </div>
+      <div class="md:col-span-3 text-xs text-white/70">Debes dejar correo o teléfono (al menos uno). El país ayuda a personalizar contenidos.</div>
+    </form>
+
+    <div id="commentsFeed" class="space-y-3 mt-4 max-h-64 overflow-auto"></div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="text-center mt-8 mb-12 text-white/80">
+  <div class="mb-4">¿Listo para empezar? Sé parte de la comunidad o deja tu comentario.</div>
+  <button id="finalDemo" class="btn-accent">Ser parte de la comunidad</button>
+  <div class="text-xs mt-4">© <span id="year"></span> Carlitos — Comunidad Explorer</div>
+</footer>
+</div>
+
+<!-- Demo modal (se mantiene) -->
+<div id="demoModal" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-50">
+  <div class="glass p-6 w-[95%] md:w-3/4 max-w-3xl card">
+    <div class="flex justify-between items-center mb-4">
+      <h4 class="text-xl font-semibold">Demo interactiva — Carlitos</h4>
+      <button id="closeDemo" class="text-white/80">Cerrar ✖</button>
+    </div>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div class="p-4 placeholder">
+        <h5 class="font-semibold">Mini recorrido</h5>
+        <p class="text-sm mt-2">Simula un reto de ahorro: establece meta, aporta semanalmente y mira cómo sube tu progreso.</p>
+        <div class="mt-3">
+          <label class="text-sm">Meta (USD)</label>
+          <input id="demoGoal" type="number" class="p-2 rounded-md w-full mt-1" placeholder="Ej. 1000">
+          <label class="text-sm mt-2">Aporte semanal</label>
+          <input id="demoWeekly" type="number" class="p-2 rounded-md w-full mt-1" placeholder="Ej. 25">
+          <div class="mt-3"><button id="runDemo" class="btn-accent">Simular progreso</button></div>
+        </div>
+      </div>
+      <div class="p-4 placeholder" id="demoResult">
+        <h5 class="font-semibold">Resultado</h5>
+        <div id="demoOutput" class="mt-3 text-sm">Introduce meta y aporte para ver tiempo estimado.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase + App logic -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-analytics.js";
+  import {
+    getFirestore, collection, addDoc, onSnapshot, query, orderBy,
+    serverTimestamp, doc, runTransaction, increment, getDoc, setDoc
+  } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+  import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyC7JOSIfEnl2xXe8daxtUjadoAQ4YpbV-Q",
+    authDomain: "landing-carlito.firebaseapp.com",
+    projectId: "landing-carlito",
+    storageBucket: "landing-carlito.firebasestorage.app",
+    messagingSenderId: "152914271383",
+    appId: "1:152914271383:web:0916ee1eccc88391e05dd2",
+    measurementId: "G-BQXWGWCRSR"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  try { getAnalytics(app); } catch(e) { console.warn('Analytics init failed', e); }
+  const db = getFirestore(app);
+  const auth = getAuth();
+
+  // UI refs
+  const projectLikeBtn = document.getElementById('projectLike');
+  const projectLikeCount = document.getElementById('projectLikeCount');
+  const commentName = document.getElementById('commentName');
+  const commentEmail = document.getElementById('commentEmail');
+  const commentPhone = document.getElementById('commentPhone');
+  const commentCountry = document.getElementById('commentCountry');
+  const commentText = document.getElementById('commentText');
+  const commentsFeed = document.getElementById('commentsFeed');
+  const commentMsg = document.getElementById('commentMsg');
+  const openAuth = document.getElementById('openAuth');
+
+  const demoModal = document.getElementById('demoModal');
+  const openDemo = document.getElementById('openDemo') || document.getElementById('ctaDemo');
+  const ctaDemo = document.getElementById('ctaDemo');
+  const ctaDemo2 = document.getElementById('ctaDemo2');
+  const finalDemo = document.getElementById('finalDemo');
+  const closeDemo = document.getElementById('closeDemo');
+  const runDemo = document.getElementById('runDemo');
+  const demoOutput = document.getElementById('demoOutput');
+
+  const countdownTimer = document.getElementById('countdownTimer');
+  const countdownTimerSmall = document.getElementById('countdownTimerSmall');
+
+  // ---------- Countdown: 3 días desde la carga ----------
+  // Calculamos una fecha objetivo = ahora + 3 días (72 horas)
+  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
+  const targetTs = Date.now() + THREE_DAYS_MS;
+
+  function formatRemaining(ms){
+    if(ms <= 0) return {d:0,h:0,m:0,s:0};
+    const s = Math.floor(ms/1000);
+    const days = Math.floor(s / (3600*24));
+    const hours = Math.floor((s % (3600*24)) / 3600);
+    const mins = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    return {d: days, h: hours, m: mins, s: secs};
+  }
+
+  function pad(n){ return String(n).padStart(2,'0'); }
+
+  function updateCountdown(){
+    const rem = targetTs - Date.now();
+    const t = formatRemaining(rem);
+    if(countdownTimer) countdownTimer.textContent = `Faltan ${t.d}d ${pad(t.h)}h:${pad(t.m)}m:${pad(t.s)}s para probar demo`;
+    if(countdownTimerSmall) countdownTimerSmall.textContent = `${t.d}d ${pad(t.h)}:${pad(t.m)}:${pad(t.s)}`;
+    if(rem <= 0){
+      // cuando llegue el tiempo, mostrar que la demo está disponible (aquí solo texto)
+      if(countdownTimer) countdownTimer.textContent = `¡La demo ya está disponible!`;
+      if(countdownTimerSmall) countdownTimerSmall.textContent = `Demo disponible`;
+      clearInterval(countdownInterval);
+    }
+  }
+  updateCountdown();
+  const countdownInterval = setInterval(updateCountdown, 1000);
+
+  // ---------- CTAs: scroll to community and focus ----------
+  function goToCommunityFocus(){
+    const section = document.getElementById('community');
+    if(!section) return;
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(()=> {
+      if(commentEmail) commentEmail.focus();
+      else if(commentPhone) commentPhone.focus();
+      else if(commentName) commentName.focus();
+      const form = document.getElementById('commentForm');
+      if(form){
+        form.classList.add('ring','ring-2','ring-white/30');
+        setTimeout(()=> form.classList.remove('ring','ring-2','ring-white/30'), 1600);
+      }
+    }, 400);
+  }
+
+  [openDemo, ctaDemo2, finalDemo].forEach(el=>{
+    if(el) el.addEventListener('click', (e)=>{ e.preventDefault(); goToCommunityFocus(); });
+  });
+
+  if(closeDemo) closeDemo.addEventListener('click', ()=> demoModal.classList.add('hidden'));
+  runDemo?.addEventListener('click', ()=>{
+    const goal = Number(document.getElementById('demoGoal').value) || 0;
+    const weekly = Number(document.getElementById('demoWeekly').value) || 0;
+    if(!goal || !weekly){ demoOutput.textContent = 'Define una meta y aporte semanal válidos.'; return; }
+    const weeks = Math.ceil(goal / weekly);
+    const months = Math.ceil(weeks / 4);
+    demoOutput.innerHTML = `<strong>Tardarás ~${weeks} semanas (~${months} meses)</strong> si ahorras ${weekly} USD por semana. ¡Pequeños pasos, gran resultado!`;
+  });
+
+  // ---------- Auth (Google) ----------
+  const provider = new GoogleAuthProvider();
+  openAuth?.addEventListener('click', async ()=> {
+    try{
+      if(auth.currentUser) await signOut(auth);
+      else await signInWithPopup(auth, provider);
+    }catch(err){ console.error('auth err', err) }
+  });
+
+  onAuthStateChanged(auth, user => {
+    if(user){
+      openAuth.textContent = `Salir (${user.displayName.split(' ')[0]})`;
+      openAuth.onclick = ()=> signOut(auth);
+    } else {
+      openAuth.textContent = 'Entrar con Google';
+      openAuth.onclick = ()=> signInWithPopup(auth, provider);
+    }
+  });
+
+  // ---------- Firestore meta likes ----------
+  const metaRef = doc(db, 'meta', 'project');
+  (async ()=> {
+    try{
+      const snap = await getDoc(metaRef);
+      if(!snap.exists()) await setDoc(metaRef, {likes: 0});
+    }catch(e){ console.warn(e) }
+  })();
+
+  onSnapshot(metaRef, snap => {
+    const data = snap.data() || {likes:0};
+    projectLikeCount.textContent = data.likes ?? 0;
+  });
+
+  projectLikeBtn.addEventListener('click', async ()=> {
+    try{
+      await runTransaction(db, async (t)=>{
+        const s = await t.get(metaRef);
+        if(!s.exists()) t.set(metaRef, {likes:1});
+        else t.update(metaRef, {likes: increment(1)});
+      });
+    }catch(err){ console.error('like tx err', err) }
+  });
+
+  // ---------- Firestore: comments collection ----------
+  const commentsCol = collection(db, 'comments');
+  const qComments = query(commentsCol, orderBy('createdAt', 'desc'));
+  onSnapshot(qComments, (snap) => {
+    commentsFeed.innerHTML = '';
+    if(snap.empty) commentsFeed.innerHTML = '<div class="text-white/80">Sé el primero en comentar.</div>';
+    snap.forEach(docSnap => {
+      const c = docSnap.data();
+      commentsFeed.appendChild(renderComment({id: docSnap.id, ...c}));
+    });
+    // reattach like events
+    document.querySelectorAll('.like-comment-btn').forEach(btn=>{
+      btn.onclick = async ()=> {
+        const id = btn.dataset.id;
+        const docRef = doc(db, 'comments', id);
+        try{
+          await runTransaction(db, async (t)=>{
+            const s = await t.get(docRef);
+            if(!s.exists()) t.set(docRef, {likes:1});
+            else t.update(docRef, {likes: increment(1)});
+          });
+        }catch(e){ console.error(e) }
+      };
+    });
+  });
+
+  // send comment: require at least email or phone
+  document.getElementById('sendComment').addEventListener('click', async (ev)=>{
+    ev.preventDefault();
+    const name = (commentName.value || 'Anónimo').trim();
+    const text = (commentText.value || '').trim();
+    const email = (commentEmail.value || '').trim();
+    const phoneRaw = (commentPhone.value || '').trim();
+    const country = (commentCountry.value || '').trim() || null;
+
+    if(!text) { commentMsg.textContent = 'Escribe algo antes de enviar.'; setTimeout(()=>commentMsg.textContent='',2000); return; }
+
+    // require at least one contact
+    if(!email && !phoneRaw){
+      commentMsg.textContent = 'Ingresa correo o teléfono (al menos uno).';
+      setTimeout(()=>commentMsg.textContent='',2200);
+      return;
+    }
+
+    // validate email if provided
+    if(email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){
+      commentMsg.textContent = 'Correo inválido.'; setTimeout(()=>commentMsg.textContent='',2000); return;
+    }
+
+    // sanitize phone to digits for storage (but display original)
+    let phone = null;
+    let phoneDisplay = null;
+    if(phoneRaw){
+      const digits = phoneRaw.replace(/\D+/g, '');
+      if(digits.length < 7){ commentMsg.textContent = 'Teléfono inválido.'; setTimeout(()=>commentMsg.textContent='',2000); return; }
+      phone = digits;
+      phoneDisplay = phoneRaw;
+    }
+
+    commentMsg.textContent = 'Enviando...';
+    try{
+      await addDoc(commentsCol, { name, text, email: email || null, phone: phone || null, phoneDisplay: phoneDisplay || null, country, likes: 0, createdAt: serverTimestamp() });
+      commentMsg.textContent = '¡Gracias! Comentario publicado.';
+      commentName.value = '';
+      commentText.value = '';
+      commentEmail.value = '';
+      commentPhone.value = '';
+      commentCountry.value = '';
+      setTimeout(()=>commentMsg.textContent = '', 2200);
+      document.getElementById('commentsFeed')?.scrollIntoView({behavior: 'smooth'});
+    }catch(e){ console.error(e); commentMsg.textContent = 'Error al enviar.'; }
+  });
+
+  function escapeHtml(str){
+    if(!str) return '';
+    return String(str).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;');
+  }
+
+  function renderComment(c){
+    const wrap = document.createElement('div');
+    wrap.className = 'glass p-3 rounded-md flex items-start justify-between';
+    const left = document.createElement('div');
+    const dateStr = c.createdAt?.toDate ? new Date(c.createdAt.toDate()).toLocaleString() : '';
+    let contactHtml = '';
+    if(c.email) contactHtml += ` <a href="mailto:${escapeHtml(c.email)}" class="text-xs text-white/70 underline ml-2">${escapeHtml(c.email)}</a>`;
+    if(c.phoneDisplay) contactHtml += ` <span class="text-xs text-white/70 ml-2">${escapeHtml(c.phoneDisplay)}</span>`;
+    const countryHtml = c.country ? ` <span class="text-xs text-white/60 ml-2">· ${escapeHtml(c.country)}</span>` : '';
+    left.innerHTML = `<div class="font-semibold text-white">${escapeHtml(c.name || 'Anónimo')} <span class="text-xs text-white/70">· ${dateStr}</span>${countryHtml}${contactHtml}</div>
+                      <div class="text-white/80 mt-2">${escapeHtml(c.text)}</div>`;
+    const right = document.createElement('div');
+    right.className = 'flex flex-col items-center gap-2';
+    const likeBtn = document.createElement('button');
+    likeBtn.className = 'bg-white/10 px-3 py-1 rounded-full like-comment-btn';
+    likeBtn.dataset.id = c.id || '';
+    likeBtn.innerHTML = `❤️ <span class="ml-2">${c.likes || 0}</span>`;
+    right.appendChild(likeBtn);
+    wrap.appendChild(left);
+    wrap.appendChild(right);
+    return wrap;
+  }
+
+  // ---------- Survey logic (sin cambios) ----------
+  const surveyCol = collection(db, 'surveyResponses');
+  document.getElementById('surveySend').addEventListener('click', async (e)=>{
+    e.preventDefault();
+    const selected = document.querySelector('.surveyOption.selected')?.dataset?.value || '';
+    const age = Number(document.getElementById('surveyAge').value) || null;
+    const focus = document.getElementById('surveyFocus').value || '';
+    const surveyMsg = document.getElementById('surveyMsg');
+    if(!selected || !age){ surveyMsg.textContent = 'Selecciona opción y edad.'; setTimeout(()=>surveyMsg.textContent='',2000); return; }
+    surveyMsg.textContent = 'Enviando...';
+    try{
+      await addDoc(surveyCol, { target: selected, age, focus, createdAt: serverTimestamp() });
+      surveyMsg.textContent = '¡Gracias! Guardamos tu preferencia.';
+      document.querySelectorAll('.surveyOption').forEach(b => b.classList.remove('selected','ring','ring-2','ring-white/40'));
+      document.getElementById('surveyAge').value = '';
+      setTimeout(()=>surveyMsg.textContent = '',2000);
+    }catch(e){ console.error(e); surveyMsg.textContent = 'Error al enviar.'; }
+  });
+
+  document.querySelectorAll('.surveyOption').forEach(btn=>{
+    btn.addEventListener('click', ()=> {
+      document.querySelectorAll('.surveyOption').forEach(b=> b.classList.remove('selected','ring','ring-2','ring-white/40'));
+      btn.classList.add('selected','ring','ring-2','ring-white/40');
+    });
+  });
+
+  // set year
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // small accessibility
+  document.querySelectorAll('button, input, textarea, select').forEach(el=>{
+    el.addEventListener('keydown', (e)=>{ if(e.key === 'Enter' && el.tagName === 'BUTTON') el.click(); });
+  });
+
+</script>
+
+</body>
+</html>
