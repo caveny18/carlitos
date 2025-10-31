@@ -1,858 +1,971 @@
-// dashboard.js
-// Módulo para hacer operativo el dashboard Carlitos
-// Requiere:
-//  - dashboard.html (ya proporcionado)
-//  - firebase-config.js exportando { db, auth } (opcional)
-//  - Chart.js, Intro.js cargados en el HTML
-// Nota: Mantén type="module" cuando lo incluyas en el HTML.
+// dashboard.js  (ES module)
+// Guardar como dashboard.js y referenciar desde dashboard.html con <script type="module" src="./dashboard.js"></script>
+// Requisitos opcionales: ./firebase-config.js exportando { db, auth } para sincronizar con Firestore.
+// Chart.js debe estar cargado en el HTML (CDN).
 
-import { db, auth } from './firebase-config.js';
-import {
-  collection,
-  addDoc,
-  getDocs,
-  setDoc,
-  doc,
-  query,
-  orderBy,
-  where,
-  onSnapshot,
-  deleteDoc,
-} from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+/* ========= DYNAMIC FIREBASE IMPORT (optional) ========= */
+let db = null, auth = null, onAuthStateChanged = null, signOut = null;
+try {
+  const mod = await import('./firebase-config.js'); // si no existe, catch
+  db = mod.db;
+  auth = mod.auth;
+  const authMod = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+  onAuthStateChanged = authMod.onAuthStateChanged;
+  signOut = authMod.signOut;
+} catch (e) {
+  // modo local si no hay firebase
+  // console.info('Firebase no disponible -> modo local', e);
+}
 
-/* ==========================
-   Estado inicial y utilidades
-   ========================== */
-const STATE = {
-  user: {
-    uid: null,
-    name: null,
-  },
-  movimientos: [], // {id, tipo:'ingreso'|'egreso', monto, fecha (ISO), categoria, nota}
-  metas: [],       // {id, titulo, tipo, target, createdAt}
-  xp: 0,
-  coins: 0,
-  charts: {},
-  overviewRange: 'month', // day | week | month
+/* ========= DOM REFS ========= */
+const DOM = {
+  userName: document.getElementById('user-name'),
+  avatarCircle: document.getElementById('avatar-circle'),
+  userRole: document.getElementById('user-role'),
+  userLevelBadge: document.getElementById('user-level-badge'),
+  coinsAmount: document.getElementById('coins-amount'),
+  xpBar: document.getElementById('xp-bar'),
+  xpText: document.getElementById('xp-text'),
+  balanceChartCanvas: document.getElementById('balanceChart'),
+  chartLegend: document.getElementById('chart-legend'),
+  toolsCompact: document.getElementById('tools-compact'),
+  transactionsList: document.getElementById('transactions-list'),
+  goalsList: document.getElementById('goals-list'),
+  openAddTransaction: document.getElementById('open-add-transaction'),
+  openAddGoal: document.getElementById('open-add-goal'),
+  modalRoot: document.getElementById('modal-root'),
+  startTourBtn: document.getElementById('start-tour'),
+  logoutBtn: document.getElementById('logout'),
+  simulateBtn: document.getElementById('simulate-data'),
+  clearTestBtn: document.getElementById('clear-test-data'),
+  chartTypeSelect: document.getElementById('chart-type'),
+  manageCategoriesBtn: document.getElementById('manage-categories'),
+  fastIncome: document.getElementById('fast-income'),
+  fastExpense: document.getElementById('fast-expense'),
 };
 
-// IDs / DOM
-const $ = (id) => document.getElementById(id);
+/* ========= KEYS, PATHS, DEFAULTS ========= */
+const PROFILE_KEY = 'carlitos_profile_data';
+const UID_KEY = 'carlitos_user_uid';
+const CATEGORIES_KEY = 'carlitos_categories';
+const TEST_FLAG_KEY = 'carlitos_test_data_created';
+const IMG_PATH = ''; // si tus imágenes de mentor están en /assets/ pon '/assets/'
 
-// Safe get for classes
-function $all(selector, root = document) {
-  return Array.from(root.querySelectorAll(selector));
-}
+const DEFAULT_CATEGORIES = [
+  { id: 'alimentos', name: 'Alimentos', color: '#f97316' },
+  { id: 'transporte', name: 'Transporte', color: '#06b6d4' },
+  { id: 'salidas', name: 'Salidas', color: '#ef4444' },
+  { id: 'suscripciones', name: 'Suscripciones', color: '#8b5cf6' },
+  { id: 'otros', name: 'Otros', color: '#94a3b8' },
+];
 
-// Formateo monetario
-const fmt = (v) => {
-  const n = Number(v) || 0;
-  return n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
-};
+/* evitar canvas borroso */
+if (window.Chart) Chart.defaults.devicePixelRatio = window.devicePixelRatio || 1;
 
-// Generar ID simple
-const uid = () => 'id' + Math.random().toString(36).slice(2, 9);
+let chartInstance = null;
+let chartType = localStorage.getItem('carlitos_chart_type') || 'doughnut';
 
-/* ==========================
-   Inicialización DOM
-   ========================== */
+/* ========= LEVELS & TOOLS ========= */
+const LEVELS = [
+  { name: "Novato", minXP: 0, maxXP: 100, title: "El Curioso", toolsRequired: 0 },
+  { name: "Aprendiz", minXP: 100, maxXP: 350, title: "El Experimentador", toolsRequired: 1 },
+  { name: "Estratega", minXP: 350, maxXP: 800, title: "El Analista", toolsRequired: 3 },
+  { name: "Maestro", minXP: 800, maxXP: 1500, title: "El Optimizador", toolsRequired: 6 },
+  { name: "Leyenda", minXP: 1500, maxXP: 99999, title: "El Inmortal", toolsRequired: 10 },
+];
+const ALL_TOOLS = [
+  { id: 'registro_gastos', name: 'Registro de Ingresos y Gastos', requiredLevel: 1 },
+  { id: 'planificador_presupuesto', name: 'Planificador de Presupuesto (50/30/20)', requiredLevel: 2 },
+  { id: 'simulador_inversiones', name: 'Simulador de Inversiones Básicas', requiredLevel: 3 },
+  { id: 'control_deuda', name: 'Control de Deuda', requiredLevel: 4 },
+];
 
-document.addEventListener('DOMContentLoaded', () => {
-  bindNav();
-  bindThemeToggle();
-  initializeMentor();
-  initializeOverviewChart();
-  initializeSimulators();
-  initializeHistoric();
-  initializeGoals();
-  initializeTour();
-  loadProfileAndData();
-  bindMentorCallButtons();
-  bindOverviewFilters();
-});
-
-/* ==========================
-   NAV / Secciones
-   ========================== */
-function bindNav() {
-  $all('.nav-btn').forEach(b => {
-    b.addEventListener('click', (e) => {
-      const sec = e.currentTarget.dataset.section;
-      showSection(sec);
-    });
-  });
-
-  // Default show inicio
-  showSection('inicio');
-}
-
-function showSection(id) {
-  document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
-  const el = $(id);
-  if (el) el.classList.remove('hidden');
-
-  // Run contextual mentor hint if visible
-  showMentorHintForSection(id);
-}
-
-/* ==========================
-   THEME
-   ========================== */
-function bindThemeToggle() {
-  const btn = $('toggle-theme-sidebar');
-  if (!btn) return;
-  btn.addEventListener('click', () => {
-    const body = document.body;
-    const current = body.getAttribute('data-theme') || 'light';
-    const next = current === 'light' ? 'dark' : 'light';
-    body.setAttribute('data-theme', next);
-    if (next === 'dark') {
-      body.classList.add('bg-slate-900', 'text-white');
-      body.classList.remove('bg-white', 'text-slate-900');
-      btn.textContent = 'Modo Claro';
-    } else {
-      body.classList.remove('bg-slate-900', 'text-white');
-      body.classList.add('bg-white', 'text-slate-900');
-      btn.textContent = 'Modo Oscuro';
-    }
-    localStorage.setItem('carlitos_theme', next);
-  });
-
-  // load pref
-  const pref = localStorage.getItem('carlitos_theme') || 'light';
-  if (pref === 'dark') {
-    document.body.setAttribute('data-theme', 'dark');
-    document.body.classList.add('bg-slate-900', 'text-white');
-    btn.textContent = 'Modo Claro';
-  }
-}
-
-/* ==========================
-   PROFILE & DATA (Firestore optional)
-   ========================== */
-async function loadProfileAndData() {
-  // cargar perfil desde localStorage (onboarding guarda 'carlitos_profile_data' en onboarding.js)
-  let profileRaw = localStorage.getItem('carlitos_profile_data');
-  if (profileRaw) {
-    try {
-      const p = JSON.parse(profileRaw);
-      STATE.user.name = p.nombre || p.name || p.displayName || 'Usuario';
-      STATE.xp = p.xp || 0;
-      STATE.coins = p.coins || 0;
-    } catch (e) {
-      console.warn('error parse profile', e);
-    }
-  } else {
-    // fallback: si hay un profile guardado con otra clave
-    const p2 = localStorage.getItem('carlitos_profile');
-    if (p2) {
-      try { STATE.user.name = JSON.parse(p2).name || 'Usuario'; } catch {}
+function calculateProgress(totalXp) {
+  let currentLevel = LEVELS[0];
+  let progressPercentage = 0;
+  for (let i = 0; i < LEVELS.length; i++) {
+    if (totalXp < LEVELS[i].maxXP) {
+      currentLevel = LEVELS[i];
+      const xpInLevel = totalXp - currentLevel.minXP;
+      const levelRange = currentLevel.maxXP - currentLevel.minXP;
+      progressPercentage = (xpInLevel / levelRange) * 100;
+      return { level: currentLevel, progressPercentage, xpToNextLevel: currentLevel.maxXP, currentLevelXp: totalXp };
     }
   }
+  const lastLevel = LEVELS[LEVELS.length - 1];
+  return { level: lastLevel, progressPercentage: 100, xpToNextLevel: lastLevel.maxXP, currentLevelXp: totalXp };
+}
 
-  // update UI
-  $('welcome-name').textContent = STATE.user.name || 'Usuario';
-  $('user-name').textContent = STATE.user.name || 'Usuario';
-  $('xp-current').textContent = STATE.xp;
-  $('coins-badge').textContent = STATE.coins;
-
-  // Intenta sincronizar con Firebase si hay sesión
+/* ========= FIRESTORE HELPERS (best-effort) ========= */
+async function addTransactionToFirestore(uid, tx) {
+  if (!db || !uid) return false;
   try {
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        STATE.user.uid = user.uid;
-        // intenta cargar movimientos de Firestore
-        await loadMovementsFromFirestore(user.uid);
-        await loadGoalsFromFirestore(user.uid);
-      } else {
-        // si no hay user, carga local
-        loadFromLocal();
-      }
-      updateAllUI();
-    });
-  } catch (e) {
-    console.warn('Firebase auth not available or not configured', e);
-    loadFromLocal();
-    updateAllUI();
-  }
+    const { collection, addDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+    const col = collection(db, 'usuarios', uid, 'transactions');
+    await addDoc(col, tx);
+    return true;
+  } catch (e) { console.error('addTransaction firestore', e); return false; }
 }
-
-function loadFromLocal() {
-  const mv = localStorage.getItem('carlitos_movimientos');
-  if (mv) {
-    try { STATE.movimientos = JSON.parse(mv); } catch { STATE.movimientos = []; }
-  }
-  const metas = localStorage.getItem('carlitos_metas');
-  if (metas) {
-    try { STATE.metas = JSON.parse(metas); } catch { STATE.metas = []; }
-  }
-}
-
-async function loadMovementsFromFirestore(uid) {
-  if (!db) return loadFromLocal();
+async function addGoalToFirestore(uid, goal) {
+  if (!db || !uid) return false;
   try {
-    const col = collection(db, 'usuarios', uid, 'movimientos');
-    const q = query(col, orderBy('fecha', 'desc'));
+    const { collection, addDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+    const col = collection(db, 'usuarios', uid, 'goals');
+    await addDoc(col, goal);
+    return true;
+  } catch (e) { console.error('addGoal firestore', e); return false; }
+}
+async function addCategoryToFirestore(uid, cat) {
+  if (!db || !uid) return false;
+  try {
+    const { collection, addDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+    const col = collection(db, 'usuarios', uid, 'categories');
+    await addDoc(col, cat);
+    return true;
+  } catch (e) { console.error('addCategory firestore', e); return false; }
+}
+async function fetchTransactionsFirestore(uid) {
+  if (!db || !uid) return [];
+  try {
+    const { collection, query, orderBy, limit, getDocs } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+    const col = collection(db, 'usuarios', uid, 'transactions');
+    const q = query(col, orderBy('date', 'desc'), limit(200));
     const snap = await getDocs(q);
-    STATE.movimientos = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    // convert fecha to ISO if needed
-    STATE.movimientos = STATE.movimientos.map(m => ({ ...m, fecha: m.fecha && m.fecha.seconds ? new Date(m.fecha.seconds * 1000).toISOString() : (m.fecha || new Date().toISOString()) }));
-  } catch (e) {
-    console.warn('Error leyendo movimientos Firestore', e);
-    loadFromLocal();
-  }
+    const arr = []; snap.forEach(d => arr.push({ id: d.id, ...d.data() })); return arr;
+  } catch (e) { console.error('fetchTransactions firestore', e); return []; }
 }
-
-async function loadGoalsFromFirestore(uid) {
-  if (!db) return;
+async function fetchGoalsFirestore(uid) {
+  if (!db || !uid) return [];
   try {
-    const col = collection(db, 'usuarios', uid, 'metas');
+    const { collection, query, orderBy, getDocs } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+    const col = collection(db, 'usuarios', uid, 'goals');
+    const q = query(col, orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    const arr = []; snap.forEach(d => arr.push({ id: d.id, ...d.data() })); return arr;
+  } catch (e) { console.error('fetchGoals firestore', e); return []; }
+}
+async function fetchCategoriesFirestore(uid) {
+  if (!db || !uid) return [];
+  try {
+    const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+    const col = collection(db, 'usuarios', uid, 'categories');
     const snap = await getDocs(col);
-    STATE.metas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  } catch (e) {
-    console.warn('Error leyendo metas Firestore', e);
-  }
+    const arr = []; snap.forEach(d => arr.push({ id: d.id, ...d.data() })); return arr;
+  } catch (e) { console.error('fetchCategories firestore', e); return []; }
 }
 
-/* ==========================
-   Guardar (Firestore preferido, fallback local)
-   ========================== */
-async function saveMovements() {
-  localStorage.setItem('carlitos_movimientos', JSON.stringify(STATE.movimientos));
-  // if user logged -> save to firestore (basic approach: overwrite each doc or set by id)
-  try {
-    if (STATE.user.uid && db) {
-      const baseCol = collection(db, 'usuarios', STATE.user.uid, 'movimientos');
-      // Note: to avoid deleting other docs we'll upsert each item
-      for (const m of STATE.movimientos) {
-        if (!m.id) m.id = uid();
-        await setDoc(doc(db, 'usuarios', STATE.user.uid, 'movimientos', m.id), {
-          tipo: m.tipo,
-          monto: Number(m.monto),
-          fecha: m.fecha,
-          categoria: m.categoria,
-          nota: m.nota || ''
-        });
-      }
-    }
-  } catch (e) {
-    console.warn('No se pudo sincronizar movimientos a Firestore', e);
-  }
+/* ========= LOCAL STORAGE HELPERS ========= */
+function readLocalCategories() {
+  const raw = localStorage.getItem(CATEGORIES_KEY);
+  if (!raw) { localStorage.setItem(CATEGORIES_KEY, JSON.stringify(DEFAULT_CATEGORIES)); return JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)); }
+  try { return JSON.parse(raw); } catch (e) { return JSON.parse(JSON.stringify(DEFAULT_CATEGORIES)); }
 }
+function saveLocalCategories(list) { localStorage.setItem(CATEGORIES_KEY, JSON.stringify(list)); }
+function saveLocalTx(tx) { const l = JSON.parse(localStorage.getItem('local_tx') || '[]'); l.unshift(tx); localStorage.setItem('local_tx', JSON.stringify(l)); }
+function saveLocalGoal(g) { const l = JSON.parse(localStorage.getItem('local_goals') || '[]'); l.unshift(g); localStorage.setItem('local_goals', JSON.stringify(l)); }
 
-async function saveGoals() {
-  localStorage.setItem('carlitos_metas', JSON.stringify(STATE.metas));
-  try {
-    if (STATE.user.uid && db) {
-      for (const g of STATE.metas) {
-        if (!g.id) g.id = uid();
-        await setDoc(doc(db, 'usuarios', STATE.user.uid, 'metas', g.id), {
-          titulo: g.titulo,
-          tipo: g.tipo,
-          target: Number(g.target),
-          createdAt: g.createdAt,
-        });
-      }
-    }
-  } catch (e) {
-    console.warn('No se pudo sincronizar metas a Firestore', e);
-  }
-}
-
-/* ==========================
-   Registrar movimiento (registro rápido y formulario completo opcional)
-   ========================== */
-function initializeHistoric() {
-  // Aquí añadiremos la UI de registro rápido (botones, inputs dinámicos)
-  // Como tu HTML no incluye inputs rápidos, crearé un pequeño widget en JS
-  const inicioSection = $('inicio');
-  if (!inicioSection) return;
-
-  // Crear formulario rápido dinámico dentro del primer card
-  const card = inicioSection.querySelector('.p-4.rounded-2xl.border');
-  if (!card) return;
-
-  // widget
-  const wrapper = document.createElement('div');
-  wrapper.className = 'mt-4 p-2 border rounded bg-slate-50 dark:bg-slate-800';
-  wrapper.innerHTML = `
-    <div class="flex gap-2">
-      <input id="quick-amount" type="number" placeholder="Monto" class="p-2 border rounded flex-1"/>
-      <select id="quick-type" class="p-2 border rounded">
-        <option value="ingreso">Ingreso</option>
-        <option value="egreso">Gasto</option>
-      </select>
-      <input id="quick-categoria" placeholder="Categoría" class="p-2 border rounded w-32"/>
-      <button id="quick-add" class="px-3 py-2 border rounded">Añadir</button>
-    </div>
-  `;
-  card.appendChild(wrapper);
-
-  // bind
-  $('#quick-add').addEventListener('click', () => {
-    const monto = Number($('#quick-amount').value) || 0;
-    const tipo = $('#quick-type').value;
-    const categoria = $('#quick-categoria').value || (tipo === 'ingreso' ? 'Varios' : 'Gastos Varios');
-    if (!monto) {
-      toast('Ingresa un monto válido');
-      return;
-    }
-    const mv = {
-      id: uid(),
-      tipo,
-      monto,
-      fecha: new Date().toISOString(),
-      categoria,
-      nota: 'Registro rápido'
-    };
-    STATE.movimientos.unshift(mv);
-    // Recompensa simple: coins/xp
-    STATE.xp += Math.round(Math.min(10, Math.abs(monto) / 10));
-    STATE.coins += Math.round(Math.min(5, Math.abs(monto) / 20));
-    saveMovements();
-    saveProfileXP();
-    updateAllUI();
-    // limpiar inputs
-    $('#quick-amount').value = '';
-    $('#quick-categoria').value = '';
-    showMentorMessage(`¡Listo! He agregado tu ${tipo} de ${fmt(monto)}`, 'ensenando');
-  });
-
-  // Also expose a full form on Registro section if exists
-  const registroSection = $('registro');
-  if (registroSection) {
-    // If you have a full form in your real HTML, you should hook it here.
-  }
-
-  // HISTORY table render
-  renderHistoryTable();
-}
-
-// save xp/coins to profile local
-function saveProfileXP() {
-  try {
-    const raw = localStorage.getItem('carlitos_profile_data');
-    if (!raw) {
-      const p = { nombre: STATE.user.name || 'Usuario', xp: STATE.xp, coins: STATE.coins };
-      localStorage.setItem('carlitos_profile_data', JSON.stringify(p));
-    } else {
-      const obj = JSON.parse(raw);
-      obj.xp = STATE.xp;
-      obj.coins = STATE.coins;
-      localStorage.setItem('carlitos_profile_data', JSON.stringify(obj));
-    }
-    $('xp-current').textContent = STATE.xp;
-    $('coins-badge').textContent = STATE.coins;
-  } catch (e) {
-    console.warn('error saving profile xp', e);
-  }
-}
-
-/* ==========================
-   HISTORIAL / Tabla / Export
-   ========================== */
-function renderHistoryTable() {
-  const container = $('history-table');
-  if (!container) return;
-
-  container.innerHTML = '';
-  // header with export buttons
-  const header = document.createElement('div');
-  header.className = 'flex items-center justify-between mb-2';
-  header.innerHTML = `
-    <div class="text-sm font-semibold">Movimientos (${STATE.movimientos.length})</div>
-    <div class="flex gap-2">
-      <button id="export-json" class="px-2 py-1 border rounded text-xs">Exportar JSON</button>
-      <button id="export-csv" class="px-2 py-1 border rounded text-xs">Exportar CSV</button>
-    </div>
-  `;
-  container.appendChild(header);
-
-  // table
-  const table = document.createElement('table');
-  table.className = 'w-full text-sm';
-  table.innerHTML = `
-    <thead class="sticky top-0 bg-white"><tr>
-      <th class="p-2 text-left">Fecha</th><th class="p-2 text-left">Tipo</th><th class="p-2 text-right">Monto</th><th class="p-2 text-left">Categoría</th><th class="p-2">Acciones</th>
-    </tr></thead>
-    <tbody id="history-body"></tbody>
-  `;
-  container.appendChild(table);
-
-  const tbody = $('history-body');
-
-  if (STATE.movimientos.length === 0) {
-    tbody.innerHTML = `<tr><td class="p-2" colspan="5">No hay movimientos aún. Usa el registro rápido para añadir tu primer movimiento.</td></tr>`;
-  } else {
-    for (const m of STATE.movimientos) {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="p-2">${new Date(m.fecha).toLocaleString()}</td>
-        <td class="p-2">${m.tipo}</td>
-        <td class="p-2 text-right">${fmt(m.monto)}</td>
-        <td class="p-2">${m.categoria || '-'}</td>
-        <td class="p-2">
-          <button data-id="${m.id}" class="delete-mv px-2 py-1 border rounded text-xs">Eliminar</button>
-        </td>
-      `;
-      tbody.appendChild(tr);
-    }
-  }
-
-  // bind delete buttons
-  container.querySelectorAll('.delete-mv').forEach(b => {
-    b.addEventListener('click', async (e) => {
-      const id = e.currentTarget.dataset.id;
-      STATE.movimientos = STATE.movimientos.filter(x => x.id !== id);
-      await saveMovements();
-      renderHistoryTable();
-      updateAllUI();
-      toast('Movimiento eliminado');
-    });
-  });
-
-  // export
-  $('#export-json').addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify(STATE.movimientos, null, 2)], { type: 'application/json' });
-    downloadBlob(blob, 'movimientos.json');
-  });
-  $('#export-csv').addEventListener('click', () => {
-    const csv = toCSV(STATE.movimientos);
-    const blob = new Blob([csv], { type: 'text/csv' });
-    downloadBlob(blob, 'movimientos.csv');
+/* ========= RENDERERS ========= */
+function renderTransactions(list = []) {
+  DOM.transactionsList.innerHTML = '';
+  if (!list.length) { DOM.transactionsList.innerHTML = `<div class="small-muted p-2">Aún no hay transacciones.</div>`; return; }
+  list.slice(0, 50).forEach(tx => {
+    const el = document.createElement('div');
+    el.className = 'flex items-center justify-between p-2 border rounded-lg';
+    el.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center">${tx.type === 'income' ? '💵' : '🧾'}</div>
+        <div>
+          <div class="font-medium">${tx.title}</div>
+          <div class="small-muted text-xs">${new Date(tx.date).toLocaleString()}</div>
+        </div>
+      </div>
+      <div class="text-right">
+        <div class="${tx.type === 'income' ? 'positive' : 'negative'} font-semibold">${tx.amount >= 0 ? 'S/ ' + Number(tx.amount).toLocaleString('es-CL') : 'S/ ' + Math.abs(tx.amount).toLocaleString('es-CL')}</div>
+        <div class="small-muted text-xs">${tx.category || '—'}</div>
+      </div>
+    `;
+    DOM.transactionsList.appendChild(el);
   });
 }
 
-function toCSV(arr) {
-  if (!arr || !arr.length) return '';
-  const keys = ['fecha', 'tipo', 'monto', 'categoria', 'nota'];
-  const rows = [keys.join(',')];
-  for (const a of arr) {
-    rows.push(keys.map(k => `"${(a[k] || '').toString().replace(/"/g, '""')}"`).join(','));
-  }
-  return rows.join('\n');
+function renderGoals(goals = []) {
+  DOM.goalsList.innerHTML = '';
+  if (!goals || !goals.length) { DOM.goalsList.innerHTML = `<div class="small-muted p-2">Sin metas. Crea una para empezar a ahorrar.</div>`; return; }
+  goals.forEach(g => {
+    const current = Number(g.current || 0); const target = Number(g.target || 1);
+    const pct = Math.min(100, Math.round((current / target) * 100));
+    const wrapper = document.createElement('div');
+    wrapper.className = 'p-3 border rounded-lg';
+    wrapper.innerHTML = `
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <div class="font-semibold">${g.title}</div>
+          <div class="small-muted text-xs">${current.toLocaleString('es-CL')} / ${target.toLocaleString('es-CL')}</div>
+        </div>
+        <div class="text-sm font-bold text-pink-500">${pct}%</div>
+      </div>
+      <div class="mt-3 w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+        <div style="width:${pct}%" class="h-2 bg-gradient-to-r from-pink-500 to-pink-300"></div>
+      </div>
+    `;
+    DOM.goalsList.appendChild(wrapper);
+  });
 }
 
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+function renderTools(level) {
+  DOM.toolsCompact.innerHTML = '';
+  const currentLevelIndex = LEVELS.findIndex(l => l.name === level.name) + 1;
+  ALL_TOOLS.forEach(t => {
+    const unlocked = t.requiredLevel <= currentLevelIndex;
+    const el = document.createElement('div');
+    el.className = 'flex items-center justify-between p-2 rounded-lg';
+    el.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-md bg-white/60 flex items-center justify-center">${unlocked ? '🟢' : '🔒'}</div>
+        <div>
+          <div class="${unlocked ? 'font-semibold' : 'small-muted'}">${t.name}</div>
+          <div class="small-muted text-xs">Nivel ${t.requiredLevel}</div>
+        </div>
+      </div>
+    `;
+    DOM.toolsCompact.appendChild(el);
+  });
 }
 
-/* ==========================
-   GRÁFICOS (Chart.js)
-   ========================== */
-function initializeOverviewChart() {
-  const ctx = $('chart-overview')?.getContext('2d');
-  if (!ctx) return;
-  STATE.charts.overview = new Chart(ctx, {
-    type: 'bar',
+/* ========= CHART HELPERS ========= */
+function buildCategorySums(transactions = [], categories = []) {
+  const map = {};
+  categories.forEach(c => map[c.id] = { name: c.name, color: c.color, sum: 0 });
+  transactions.forEach(tx => {
+    const catId = (tx.category || '').toString().toLowerCase().replace(/\s+/g, '_') || 'otros';
+    if (!map[catId]) {
+      const found = categories.find(c => c.name.toLowerCase() === (tx.category || '').toLowerCase());
+      if (found) map[found.id].sum += Math.abs(Number(tx.amount || 0));
+      else { if (!map['otros']) map['otros'] = { name: 'Otros', color: '#94a3b8', sum: 0 }; map['otros'].sum += Math.abs(Number(tx.amount || 0)); }
+    } else map[catId].sum += Math.abs(Number(tx.amount || 0));
+  });
+  return Object.values(map);
+}
+
+function drawBalanceChart(transactions = [], categories = []) {
+  const catSums = buildCategorySums(transactions, categories);
+  const labels = catSums.map(c => c.name);
+  const colors = catSums.map(c => c.color);
+  const data = catSums.map(c => Math.round(c.sum));
+
+  DOM.chartLegend.innerHTML = '';
+  catSums.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'tag';
+    item.innerHTML = `<span class="color-preview" style="background:${c.color}"></span><span class="small-muted">${c.name}</span> <strong style="margin-left:8px">${c.sum ? 'S/ ' + c.sum.toLocaleString('es-CL') : ''}</strong>`;
+    DOM.chartLegend.appendChild(item);
+  });
+
+  if (chartInstance) try { chartInstance.destroy(); } catch (e) {}
+  const ctx = DOM.balanceChartCanvas.getContext('2d');
+
+  const cfg = {
+    type: chartType === 'bar' ? 'bar' : (chartType === 'line' ? 'line' : 'doughnut'),
     data: {
-      labels: [], datasets: [
-        { label: 'Ingresos', data: [], stack: 's1', backgroundColor: undefined },
-        { label: 'Gastos', data: [], stack: 's1', backgroundColor: undefined }
-      ]
+      labels,
+      datasets: [{
+        label: 'Gastos por categoría',
+        data,
+        backgroundColor: colors,
+        borderColor: colors,
+        fill: chartType === 'line',
+        tension: 0.3
+      }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom' },
-        tooltip: { mode: 'index', intersect: false }
-      },
-      scales: {
-        x: { stacked: true },
-        y: { stacked: false }
-      }
+      plugins: { legend: { display: chartType === 'doughnut' } },
+      scales: chartType === 'doughnut' ? {} : { x: { grid: { display: false } }, y: { ticks: { beginAtZero: true } } }
     }
-  });
+  };
 
-  updateOverviewChart();
+  chartInstance = new Chart(ctx, cfg);
 }
 
-function bindOverviewFilters() {
-  ['overview-filter-day','overview-filter-week','overview-filter-month'].forEach(id => {
-    const el = $(id);
-    if (!el) return;
-    el.addEventListener('click', (e) => {
-      STATE.overviewRange = id.includes('day') ? 'day' : id.includes('week') ? 'week' : 'month';
-      updateOverviewChart();
-      // visual active
-      ['overview-filter-day','overview-filter-week','overview-filter-month'].forEach(i => $(i).classList.remove('bg-indigo-500','text-white'));
-      e.currentTarget.classList.add('bg-indigo-500','text-white');
+/* ========= MODAL HELPERS ========= */
+function openModal(html) {
+  DOM.modalRoot.innerHTML = '';
+  const backdrop = document.createElement('div');
+  backdrop.className = 'modal-backdrop';
+  const m = document.createElement('div');
+  m.className = 'modal';
+  m.innerHTML = html;
+  backdrop.appendChild(m);
+  DOM.modalRoot.appendChild(backdrop);
+  backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
+  return m;
+}
+function closeModal() { DOM.modalRoot.innerHTML = ''; }
+
+/* ========= TRANSACTION & GOAL UI ========= */
+DOM.openAddTransaction?.addEventListener('click', () => openAddTransactionModal());
+function openAddTransactionModal(prefill = {}) {
+  const html = `
+    <h3 class="text-lg font-bold mb-2">Añadir transacción</h3>
+    <div class="space-y-2">
+      <label class="text-xs small-muted">Título</label>
+      <input id="tx-title" class="w-full border p-2 rounded" placeholder="Ej: Pago sueldo / Cena" value="${prefill.title || ''}" />
+      <label class="text-xs small-muted">Tipo</label>
+      <select id="tx-type" class="w-full border p-2 rounded">
+        <option value="expense">Gasto</option>
+        <option value="income">Ingreso</option>
+      </select>
+      <label class="text-xs small-muted">Categoría</label>
+      <select id="tx-category" class="w-full border p-2 rounded"></select>
+      <label class="text-xs small-muted">Monto (S/)</label>
+      <input id="tx-amount" type="number" class="w-full border p-2 rounded" placeholder="0" value="${prefill.amount || ''}" />
+      <div class="flex justify-end gap-2 mt-3">
+        <button id="tx-cancel" class="px-3 py-2 rounded border">Cancelar</button>
+        <button id="tx-save" class="px-4 py-2 rounded btn-primary">Guardar</button>
+      </div>
+    </div>
+  `;
+  
+  const modal = openModal(html);
+  const sel = modal.querySelector('#tx-category');
+  const cats = readLocalCategories();
+  cats.forEach(c => { const o = document.createElement('option'); o.value = c.name; o.textContent = c.name; sel.appendChild(o); });
+  if (prefill.type) modal.querySelector('#tx-type').value = prefill.type;
+  modal.querySelector('#tx-cancel').onclick = closeModal;
+  modal.querySelector('#tx-save').onclick = async () => {
+    const title = modal.querySelector('#tx-title').value.trim() || 'Transacción';
+    const type = modal.querySelector('#tx-type').value;
+    const category = modal.querySelector('#tx-category').value || 'Otros';
+    let amount = Number(modal.querySelector('#tx-amount').value) || 0;
+    if (type === 'expense') amount = -Math.abs(amount);
+    const tx = { title, type, category, amount, date: new Date().toISOString(), test: false };
+
+    const uid = (currentUser && currentUser.uid) || localStorage.getItem(UID_KEY);
+    if (db && uid) {
+      const ok = await addTransactionToFirestore(uid, tx);
+      if (!ok) saveLocalTx(tx);
+    } else saveLocalTx(tx);
+
+    closeModal();
+    await refreshData();
+  };
+}
+
+DOM.openAddGoal?.addEventListener('click', () => openAddGoalModal());
+function openAddGoalModal() {
+  const html = `
+    <h3 class="text-lg font-bold mb-2">Crear Meta</h3>
+    <div class="space-y-2">
+      <label class="text-xs small-muted">Título</label>
+      <input id="goal-title" class="w-full border p-2 rounded" placeholder="Ej: Ahorrar para laptop" />
+      <label class="text-xs small-muted">Objetivo (S/)</label>
+      <input id="goal-target" type="number" class="w-full border p-2 rounded" placeholder="1000" />
+      <div class="flex justify-end gap-2 mt-3">
+        <button id="goal-cancel" class="px-3 py-2 rounded border">Cancelar</button>
+        <button id="goal-save" class="px-4 py-2 rounded btn-accent">Crear</button>
+      </div>
+    </div>
+  `;
+  const modal = openModal(html);
+  modal.querySelector('#goal-cancel').onclick = closeModal;
+  modal.querySelector('#goal-save').onclick = async () => {
+    const title = modal.querySelector('#goal-title').value.trim() || 'Meta';
+    const target = Number(modal.querySelector('#goal-target').value) || 1;
+    const g = { title, target, current: 0, createdAt: new Date().toISOString(), test: false };
+
+    const uid = (currentUser && currentUser.uid) || localStorage.getItem(UID_KEY);
+    if (db && uid) {
+      const ok = await addGoalToFirestore(uid, g);
+      if (!ok) saveLocalGoal(g);
+    } else saveLocalGoal(g);
+
+    closeModal();
+    await refreshData();
+  };
+}
+
+/* ========= CATEGORIES UI ========= */
+DOM.manageCategoriesBtn?.addEventListener('click', () => openManageCategoriesModal());
+function openManageCategoriesModal() {
+  const html = `
+    <h3 class="text-lg font-bold mb-2">Categorías</h3>
+    <div class="space-y-3">
+      <div id="categories-list" class="space-y-2" style="max-height:240px; overflow:auto;"></div>
+      <div class="pt-2 border-t">
+        <div class="grid grid-cols-2 gap-2">
+          <input id="new-cat-name" placeholder="Nombre categoría" class="border p-2 rounded" />
+          <input id="new-cat-color" type="color" value="#06b6d4" class="border p-1 rounded" />
+        </div>
+        <div class="flex justify-end gap-2 mt-3">
+          <button id="cat-close" class="px-3 py-2 rounded border">Cerrar</button>
+          <button id="cat-add" class="px-4 py-2 rounded btn-primary">Agregar</button>
+        </div>
+      </div>
+    </div>
+  `;
+  const modal = openModal(html);
+
+  function renderList() {
+    const listWrap = modal.querySelector('#categories-list');
+    const list = readLocalCategories();
+    listWrap.innerHTML = '';
+    list.forEach((c) => {
+      const row = document.createElement('div');
+      row.className = 'flex items-center justify-between p-2 border rounded';
+      row.innerHTML = `<div class="flex items-center gap-3"><span class="color-preview" style="background:${c.color}"></span><div><div class="font-semibold">${c.name}</div><div class="small-muted text-xs">id: ${c.id}</div></div></div><div><button class="px-2 py-1 rounded border delete-cat" data-id="${c.id}">Eliminar</button></div>`;
+      listWrap.appendChild(row);
     });
-  });
+    listWrap.querySelectorAll('.delete-cat').forEach(btn => {
+      btn.onclick = async () => {
+        const id = btn.dataset.id;
+        const list = readLocalCategories().filter(x => x.id !== id);
+        saveLocalCategories(list);
+        if (db && currentUser) {
+          // intentar eliminar en firestore (best-effort)
+          try {
+            const { collection, getDocs, deleteDoc, doc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+            const col = collection(db, 'usuarios', currentUser.uid, 'categories');
+            const snap = await getDocs(col);
+            for (const d of snap.docs) {
+              const data = d.data();
+              if ((data.id || '').toString() === id || (data.name || '').toString().toLowerCase() === id.toLowerCase()) {
+                await deleteDoc(doc(db, `usuarios/${currentUser.uid}/categories/${d.id}`));
+              }
+            }
+          } catch (e) { console.warn('no se pudo eliminar categoria firestore', e); }
+        }
+        await refreshData();
+        renderList();
+      };
+    });
+  }
+  renderList();
+  modal.querySelector('#cat-close').onclick = closeModal;
+  modal.querySelector('#cat-add').onclick = async () => {
+    const name = modal.querySelector('#new-cat-name').value.trim();
+    const color = modal.querySelector('#new-cat-color').value;
+    if (!name) { alert('Pon nombre'); return; }
+    const id = name.toLowerCase().replace(/\s+/g, '_');
+    const newCat = { id, name, color };
+    const list = readLocalCategories();
+    list.unshift(newCat);
+    saveLocalCategories(list);
+    if (db && currentUser) await addCategoryToFirestore(currentUser.uid, newCat).catch(() => {});
+    modal.querySelector('#new-cat-name').value = '';
+    renderList();
+    await refreshData();
+  };
 }
 
-function updateOverviewChart() {
-  const ch = STATE.charts.overview;
-  if (!ch) return;
-
-  // prepare labels based on range
-  const range = STATE.overviewRange;
-  let labels = [];
-  let ingresosData = [];
-  let gastosData = [];
-
+/* ========= SIMULATION & CLEAR TEST DATA ========= */
+DOM.simulateBtn?.addEventListener('click', () => simulateDataPrompt());
+async function simulateDataPrompt() {
+  const ok = confirm('Generará transacciones de ejemplo para los últimos 30 días. ¿Continuar?');
+  if (!ok) return;
+  await simulateData();
+  alert('Datos de prueba generados. Usa "Limpiar prueba" para eliminarlos.');
+}
+async function simulateData() {
+  const categories = readLocalCategories();
+  const generated = [];
   const now = new Date();
-
-  if (range === 'day') {
-    // last 24 hours (by hour)
-    labels = Array.from({length: 24}, (_, i) => `${i}:00`);
-    ingresosData = new Array(24).fill(0);
-    gastosData = new Array(24).fill(0);
-    STATE.movimientos.forEach(m => {
-      const d = new Date(m.fecha);
-      const diffHours = Math.floor((now - d) / (1000 * 60 * 60));
-      if (diffHours <= 24) {
-        const h = d.getHours();
-        if (m.tipo === 'ingreso') ingresosData[h] += Number(m.monto);
-        else gastosData[h] += Number(m.monto);
-      }
-    });
-  } else if (range === 'week') {
-    // last 7 days
-    labels = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(); d.setDate(now.getDate() - i);
-      labels.push(d.toLocaleDateString());
+  for (let i = 0; i < 30; i++) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    const count = Math.floor(Math.random() * 3) + 1;
+    for (let k = 0; k < count; k++) {
+      const cat = categories[Math.floor(Math.random() * categories.length)];
+      let amount = 0;
+      const name = (cat.name || '').toLowerCase();
+      if (name.includes('aliment')) amount = (Math.random() * 20 + 5);
+      else if (name.includes('transp')) amount = (Math.random() * 6 + 1);
+      else if (name.includes('salid')) amount = (Math.random() * 40 + 10);
+      else if (name.includes('suscrip')) amount = (Math.random() * 15 + 5);
+      else amount = (Math.random() * 30 + 5);
+      amount = Math.round(amount * 100) / 100;
+      const tx = {
+        title: `${cat.name} - gasto`,
+        type: 'expense',
+        category: cat.name,
+        amount: -Math.abs(amount),
+        date: new Date(d.getFullYear(), d.getMonth(), d.getDate(), Math.floor(Math.random() * 23), Math.floor(Math.random() * 59)).toISOString(),
+        test: true
+      };
+      generated.push(tx);
     }
-    ingresosData = new Array(7).fill(0);
-    gastosData = new Array(7).fill(0);
-    STATE.movimientos.forEach(m => {
-      const d = new Date(m.fecha);
-      const diffDays = Math.floor((now - d) / (1000 * 60 * 60 * 24));
-      if (diffDays <= 6) {
-        const idx = 6 - diffDays;
-        if (m.tipo === 'ingreso') ingresosData[idx] += Number(m.monto);
-        else gastosData[idx] += Number(m.monto);
-      }
-    });
+  }
+
+  if (db && currentUser) {
+    for (const tx of generated) {
+      try { await addTransactionToFirestore(currentUser.uid, tx); } catch (e) { saveLocalTx(tx); }
+    }
   } else {
-    // month -> last 30 days
-    labels = [];
-    for (let i = 29; i >= 0; i--) {
-      const d = new Date(); d.setDate(now.getDate() - i);
-      labels.push(d.toLocaleDateString());
-    }
-    ingresosData = new Array(30).fill(0);
-    gastosData = new Array(30).fill(0);
-    STATE.movimientos.forEach(m => {
-      const d = new Date(m.fecha);
-      const diffDays = Math.floor((now - d) / (1000 * 60 * 60 * 24));
-      if (diffDays <= 29) {
-        const idx = 29 - diffDays;
-        if (m.tipo === 'ingreso') ingresosData[idx] += Number(m.monto);
-        else gastosData[idx] += Number(m.monto);
-      }
-    });
+    const l = JSON.parse(localStorage.getItem('local_tx') || '[]');
+    localStorage.setItem('local_tx', JSON.stringify(generated.concat(l)));
+  }
+  localStorage.setItem(TEST_FLAG_KEY, 'true');
+  await refreshData();
+}
+
+DOM.clearTestBtn?.addEventListener('click', () => {
+  const ok = confirm('Eliminará solo los datos de prueba (marcados como test) localmente y en Firestore si estás logueado. ¿Continuar?');
+  if (!ok) return;
+  clearTestData();
+});
+async function clearTestData() {
+  // Local cleanup
+  try {
+    localStorage.removeItem(TEST_FLAG_KEY);
+    const localTx = JSON.parse(localStorage.getItem('local_tx') || '[]');
+    localStorage.setItem('local_tx', JSON.stringify(localTx.filter(tx => !tx.test)));
+    const localGoals = JSON.parse(localStorage.getItem('local_goals') || '[]');
+    localStorage.setItem('local_goals', JSON.stringify(localGoals.filter(g => !g.test)));
+  } catch (e) { console.warn('clearTestData local error', e); }
+
+  // Firestore cleanup (best-effort)
+  if (db && currentUser) {
+    try {
+      const mods = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+      const { collection, query, where, getDocs, deleteDoc, doc } = mods;
+      // transactions
+      try {
+        const txCol = collection(db, 'usuarios', currentUser.uid, 'transactions');
+        const qTx = query(txCol, where('test', '==', true));
+        const snapTx = await getDocs(qTx);
+        for (const d of snapTx.docs) await deleteDoc(doc(db, `usuarios/${currentUser.uid}/transactions/${d.id}`));
+      } catch (e) { console.warn('clearTestData transactions error', e); }
+      // goals
+      try {
+        const gCol = collection(db, 'usuarios', currentUser.uid, 'goals');
+        const qG = query(gCol, where('test', '==', true));
+        const snapG = await getDocs(qG);
+        for (const d of snapG.docs) await deleteDoc(doc(db, `usuarios/${currentUser.uid}/goals/${d.id}`));
+      } catch (e) { console.warn('clearTestData goals error', e); }
+      // categories (if any created as test)
+      try {
+        const cCol = collection(db, 'usuarios', currentUser.uid, 'categories');
+        const qC = query(cCol, where('test', '==', true));
+        const snapC = await getDocs(qC);
+        for (const d of snapC.docs) await deleteDoc(doc(db, `usuarios/${currentUser.uid}/categories/${d.id}`));
+      } catch (e) { console.warn('clearTestData categories error', e); }
+    } catch (e) { console.warn('clearTestData firestore module error', e); }
   }
 
-  ch.data.labels = labels;
-  ch.data.datasets[0].data = ingresosData;
-  ch.data.datasets[1].data = gastosData;
-  ch.update();
+  await refreshData();
+  alert('Datos de prueba eliminados (si existían).');
 }
 
-/* ==========================
-   Simuladores
-   ========================== */
-function initializeSimulators() {
-  // ahorro mensual
-  const runS1 = $('run-s1');
-  const resetS1 = $('reset-s1');
-  if (runS1) runS1.addEventListener('click', () => {
-    const M = Number($('s1-monthly').value) || 0;
-    const r = Number($('s1-rate').value) / 100 || 0;
-    const n = Number($('s1-years').value) || 0;
-    const total = futureValueMonthly(M, r, n);
-    $('s1-result').textContent = fmt(total);
-  });
-  if (resetS1) resetS1.addEventListener('click', () => {
-    $('s1-monthly').value = ''; $('s1-rate').value = ''; $('s1-years').value = '';
-    $('s1-result').textContent = '$0';
-  });
+/* ========= QUICK ACTIONS & CHART TYPE ========= */
+DOM.fastIncome?.addEventListener('click', () => openAddTransactionModal({ title: 'Ingreso rápido', amount: 100, type: 'income' }));
+DOM.fastExpense?.addEventListener('click', () => openAddTransactionModal({ title: 'Gasto rápido', amount: 20, type: 'expense' }));
 
-  // millonario
-  const runM = $('run-million');
-  const resetM = $('reset-million');
-  if (runM) runM.addEventListener('click', () => {
-    const M = Number($('million-monthly').value) || 0;
-    const r = Number($('million-rate').value) / 100 || 0;
-    if (!M || r <= 0) {
-      $('million-result').textContent = 'Ingresa aporte y tasa válida';
+DOM.chartTypeSelect && (DOM.chartTypeSelect.value = chartType);
+DOM.chartTypeSelect?.addEventListener('change', (e) => {
+  chartType = e.target.value;
+  localStorage.setItem('carlitos_chart_type', chartType);
+  refreshChartOnly();
+});
+
+/* ========= AUTH WATCHER & DATA REFRESH ========= */
+let currentUser = null;
+if (onAuthStateChanged && auth) {
+  onAuthStateChanged(auth, async (user) => {
+    if (user) { currentUser = user; localStorage.setItem(UID_KEY, user.uid); }
+    else { currentUser = null; localStorage.removeItem(UID_KEY); }
+    await refreshData();
+  });
+} else {
+  (async () => { await refreshData(); })();
+}
+
+function renderProfile(profile = {}) {
+  DOM.userName.textContent = profile.name || profile.nombre || 'Usuario';
+  DOM.avatarCircle.textContent = (profile.name ? profile.name[0].toUpperCase() : 'C');
+  DOM.userRole.textContent = profile.role || '';
+  DOM.coinsAmount.textContent = Number(profile.carlitosCoins || profile.coins || 0).toLocaleString('es-CL');
+  const prog = calculateProgress(Number(profile.totalXP || profile.xp || 0));
+  DOM.userLevelBadge.textContent = `${prog.level.name}`;
+  DOM.xpBar.style.width = `${Math.min(100, Math.round(prog.progressPercentage))}%`;
+  DOM.xpText.textContent = `${(prog.currentLevelXp || 0).toLocaleString('es-CL')} / ${prog.xpToNextLevel.toLocaleString('es-CL')} XP`;
+  renderTools(prog.level);
+}
+
+async function refreshChartOnly() {
+  if (currentUser && db) {
+    try {
+      const txFS = await fetchTransactionsFirestore(currentUser.uid);
+      const catsFS = await fetchCategoriesFirestore(currentUser.uid);
+      const localTx = JSON.parse(localStorage.getItem('local_tx') || '[]');
+      const txAll = localTx.concat(txFS);
+      const catsLocal = readLocalCategories();
+      const catsAll = (catsFS && catsFS.length) ? catsFS.map(c => ({ id: c.id || (c.name || '').toLowerCase().replace(/\s+/g, '_'), name: c.name, color: c.color })) : catsLocal;
+      drawBalanceChart(txAll, catsAll);
       return;
-    }
-    const months = monthsToReachTarget(M, r, 1000000);
-    const years = Math.floor(months / 12);
-    const remMonths = months % 12;
-    $('million-result').textContent = `${years} años y ${remMonths} meses (~${months} meses)`;
-  });
-  if (resetM) resetM.addEventListener('click', () => {
-    $('million-monthly').value = ''; $('million-rate').value = ''; $('million-result').textContent = '—';
-  });
-}
-
-function futureValueMonthly(monthly, annualRate, years) {
-  const r = annualRate / 12;
-  const n = years * 12;
-  if (r === 0) return monthly * n;
-  return monthly * ((Math.pow(1 + r, n) - 1) / r);
-}
-
-function monthsToReachTarget(monthly, annualRate, target) {
-  const r = annualRate / 12;
-  let bal = 0;
-  let months = 0;
-  while (bal < target && months < 1000 * 12) { // límite
-    bal = bal * (1 + r) + monthly;
-    months++;
+    } catch (e) { console.warn('refreshChartOnly firestore failed', e); }
   }
-  return months;
+  const tx = JSON.parse(localStorage.getItem('local_tx') || '[]');
+  const cats = readLocalCategories();
+  drawBalanceChart(tx, cats);
 }
 
-/* ==========================
-   METAS (Herramientas)
-   ========================== */
-function initializeGoals() {
-  // render existing
-  renderGoalsList();
-
-  const addBtn = $('add-goal');
-  if (!addBtn) return;
-  addBtn.addEventListener('click', async () => {
-    const titulo = $('goal-title').value?.trim() || '';
-    const target = Number($('goal-target').value) || 0;
-    const tipo = $('goal-type').value || 'ahorro';
-    if (!titulo || target <= 0) {
-      toast('Completa título y monto de la meta');
-      return;
-    }
-    const g = { id: uid(), titulo, target, tipo, createdAt: new Date().toISOString() };
-    STATE.metas.push(g);
-    await saveGoals();
-    renderGoalsList();
-    $('goal-title').value = ''; $('goal-target').value = '';
-    toast('Meta añadida');
-  });
-}
-
-function renderGoalsList() {
-  const container = $('goals-list');
-  if (!container) return;
-  container.innerHTML = '';
-
-  if (!STATE.metas.length) {
-    container.innerHTML = `<div class="text-sm text-slate-500">No tienes metas aún. Crea una para empezar a ahorrar.</div>`;
+async function refreshData() {
+  const localProfile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
+  if (!currentUser || !db) {
+    renderProfile(localProfile);
+    const tx = JSON.parse(localStorage.getItem('local_tx') || '[]');
+    const goals = JSON.parse(localStorage.getItem('local_goals') || '[]');
+    const cats = readLocalCategories();
+    renderTransactions(tx);
+    renderGoals(goals);
+    drawBalanceChart(tx, cats);
     return;
   }
 
-  const list = document.createElement('div');
-  list.className = 'space-y-2';
-  for (const g of STATE.metas) {
-    const progress = computeGoalProgress(g);
-    const el = document.createElement('div');
-    el.className = 'p-2 border rounded flex items-center justify-between';
-    el.innerHTML = `
-      <div>
-        <div class="font-semibold">${g.titulo} <span class="text-xs text-slate-500">(${g.tipo})</span></div>
-        <div class="text-xs text-slate-500">Meta: ${fmt(g.target)} — Progreso: ${Math.round(progress * 100)}%</div>
-      </div>
-      <div class="flex gap-2 items-center">
-        <button data-id="${g.id}" class="delete-goal px-2 py-1 border rounded text-xs">Eliminar</button>
-      </div>
-    `;
-    list.appendChild(el);
-  }
-  container.appendChild(list);
+  try {
+    const profFS = await fetchProfileFromFirestore(currentUser.uid).catch(()=>null);
+    const txFS = await fetchTransactionsFirestore(currentUser.uid).catch(()=>[]);
+    const goalsFS = await fetchGoalsFirestore(currentUser.uid).catch(()=>[]);
+    const catsFS = await fetchCategoriesFirestore(currentUser.uid).catch(()=>[]);
 
-  container.querySelectorAll('.delete-goal').forEach(b => {
-    b.addEventListener('click', async (e) => {
-      const id = e.currentTarget.dataset.id;
-      STATE.metas = STATE.metas.filter(x => x.id !== id);
-      await saveGoals();
-      renderGoalsList();
-      toast('Meta eliminada');
-    });
-  });
+    const localTx = JSON.parse(localStorage.getItem('local_tx') || '[]');
+    const localGoals = JSON.parse(localStorage.getItem('local_goals') || '[]');
+    const txAll = localTx.concat(txFS);
+    const goalsAll = localGoals.concat(goalsFS);
+    const catsLocal = readLocalCategories();
+    const catsAll = (catsFS && catsFS.length) ? catsFS.map(c => ({ id: c.id || (c.name || '').toLowerCase().replace(/\s+/g, '_'), name: c.name, color: c.color })) : catsLocal;
+
+    renderProfile(profFS || localProfile);
+    renderTransactions(txAll);
+    renderGoals(goalsAll);
+    drawBalanceChart(txAll, catsAll);
+  } catch (e) {
+    console.error('refreshData error', e);
+    const tx = JSON.parse(localStorage.getItem('local_tx') || '[]');
+    const goals = JSON.parse(localStorage.getItem('local_goals') || '[]');
+    const cats = readLocalCategories();
+    renderProfile(localProfile);
+    renderTransactions(tx);
+    renderGoals(goals);
+    drawBalanceChart(tx, cats);
+  }
 }
 
-function computeGoalProgress(goal) {
-  // simple heuristic: suma de ingresos recientes / target
-  const recentIngresos = STATE.movimientos
-    .filter(m => m.tipo === 'ingreso')
-    .reduce((s, m) => s + Number(m.monto), 0);
-  return Math.min(1, recentIngresos / (goal.target || 1));
-}
+/* ========= INIT UI ========= */
+(function initLocal() {
+  if (!localStorage.getItem(CATEGORIES_KEY)) saveLocalCategories(DEFAULT_CATEGORIES);
+  DOM.chartTypeSelect && (DOM.chartTypeSelect.value = chartType);
+  refreshData();
+})();
 
-/* ==========================
-   Mentor Interactivo
-   ========================== */
-const MENTOR = {
-  visible: false,
-  avatarEl: null,
-  bubbleEl: null,
-  timeoutId: null,
-  images: {
-    normal: null,
-    ensenando: null,
-    riendo: null,
-    confundido: null
+/* ========= LOGOUT ========= */
+DOM.logoutBtn?.addEventListener('click', async () => {
+  if (signOut && auth) {
+    try { await signOut(auth); localStorage.removeItem(UID_KEY); window.location.href = './index.html'; } catch (e) { console.error(e); alert('Error cerrando sesión'); }
+  } else {
+    localStorage.removeItem(UID_KEY); window.location.href = './index.html';
   }
+});
+
+/* ========= TOUR (Spotlight + Mentor Float + Typing) ========= */
+/* Tutor images: coloca nombres de archivos reales en IMG_PATH si quieres */
+const TUTOR_IMG_VARIANTS = {
+  'Mono': ['mononormal.png','monoenseñando.png','monoriendo.png','iconomono.png'],
+  'Ardilla': ['ardillanormal.png','ardillaenseñando.png','ardillariendo.png','iconoardilla.png'],
+  'Condor': ['condornormal.png','condorenseñando.png','condorriendo.png','iconocondor.png'],
+  'Gata': ['gatanormal.png','gataenseñando.png','gatariendo.png','iconogata.png'],
 };
 
-function initializeMentor() {
-  MENTOR.avatarEl = $('mentor-avatar');
-  MENTOR.bubbleEl = $('mentor-bubble');
-  // Default avatar: simple emoji or gradient
-  if (MENTOR.avatarEl) {
-    MENTOR.avatarEl.innerHTML = `<div class="w-full h-full flex items-center justify-center text-4xl">🦊</div>`;
-    MENTOR.avatarEl.style.pointerEvents = 'auto';
+function normalizeTutorKey(raw) {
+  if (!raw) return 'Mono';
+  const s = raw.toString().toLowerCase();
+  if (s.includes('condor') || s.includes('cóndor') || s.includes('inti')) return 'Condor';
+  if (s.includes('ardilla') || s.includes('saison')) return 'Ardilla';
+  if (s.includes('gata') || s.includes('leopardo') || s.includes('auri') || s.includes('gato')) return 'Gata';
+  if (s.includes('mono') || s.includes('kantu')) return 'Mono';
+  return 'Mono';
+}
+function createImgWithFallbacks(variants = [], onReady) {
+  const img = new Image();
+  img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
+  let i = 0;
+  function tryNext() {
+    if (i >= variants.length) { if (onReady) onReady(img); return; }
+    const candidate = variants[i++];
+    img.onerror = tryNext;
+    img.onload = () => { if (onReady) onReady(img); };
+    img.src = candidate.startsWith('http') || candidate.startsWith('/') ? candidate : (IMG_PATH + candidate);
   }
-  // Hide by default (already hidden in HTML)
+  tryNext();
+  return img;
+}
+function getFirstValidImage(list) { return new Promise(resolve => createImgWithFallbacks(list, el => resolve(el))); }
+
+let tourState = { active: false, step: 0, steps: [], overlayEl: null, mentorEl: null, bubbleEl: null, typing: false, typingTimer: null };
+
+function buildTourSteps(profile = {}) {
+  const assigned = profile.assignedTutor || profile.tutor || '';
+  const tutorKey = normalizeTutorKey(assigned);
+  const variants = TUTOR_IMG_VARIANTS[tutorKey] || [];
+  return [
+    { sel: '.card:first-of-type', title: 'Bienvenida', text: `¡Hola! Soy tu mentor. Te guiaré por este Dashboard.` , imgVariantList: variants },
+    { sel: '#balanceChart', title: 'Gráficos', text: 'Aquí ves la distribución de tus gastos. Cambia el tipo: Circular / Barras / Línea.' , imgVariantList: variants },
+    { sel: '#transactions-list', title: 'Transacciones', text: 'En Transacciones verás tus movimientos y podrás añadir nuevos.' , imgVariantList: variants },
+    { sel: '#manage-categories', title: 'Categorías', text: 'Agrega, elimina o cambia colores de categorías para personalizar tus informes.' , imgVariantList: variants },
+    { sel: '#simulate-data', title: 'Simular', text: 'Pulsa "Simular datos" para autogenerar gastos de ejemplo (se marcan con test:true).' , imgVariantList: variants },
+    { sel: '#clear-test-data', title: 'Limpiar pruebas', text: 'Usa "Limpiar prueba" para borrar únicamente los datos marcados como prueba.' , imgVariantList: variants },
+    { sel: '#open-add-transaction', title: 'Añadir', text: 'Desde + Añadir registra gastos o ingresos reales — se guardan en Firebase si estás logueado.' , imgVariantList: variants },
+    { sel: '#bottom-nav', title: 'Menú', text: 'La barra inferior te ayuda a navegar entre las secciones principales.' , imgVariantList: variants },
+    { sel: '.card:first-of-type', title: '¡Listo!', text: 'Eso es todo. Repite el tour cuando quieras.' , imgVariantList: variants },
+  ];
 }
 
-function bindMentorCallButtons() {
-  $all('.mentor-call-btn').forEach(b => {
-    b.addEventListener('click', (e) => {
-      const tool = e.currentTarget.dataset.tool || 'inicio';
-      openMentorBubbleFor(tool);
+function createTourUI(profile) {
+  document.getElementById('tour-overlay')?.remove();
+  document.getElementById('tour-mentor-image')?.remove();
+  document.getElementById('tour-mentor-bubble')?.remove();
+
+  // overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'tour-overlay';
+  overlay.className = 'tour-overlay';
+  overlay.style.position = 'fixed';
+  overlay.style.inset = '0';
+  overlay.style.zIndex = '10050';
+  overlay.style.pointerEvents = 'auto';
+  overlay.style.transition = 'background 400ms ease';
+  overlay.style.setProperty('--spot-x', '50px');
+  overlay.style.setProperty('--spot-y', '50px');
+  overlay.style.setProperty('--spot-r', '80px');
+  overlay.style.background = 'radial-gradient(circle at 50px 50px, rgba(0,0,0,0) calc(80px - 6px), rgba(0,0,0,0.55) calc(80px - 6px + 8px))';
+  document.body.appendChild(overlay);
+  tourState.overlayEl = overlay;
+
+  // mentor image
+  const mentorImg = document.createElement('img');
+  mentorImg.id = 'tour-mentor-image';
+  mentorImg.className = 'mentor-image-tour mentor-float';
+  mentorImg.alt = 'Mentor';
+  mentorImg.style.width = '120px'; mentorImg.style.height = '120px';
+  mentorImg.style.position = 'fixed'; mentorImg.style.borderRadius = '12px'; mentorImg.style.zIndex = '10090';
+  mentorImg.style.pointerEvents = 'none';
+  mentorImg.style.boxShadow = '0 20px 50px rgba(6,8,15,0.08)';
+  mentorImg.style.backgroundColor = '#fff';
+  mentorImg.style.transition = 'transform 700ms cubic-bezier(.22,.9,.32,1), left 700ms, top 700ms';
+  document.body.appendChild(mentorImg);
+  tourState.mentorEl = mentorImg;
+
+  // bubble
+  const bubble = document.createElement('div');
+  bubble.id = 'tour-mentor-bubble';
+  bubble.className = 'mentor-bubble';
+  bubble.style.position = 'fixed';
+  bubble.style.zIndex = '10095';
+  bubble.style.maxWidth = '420px';
+  bubble.style.background = 'linear-gradient(180deg,#f8fafc,#f1f5f9)';
+  bubble.style.border = '1px solid rgba(159,122,234,0.12)';
+  bubble.style.color = '#0f172a';
+  bubble.style.padding = '12px 14px';
+  bubble.style.borderRadius = '12px';
+  bubble.style.boxShadow = '0 18px 50px rgba(2,6,23,0.08)';
+  bubble.style.transition = 'left 700ms, top 700ms, transform 300ms';
+  bubble.innerHTML = `<div id="tour-bubble-content"><strong>Hola</strong><div class="bubble-text" style="min-height:36px;"></div></div>
+    <div class="tour-controls" style="margin-top:10px; display:flex; gap:8px; justify-content:flex-end;">
+      <button id="tour-skip" class="btn-ghost">Omitir</button>
+      <button id="tour-prev" class="btn-ghost">Atrás</button>
+      <button id="tour-next" class="btn-primary">Siguiente</button>
+    </div>`;
+  document.body.appendChild(bubble);
+  tourState.bubbleEl = bubble;
+
+  bubble.querySelector('#tour-skip').onclick = () => endTour(true);
+  bubble.querySelector('#tour-prev').onclick = () => { if (tourState.step > 0) { tourState.step--; showTourStep(); } };
+  bubble.querySelector('#tour-next').onclick = () => {
+    if (tourState.typing) { finishTypingNow(); return; }
+    tourState.step++;
+    if (tourState.step >= tourState.steps.length) return endTour();
+    showTourStep();
+  };
+}
+
+function setSpotlightForRect(rect) {
+  const overlay = tourState.overlayEl;
+  if (!overlay) return;
+  const isNav = rect.top > (window.innerHeight - 160) || rect.selector === '#bottom-nav';
+  if (isNav) {
+    const top = Math.max(0, rect.top - 12);
+    const bottom = Math.min(window.innerHeight, rect.bottom + 12);
+    overlay.style.background = `linear-gradient(to bottom,
+      rgba(0,0,0,0.55) 0%,
+      rgba(0,0,0,0.55) ${top}px,
+      rgba(0,0,0,0) ${top}px,
+      rgba(0,0,0,0) ${bottom}px,
+      rgba(0,0,0,0.55) ${bottom}px,
+      rgba(0,0,0,0.55) 100%)`;
+    return;
+  }
+  const cx = Math.round(rect.left + rect.width / 2);
+  const cy = Math.round(rect.top + rect.height / 2);
+  const halfW = rect.width / 2;
+  const halfH = rect.height / 2;
+  const r = Math.ceil(Math.sqrt(halfW * halfW + halfH * halfH) + 28);
+  overlay.style.removeProperty('background');
+  overlay.style.setProperty('--spot-x', cx + 'px');
+  overlay.style.setProperty('--spot-y', cy + 'px');
+  overlay.style.setProperty('--spot-r', r + 'px');
+  overlay.style.background = `radial-gradient(circle at ${cx}px ${cy}px, rgba(0,0,0,0) calc(${r}px - 6px), rgba(0,0,0,0.55) calc(${r}px - 6px + 8px))`;
+}
+
+function moveMentorToTarget(targetRect) {
+  const mentor = tourState.mentorEl;
+  const bubble = tourState.bubbleEl;
+  if (!mentor || !bubble) return;
+  const margin = 12;
+  let preferredLeft = Math.min(window.innerWidth - mentor.offsetWidth - 16, targetRect.right + 12);
+  let preferredTop = targetRect.top + (targetRect.height / 2) - (mentor.offsetHeight / 2);
+  if (preferredLeft + mentor.offsetWidth + margin > window.innerWidth - 8) {
+    preferredLeft = Math.max(margin, targetRect.left - mentor.offsetWidth - 12);
+  }
+  if (preferredLeft < margin) preferredLeft = margin;
+  let left = Math.round(preferredLeft);
+  let top = Math.round(preferredTop);
+  if (top < margin) top = margin + 16;
+  if (top + mentor.offsetHeight + margin > window.innerHeight) top = window.innerHeight - mentor.offsetHeight - margin;
+  mentor.style.left = `${left}px`; mentor.style.top = `${top}px`;
+
+  const bubbleLeft = left - (bubble.offsetWidth / 2) + (mentor.offsetWidth / 2);
+  let bubbleTop = top - bubble.offsetHeight - 12;
+  if (bubbleTop < 12) bubbleTop = top + mentor.offsetHeight + 12;
+  bubble.style.left = `${Math.max(12, Math.min(window.innerWidth - bubble.offsetWidth - 12, bubbleLeft))}px`;
+  bubble.style.top = `${Math.max(12, Math.min(window.innerHeight - bubble.offsetHeight - 12, bubbleTop))}px`;
+}
+
+function focusOnSelector(selector) {
+  const target = document.querySelector(selector);
+  if (target) {
+    target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const rect = target.getBoundingClientRect();
+        rect.selector = selector;
+        document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+        target.classList.add('tour-highlight');
+        resolve(rect);
+      }, 520);
     });
-  });
-}
-
-function openMentorBubbleFor(context) {
-  let msg = 'Hola, ¿en qué te ayudo?';
-  switch (context) {
-    case 'inicio':
-      msg = `¡Hola ${STATE.user.name || 'amigo'}! Puedes registrar ingresos/gastos rápido aquí. ¿Quieres ayuda con un simulador?`;
-      break;
-    case 'registro':
-      msg = 'En el registro puedes detallar monto, categoría y fecha. Yo te ayudo a elegir categorías.';
-      break;
-    case 'historico':
-      msg = 'Aquí están tus movimientos. Puedes exportarlos o eliminarlos.';
-      break;
-    case 'simuladores':
-      msg = 'Prueba hacer pequeñas variaciones en la tasa para ver cómo cambia tu ahorro.';
-      break;
-    default:
-      msg = 'Puedo ayudarte con metas, simuladores y con interpretar tus gastos.';
+  } else {
+    return new Promise((resolve) => {
+      setTimeout(() => resolve({ left: window.innerWidth / 2 - 60, top: window.innerHeight / 2 - 60, right: window.innerWidth / 2 + 60, width: 120, height: 120 }), 350);
+    });
   }
-  showMentorMessage(msg, 'ensenando');
 }
 
-function showMentorMessage(text, state = 'normal', ttl = 4000) {
-  if (!MENTOR.bubbleEl || !MENTOR.avatarEl) return;
-  MENTOR.bubbleEl.classList.remove('hidden');
-  MENTOR.bubbleEl.style.pointerEvents = 'auto';
-  MENTOR.bubbleEl.querySelector('#mentor-text').textContent = text;
-  // small show/hide logic
-  if (MENTOR.timeoutId) clearTimeout(MENTOR.timeoutId);
-  MENTOR.timeoutId = setTimeout(() => {
-    MENTOR.bubbleEl.classList.add('hidden');
-  }, ttl);
+function typeText(containerEl, text, speed = 18, cb) {
+  tourState.typing = true;
+  containerEl.innerHTML = '';
+  let i = 0;
+  setMentorStateImage(normalizeTutorKey(JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}').assignedTutor || ''), 'enseñando');
+  tourState.typingTimer = setInterval(() => {
+    containerEl.innerHTML += text[i] === ' ' ? ' ' : text[i];
+    i++;
+    if (i >= text.length) {
+      clearInterval(tourState.typingTimer);
+      tourState.typingTimer = null;
+      tourState.typing = false;
+      setTimeout(() => setMentorStateImage(normalizeTutorKey(JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}').assignedTutor || ''), 'normal'), 350);
+      if (cb) cb();
+    }
+  }, speed);
+}
+function finishTypingNow() {
+  if (!tourState.typing) return;
+  clearInterval(tourState.typingTimer);
+  tourState.typingTimer = null;
+  tourState.typing = false;
+  const bubbleTextEl = tourState.bubbleEl.querySelector('.bubble-text');
+  const step = tourState.steps[tourState.step];
+  bubbleTextEl.innerHTML = step ? step.text : '';
+  setMentorStateImage(normalizeTutorKey(JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}').assignedTutor || ''), 'normal');
 }
 
-function showMentorHintForSection(sectionId) {
-  // quick hints when navigating
-  if (sectionId === 'inicio') showMentorMessage('Resumen diario: revisa tu saldo estimado y registra movimientos rápidos.', 'ensenando', 3000);
-  if (sectionId === 'simuladores') showMentorMessage('¿Quieres simular cuánto ahorrarás? Introduce un aporte mensual y tasa.', 'ensenando', 3500);
-}
-
-/* ==========================
-   Tour Guiado (Intro.js)
-   ========================== */
-function initializeTour() {
-  const btn = $('tour-general-btn');
-  if (!btn) return;
-  btn.addEventListener('click', () => startTour());
-}
-
-function startTour() {
-  const intro = introJs();
-  intro.setOptions({
-    steps: [
-      { intro: "Bienvenido a Carlitos — te guiaré por lo importante." },
-      { element: document.querySelector('#welcome-name'), intro: "Aquí está tu nombre y el saludo." },
-      { element: document.querySelector('#predicted-balance'), intro: "Tu saldo estimado aparece aquí." },
-      { element: document.querySelector('#chart-overview'), intro: "Gráficos rápidos: ingresos vs gastos." },
-      { element: document.querySelector('#quick-amount') || '.nav-btn', intro: "Registro rápido para añadir movimientos." },
-      { element: document.querySelector('#run-s1'), intro: "Simuladores: prueba ahorro mensual." },
-      { element: document.querySelector('#goals-list'), intro: "Metas: configura objetivos de ahorro o reducción de gastos." },
-      { intro: "Eso es todo por ahora. ¡A empezar!" }
-    ],
-    showStepNumbers: false,
-    exitOnEsc: true,
-    exitOnOverlayClick: true,
-    showBullets: true,
+async function setMentorStateImage(tutorKeyRaw, state = 'normal') {
+  const tutorKey = normalizeTutorKey(tutorKeyRaw);
+  const list = (TUTOR_IMG_VARIANTS[tutorKey] || []).slice();
+  const prioritized = [];
+  const stateLower = state.toLowerCase().replace('ñ', 'n');
+  list.forEach(fn => {
+    const lower = fn.toLowerCase();
+    if (lower.includes(stateLower) || lower.includes(stateLower.replace('n', 'ñ'))) prioritized.push(fn);
   });
-
-  intro.start();
+  const combined = prioritized.concat(list.filter(x => !prioritized.includes(x)));
+  const img = await getFirstValidImage(combined.map(fn => (fn.startsWith('http') ? fn : IMG_PATH + fn)));
+  if (img && tourState.mentorEl) tourState.mentorEl.src = img.src;
 }
 
-/* ==========================
-   UTILS: Toast
-   ========================== */
-function toast(msg, ttl = 2500) {
-  // simple toast at bottom-right
-  const t = document.createElement('div');
-  t.className = 'fixed right-6 bottom-6 px-4 py-2 rounded bg-black text-white shadow';
-  t.style.zIndex = 9999;
-  t.textContent = msg;
-  document.body.appendChild(t);
-  setTimeout(() => t.classList.add('opacity-0'), ttl - 200);
-  setTimeout(() => t.remove(), ttl);
+async function showTourStep() {
+  const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
+  const step = tourState.steps[tourState.step];
+  const bubble = tourState.bubbleEl;
+  const mentor = tourState.mentorEl;
+  if (!step || !bubble || !mentor) return endTour();
+
+  document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+
+  focusOnSelector(step.sel).then(async rect => {
+    setSpotlightForRect(rect);
+    moveMentorToTarget(rect);
+    bubble.querySelector('#tour-bubble-content strong').textContent = step.title || '';
+    const bubbleTextEl = bubble.querySelector('.bubble-text');
+
+    await setMentorStateImage(profile.assignedTutor || '', 'enseñando');
+    typeText(bubbleTextEl, step.text || '', 18);
+
+    const nextBtn = bubble.querySelector('#tour-next');
+    nextBtn.textContent = (tourState.step === tourState.steps.length - 1) ? 'Finalizar' : 'Siguiente';
+  });
 }
 
-/* ==========================
-   UPDATE UI: summary, charts, history
-   ========================== */
-function updateAllUI() {
-  updateSummary();
-  updateOverviewChart();
-  renderHistoryTable();
-  renderGoalsList();
+function startTour(profile = null) {
+  if (tourState.active) return;
+  if (!profile) profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
+  tourState.steps = buildTourSteps(profile);
+  tourState.step = 0;
+  createTourUI(profile);
+  tourState.active = true;
+  setTimeout(() => showTourStep(), 350);
+}
+function endTour(skipSave = false) {
+  document.querySelectorAll('.tour-highlight').forEach(el => el.classList.remove('tour-highlight'));
+  tourState.overlayEl?.remove();
+  tourState.mentorEl?.remove();
+  tourState.bubbleEl?.remove();
+  tourState = { active: false, step: 0, steps: [], overlayEl: null, mentorEl: null, bubbleEl: null, typing: false, typingTimer: null };
+  if (!skipSave) localStorage.setItem('tutorialCompleted', 'true');
 }
 
-function updateSummary() {
-  const ingresos = STATE.movimientos.filter(m => m.tipo === 'ingreso').reduce((s, m) => s + Number(m.monto), 0);
-  const egresos = STATE.movimientos.filter(m => m.tipo === 'egreso').reduce((s, m) => s + Number(m.monto), 0);
-  const balance = ingresos - egresos;
-  $('total-ingresos').textContent = fmt(ingresos);
-  $('total-egresos').textContent = fmt(egresos);
-  $('predicted-balance').textContent = fmt(balance);
-  $('xp-current').textContent = STATE.xp;
-  $('coins-badge').textContent = STATE.coins;
-}
+DOM.startTourBtn?.addEventListener('click', () => startTour(JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {}));
+window.addEventListener('resize', () => {
+  if (tourState.active && tourState.steps.length > 0) {
+    const step = tourState.steps[tourState.step];
+    const el = document.querySelector(step.sel);
+    if (el) {
+      const rect = el.getBoundingClientRect();
+      setSpotlightForRect(rect);
+      moveMentorToTarget(rect);
+    }
+  }
+});
 
-/* ==========================
-   Buttons / Helpers binding
-   ========================== */
-function bindOverviewFilters() {
-  // already bound in initializeOverviewChart via IDs
-}
+/* autostart tour if not seen */
+(function autoStartTourIfNew() {
+  const seen = localStorage.getItem('tutorialCompleted');
+  const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
+  if (!seen) setTimeout(() => startTour(profile), 750);
+})();
 
-/* ==========================
-   Helper: bind buttons not yet bound
-   ========================== */
-function bindMentorCallButtons() {
-  // already done earlier
-}
+/* ========= POLLING / AUTO REFRESH ========= */
+setInterval(() => { if (currentUser) refreshData(); }, 60_000);
 
-/* ==========================
-   Small extra utilities
-   ========================== */
-// Convert numbers friendly
-function safeNum(v) { return Number(v) || 0; }
-
-/* ==========================
-   End of module
-   ========================== */
-
+/* ========= FIN ========= */
+// ya está todo: funciones para CRUD local + sync firestore, simulador, limpieza selectiva,
+// gráficas adaptables y tour spotlight con mentor flotante.

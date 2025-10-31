@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lección — Presupuesto (Carlitos)</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./aprender.css" /> <!-- reutiliza estilos -->
+  <style>
+    .lesson-hero { border-radius:14px; padding:18px; background:linear-gradient(90deg,#ffffff,#f7fffb); box-shadow: 0 18px 40px rgba(2,6,23,0.06); }
+    .badge { display:inline-flex; gap:8px; align-items:center; padding:8px 10px; border-radius:999px; background:linear-gradient(90deg,#06b6d4,#059669); color:#fff; font-weight:800; }
+    .game-stage { min-height:320px; display:grid; place-items:center; border-radius:12px; border:1px dashed rgba(2,6,23,0.04); background:#fff; padding:20px; }
+    .btn-large { padding:12px 18px; border-radius:12px; font-weight:800; }
+  </style>
+</head>
+<body class="bg-gradient-to-b from-emerald-50 to-white min-h-screen">
+
+  <div class="max-w-3xl mx-auto p-4">
+    <header class="flex items-center justify-between mb-6">
+      <div>
+        <a href="./Aprender.html" class="small-muted">← Volver</a>
+        <h1 class="text-2xl font-extrabold mt-2">Lección: Presupuesto</h1>
+        <p class="muted">Sección: Conceptos & práctico 5-min (Reto Presupuesto)</p>
+      </div>
+      <div class="text-right">
+        <div class="badge">💰 Presupuesto</div>
+      </div>
+    </header>
+
+    <main class="space-y-6">
+      <section class="lesson-hero">
+        <div class="flex items-start justify-between">
+          <div>
+            <h2 class="text-xl font-bold">Reto: Arma tu presupuesto 50/30/20</h2>
+            <p class="muted mt-1">Decide cómo distribuir S/ 2000 en necesidades, deseos y ahorro.</p>
+          </div>
+          <div>
+            <div class="small-muted">Recompensa</div>
+            <div class="text-lg font-bold">+20 coins · +50 XP</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card game-stage" id="game-stage">
+        <!-- Aquí va la interacción: draggable, opciones, quiz, etc. -->
+        <div class="text-center p-4">
+          <p class="font-semibold">Simulación RÁPIDA (placeholder)</p>
+          <p class="muted mt-2">Selecciona cuánto asignas a A: Necesidades, B: Deseos, C: Ahorro</p>
+          <div class="mt-4 grid grid-cols-3 gap-3 max-w-xl mx-auto">
+            <input id="inp-need" type="range" min="0" max="2000" value="1000" />
+            <input id="inp-want" type="range" min="0" max="2000" value="600" />
+            <input id="inp-save" type="range" min="0" max="2000" value="400" />
+          </div>
+          <div class="mt-4">
+            <button id="btn-eval" class="btn-large bg-gradient-to-r from-indigo-500 to-purple-600 text-white">Evaluar distribución</button>
+          </div>
+          <div id="eval-result" class="mt-4 muted"></div>
+        </div>
+      </section>
+
+      <section class="card p-4">
+        <h3 class="font-semibold">Mini-lección</h3>
+        <p class="muted mt-2">Explicación breve sobre por qué 50/30/20 funciona y cómo adaptarlo si tus gastos fijos son altos.</p>
+      </section>
+
+      <div class="flex gap-3">
+        <button id="btn-complete" class="btn-large btn-primary">Marcar como completada</button>
+        <a href="./Aprender.html" class="btn-large btn-ghost" style="padding:12px 18px;border-radius:12px;">Volver</a>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // lógica simple de ejemplo (puedes reemplazar por mini juego real)
+    document.getElementById('btn-eval').addEventListener('click', ()=> {
+      const need = Number(document.getElementById('inp-need').value);
+      const want = Number(document.getElementById('inp-want').value);
+      const save = Number(document.getElementById('inp-save').value);
+      const total = need + want + save;
+      const res = document.getElementById('eval-result');
+      if (total !== 2000) {
+        res.innerHTML = '<span style="color:#ef4444">La suma debe ser exactamente S/ 2000 para el ejercicio (ahora '+ total +')</span>';
+      } else {
+        const pNeed = Math.round((need/2000)*100), pWant = Math.round((want/2000)*100), pSave = Math.round((save/2000)*100);
+        res.innerHTML = `<strong>Distribución:</strong> Necesidades ${pNeed}% • Deseos ${pWant}% • Ahorro ${pSave}%`;
+      }
+    });
+
+    // completar: marcar progreso local y volver
+    document.getElementById('btn-complete').addEventListener('click', ()=> {
+      // marca progreso local (ejemplo simple)
+      const KEY = 'carlitos_levels_progress';
+      try {
+        const ps = JSON.parse(localStorage.getItem(KEY) || '{}');
+        if (!ps.presupuesto) ps.presupuesto = { pct:100, completed:true, unlocked:true };
+        else { ps.presupuesto.pct = 100; ps.presupuesto.completed = true; ps.presupuesto.unlocked = true; }
+        localStorage.setItem(KEY, JSON.stringify(ps));
+        // añadir recompensa rápida al perfil
+        const PROFILE_KEY = 'carlitos_profile_data';
+        const prof = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
+        prof.carlitosCoins = (Number(prof.carlitosCoins||0) + 20);
+        prof.totalXP = (Number(prof.totalXP||0) + 50);
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(prof));
+        alert('¡Buen trabajo! Ganaste +20 coins y +50 XP. Volviendo al camino de aprendizaje...');
+        window.location.href = './Aprender.html';
+      } catch(e){ console.error(e); alert('Error guardando progreso'); }
+    });
+  </script>
+</body>
+</html>

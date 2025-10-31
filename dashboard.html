@@ -2,202 +2,116 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Carlitos Dashboard</title>
-  <link rel="icon" href="logo.png" type="image/png" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Carlitos — Aprender</title>
+
+  <!-- Tailwind (utilidades) -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/intro.js/minified/intro.min.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intro.js/minified/introjs.min.css" />
+
+  <!-- Chart / Confetti optional (keeps perf) -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <link rel="stylesheet" href="./aprender.css">
 </head>
+<body class="bg-slate-50 text-slate-900">
 
-<body class="bg-slate-50 text-slate-900 min-h-screen flex" data-theme="light">
-  <!-- Sidebar -->
-  <aside class="w-64 bg-white shadow-lg p-4 flex flex-col justify-between">
-    <div>
-      <div class="flex items-center mb-6">
-        <img src="logo.png" alt="Carlitos Logo" class="w-10 h-10 mr-2" />
-        <h1 class="text-xl font-bold text-indigo-600">Carlitos</h1>
-      </div>
-
-      <nav class="space-y-2">
-        <button class="nav-btn w-full text-left p-2 rounded hover:bg-indigo-100" data-section="inicio">🏠 Inicio</button>
-        <button class="nav-btn w-full text-left p-2 rounded hover:bg-indigo-100" data-section="registro">📝 Registro</button>
-        <button class="nav-btn w-full text-left p-2 rounded hover:bg-indigo-100" data-section="historico">📜 Histórico</button>
-        <button class="nav-btn w-full text-left p-2 rounded hover:bg-indigo-100" data-section="simuladores">🧮 Simuladores</button>
-        <button class="nav-btn w-full text-left p-2 rounded hover:bg-indigo-100" data-section="metas">🎯 Metas</button>
-        <button class="nav-btn w-full text-left p-2 rounded hover:bg-indigo-100" data-section="economia">📈 Economía</button>
-        <button class="nav-btn w-full text-left p-2 rounded hover:bg-indigo-100" data-section="herramientas">🛠️ Herramientas</button>
-      </nav>
-    </div>
-
-    <div class="pt-4 border-t mt-4">
-      <button id="toggle-theme-sidebar" class="w-full py-2 border rounded mb-2">Modo Oscuro</button>
-      <button id="tour-general-btn" class="w-full py-2 bg-indigo-500 text-white rounded">🎓 Tour guiado</button>
-    </div>
-  </aside>
-
-  <!-- Main content -->
-  <main class="flex-1 p-6 overflow-y-auto relative">
-
-    <!-- SECCIÓN INICIO -->
-    <section id="inicio" class="section">
-      <div class="mb-4">
-        <h2 class="text-2xl font-bold">Bienvenido, <span id="welcome-name">Usuario</span> 👋</h2>
-      </div>
-
-      <!-- Resumen -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-        <div class="p-4 border rounded-2xl bg-white shadow">
-          <p class="text-sm text-slate-500">Saldo estimado</p>
-          <h3 id="predicted-balance" class="text-2xl font-semibold">$0</h3>
-        </div>
-        <div class="p-4 border rounded-2xl bg-white shadow">
-          <p class="text-sm text-slate-500">Ingresos</p>
-          <h3 id="total-ingresos" class="text-2xl font-semibold text-green-600">$0</h3>
-        </div>
-        <div class="p-4 border rounded-2xl bg-white shadow">
-          <p class="text-sm text-slate-500">Gastos</p>
-          <h3 id="total-egresos" class="text-2xl font-semibold text-red-500">$0</h3>
-        </div>
-      </div>
-
-      <!-- Gráfico -->
-      <div class="p-4 border rounded-2xl bg-white shadow h-64">
-        <canvas id="chart-overview"></canvas>
-      </div>
-
-      <!-- Mentor call -->
-      <div class="mt-4">
-        <button class="mentor-call-btn bg-indigo-500 text-white px-4 py-2 rounded" data-tool="inicio">
-          Llamar al tutor 🦊
-        </button>
-      </div>
-    </section>
-
-    <!-- SECCIÓN REGISTRO -->
-    <section id="registro" class="section hidden">
-      <h2 class="text-xl font-semibold mb-4">Registrar Movimiento</h2>
-      <form id="registro-form" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-        <input type="number" id="reg-monto" placeholder="Monto" class="p-2 border rounded" />
-        <select id="reg-tipo" class="p-2 border rounded">
-          <option value="ingreso">Ingreso</option>
-          <option value="egreso">Gasto</option>
-        </select>
-        <input type="text" id="reg-categoria" placeholder="Categoría" class="p-2 border rounded" />
-        <input type="date" id="reg-fecha" class="p-2 border rounded" />
-        <input type="text" id="reg-nota" placeholder="Nota" class="p-2 border rounded col-span-full" />
-      </form>
-
-      <div class="flex gap-2">
-        <button id="registro-guardar" class="bg-indigo-500 text-white px-4 py-2 rounded">Guardar</button>
-        <button id="registro-limpiar" class="border px-4 py-2 rounded">Limpiar</button>
-        <button class="mentor-call-btn bg-indigo-500 text-white px-4 py-2 rounded" data-tool="registro">Llamar al tutor 🦊</button>
-      </div>
-    </section>
-
-    <!-- SECCIÓN HISTÓRICO -->
-    <section id="historico" class="section hidden">
-      <h2 class="text-xl font-semibold mb-4">Histórico</h2>
-      <div id="history-table" class="overflow-x-auto bg-white rounded p-4 shadow"></div>
-
-      <div class="mt-4">
-        <button class="mentor-call-btn bg-indigo-500 text-white px-4 py-2 rounded" data-tool="historico">
-          Llamar al tutor 🦊
-        </button>
-      </div>
-    </section>
-
-    <!-- SECCIÓN SIMULADORES -->
-    <section id="simuladores" class="section hidden space-y-6">
-      <h2 class="text-xl font-semibold">Simuladores</h2>
-
-      <div class="p-4 border rounded-2xl bg-white shadow">
-        <h3 class="font-semibold mb-2">Ahorro mensual</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <input id="s1-monthly" type="number" placeholder="Aporte mensual" class="p-2 border rounded" />
-          <input id="s1-rate" type="number" placeholder="Tasa anual %" class="p-2 border rounded" />
-          <input id="s1-years" type="number" placeholder="Años" class="p-2 border rounded" />
-          <div class="flex gap-2">
-            <button id="run-s1" class="bg-indigo-500 text-white px-4 py-2 rounded">Calcular</button>
-            <button id="reset-s1" class="border px-4 py-2 rounded">Limpiar</button>
-          </div>
-        </div>
-        <p class="mt-3">Resultado: <span id="s1-result" class="font-semibold">$0</span></p>
-      </div>
-
-      <div class="p-4 border rounded-2xl bg-white shadow">
-        <h3 class="font-semibold mb-2">Objetivo Millonario 💰</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <input id="million-monthly" type="number" placeholder="Ahorro mensual" class="p-2 border rounded" />
-          <input id="million-rate" type="number" placeholder="Tasa anual %" class="p-2 border rounded" />
-          <div class="flex gap-2">
-            <button id="run-million" class="bg-indigo-500 text-white px-4 py-2 rounded">Calcular</button>
-            <button id="reset-million" class="border px-4 py-2 rounded">Limpiar</button>
-          </div>
-        </div>
-        <p class="mt-3">Tiempo estimado: <span id="million-result" class="font-semibold">—</span></p>
-      </div>
-
+  <div class="page-container max-w-6xl mx-auto p-4">
+    <header class="flex items-center justify-between gap-4 mb-6">
       <div>
-        <button class="mentor-call-btn bg-indigo-500 text-white px-4 py-2 rounded" data-tool="simuladores">
-          Llamar al tutor 🦊
-        </button>
+        <h1 class="title">Aprende • Carlitos Academy</h1>
+        <p class="subtitle">Lecciones por niveles — Interactivo, limpio y pro</p>
       </div>
+
+      <div class="flex items-center gap-3">
+        <button id="btn-tour" class="btn-outline">🎓 Tour</button>
+        <button id="btn-simulate" class="btn-primary">⚡ Demo</button>
+        <button id="btn-reset" class="btn-ghost">Reset</button>
+      </div>
+    </header>
+
+    <!-- HERO -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start mb-6">
+      <div class="hero card col-span-2">
+        <div class="flex items-center gap-4">
+          <div id="hero-avatar" class="avatar">C</div>
+          <div>
+            <div id="hero-name" class="hero-name">Usuario</div>
+            <div id="hero-role" class="muted">Explorador</div>
+            <div class="mt-3">
+              <div class="small-muted">XP</div>
+              <div class="xp-wrap mt-2">
+                <div id="xp-fill" class="xp-fill" style="width:0%"></div>
+              </div>
+              <div id="xp-meta" class="muted text-xs mt-2">0 XP • Próximo 100</div>
+            </div>
+          </div>
+
+          <div class="ml-auto text-right">
+            <div class="muted text-xs">Nivel</div>
+            <div id="level-badge" class="level-badge">Novato</div>
+            <div class="mt-2"><button id="btn-first-lesson" class="btn-primary-sm">Ir a lección 1</button></div>
+          </div>
+        </div>
+
+        <!-- mentor small -->
+        <div id="mentor-small" class="mentor-small" title="Tu mentor">
+          <img id="mentor-small-img" alt="Mentor" draggable="false"/>
+        </div>
+      </div>
+
+      <aside class="card">
+        <div>
+          <div class="muted text-xs">Progreso</div>
+          <div id="stats" class="mt-2 font-semibold">0 XP • 0 Coins</div>
+        </div>
+        <div class="mt-4 border-t pt-3">
+          <div class="muted text-xs">Consejo del mentor</div>
+          <div id="mentor-advice" class="mt-2 text-sm">Tu mentor te dará recomendaciones según tu actividad.</div>
+        </div>
+      </aside>
     </section>
 
-    <!-- SECCIÓN METAS -->
-    <section id="metas" class="section hidden">
-      <h2 class="text-xl font-semibold mb-4">Metas</h2>
-
-      <div class="flex gap-2 mb-4">
-        <input id="goal-title" placeholder="Título de la meta" class="p-2 border rounded flex-1" />
-        <input id="goal-target" placeholder="Monto objetivo" type="number" class="p-2 border rounded w-32" />
-        <select id="goal-type" class="p-2 border rounded">
-          <option value="ahorro">Ahorro</option>
-          <option value="gasto">Reducir gasto</option>
-          <option value="ingreso">Generar ingreso</option>
-        </select>
-        <button id="add-goal" class="bg-indigo-500 text-white px-4 py-2 rounded">Agregar</button>
+    <!-- MAPA NIVELES (minimal) -->
+    <section class="card mb-20">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold">Mapa de Niveles</h2>
+        <div class="flex items-center gap-2">
+          <select id="mode" class="select-min">
+            <option value="adventure">Aventura</option>
+            <option value="practice">Práctica</option>
+            <option value="exam">Examen</option>
+          </select>
+          <button id="unlock-demo" class="btn-outline-sm">Desbloquear demo</button>
+        </div>
       </div>
 
-      <div id="goals-list" class="space-y-2 bg-white p-4 border rounded shadow"></div>
-
-      <div class="mt-4">
-        <button class="mentor-call-btn bg-indigo-500 text-white px-4 py-2 rounded" data-tool="metas">Llamar al tutor 🦊</button>
-      </div>
-    </section>
-
-    <!-- ECONOMÍA -->
-    <section id="economia" class="section hidden">
-      <div class="p-4 border rounded bg-white shadow">
-        <h2 class="text-xl font-semibold mb-2">Economía</h2>
-        <p class="text-slate-500 italic">Próximamente 📊</p>
+      <!-- svg path + nodes container -->
+      <div id="map-wrap" class="map-wrap">
+        <svg id="curve-svg" viewBox="0 0 1200 260" class="w-full h-36" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#06b6d4"/></linearGradient>
+          </defs>
+          <path id="curve-path" d="M40 200 C 240 40, 460 320, 660 200 C 860 80, 1080 320, 1160 200"
+            stroke="url(#lg)" stroke-width="6" fill="none" stroke-linecap="round" />
+        </svg>
+        <div id="nodes-root" class="nodes-root"></div>
       </div>
     </section>
+  </div>
 
-    <!-- HERRAMIENTAS -->
-    <section id="herramientas" class="section hidden">
-      <div class="p-4 border rounded bg-white shadow">
-        <h2 class="text-xl font-semibold mb-2">Herramientas</h2>
-        <p class="text-slate-500 italic">Próximamente 🧩</p>
-      </div>
-    </section>
-
-    <!-- Mentor -->
-    <div id="mentor-avatar" class="fixed bottom-20 right-6 w-16 h-16 rounded-full shadow-lg bg-white border overflow-hidden cursor-pointer"></div>
-    <div id="mentor-bubble" class="hidden fixed bottom-40 right-20 bg-white border p-3 rounded-2xl shadow max-w-xs">
-      <p id="mentor-text" class="text-sm text-slate-700"></p>
+  <!-- Bottom nav (coherencia) -->
+  <nav id="bottom-nav" class="nav fixed bottom-0 left-0 right-0 bg-white border-t z-40">
+    <div class="max-w-2xl mx-auto flex justify-around py-2">
+      <a href="./dashboard.html" class="muted">Dashboard</a>
+      <a href="./Aprender.html" class="active">Aprender</a>
+      <a href="./Microaprendizaje.html" class="muted">Micro</a>
+      <a href="./Carlitos.html" class="muted">Perfil</a>
     </div>
-  </main>
+  </nav>
 
-  <!-- Firebase SDKs -->
-  <script type="module" src="firebase-config.js"></script>
+  <!-- TOUR overlay root -->
+  <div id="tour-root"></div>
 
-  <!-- Dashboard principal -->
-  <script type="module" src="dashboard.js"></script>
-
-  <!-- Onboarding data -->
-  <script type="module" src="onboarding.js"></script>
+  <script type="module" src="./aprender.js"></script>
 </body>
 </html>

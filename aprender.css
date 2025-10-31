@@ -1,0 +1,91 @@
+/* aprender.css — estilo pro para finanzas, animaciones y microinteracciones */
+:root{
+  --maxw:1100px;
+  --muted:#6b7280;
+  --accent-1:#059669;
+  --accent-2:#06b6d4;
+  --shadow: 0 14px 40px rgba(2,6,23,0.07);
+  --glass: rgba(255,255,255,0.94);
+}
+
+*{box-sizing:border-box}
+body{font-family:Inter, system-ui, -apple-system; margin:0; color:#0f172a; background:linear-gradient(180deg,#ecfdf5 0%, #ffffff 60%); -webkit-font-smoothing:antialiased}
+.app-max{max-width:var(--maxw)}
+
+/* Topbar */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px;border-radius:14px;background:var(--glass);box-shadow:var(--shadow);border:1px solid rgba(2,6,23,0.04)}
+.brand-info{display:flex;gap:12px;align-items:center}
+.brand-badge{width:56px;height:56px;border-radius:12px;background:linear-gradient(90deg,#fff,#f7fff7);display:grid;place-items:center;position:relative;box-shadow:0 8px 24px rgba(2,6,23,0.04);overflow:hidden}
+.brand-badge img{width:38px;height:38px;object-fit:contain}
+.brand-initial{font-weight:800;color:var(--accent-1);font-size:20px}
+.hello{font-weight:800;font-size:16px}
+.muted{color:var(--muted);font-size:13px}
+
+/* top controls */
+.top-controls{display:flex;gap:10px;align-items:center}
+.status-pill{display:inline-flex;gap:8px;align-items:center;padding:8px 10px;border-radius:999px;background:white;box-shadow:0 8px 30px rgba(2,6,23,0.04);font-weight:700}
+.btn-ghost{background:transparent;border:0;color:var(--muted);padding:6px 8px;border-radius:10px}
+.btn-primary{background:linear-gradient(90deg,var(--accent-1),var(--accent-2));color:#fff;padding:10px 12px;border-radius:12px;border:0;font-weight:800}
+.btn-primary-sm{background:linear-gradient(90deg,var(--accent-1),var(--accent-2));color:#fff;padding:7px 10px;border-radius:10px;border:0;font-weight:800;font-size:13px}
+.btn-outline{background:transparent;border:1px solid rgba(2,6,23,0.06);padding:9px 11px;border-radius:10px}
+
+/* cards */
+.card{background:white;border-radius:14px;padding:14px;box-shadow:var(--shadow);border:1px solid rgba(2,6,23,0.04)}
+.card-pad{padding:18px}
+.card-header{display:flex;justify-content:space-between;align-items:center}
+.title{font-size:18px;font-weight:800;margin:0}
+.controls-inline{display:flex;gap:8px;align-items:center}
+.select{padding:8px 10px;border-radius:10px;border:1px solid rgba(2,6,23,0.06)}
+
+/* levels grid */
+.levels-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(86px,1fr));gap:14px}
+@media (max-width:900px){ .levels-grid{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;} .levels-grid::-webkit-scrollbar{display:none} }
+
+.level-card{display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;transition:transform .22s,box-shadow .22s}
+.level-card.locked{opacity:.45;pointer-events:none}
+.level-icon{width:86px;height:86px;border-radius:999px;display:grid;place-items:center;position:relative;box-shadow:0 18px 48px rgba(2,6,23,0.06);overflow:visible; transform-origin:center}
+.level-icon .center-dot{position:relative;z-index:6;color:white;font-weight:900;font-size:20px}
+.level-label{font-weight:800;font-size:13px;text-align:center}
+
+/* ring & pulse animation for active */
+@keyframes pulseFloat { 0%{transform:translateY(0)}50%{transform:translateY(-6px)}100%{transform:translateY(0)} }
+.floating{animation: pulseFloat 3s ease-in-out infinite}
+.level-icon:hover{transform:scale(1.04) rotate(-2deg);filter:brightness(1.03)}
+.level-card:hover{transform:translateY(-8px)}
+
+/* svg ring placed inside .ring (JS crea SVG) */
+.ring{position:absolute;left:15px;top:15px;transform:rotate(-90deg);width:56px;height:56px;transition:all .6s cubic-bezier(.2,.9,.3,1)}
+
+/* detail panel */
+.detail-layout{display:flex;gap:16px;align-items:flex-start}
+.detail-icon{width:88px;height:88px;border-radius:14px;background:linear-gradient(90deg,#fff,#f7fff7);display:grid;place-items:center;font-weight:900;color:#fff}
+.detail-body{flex:1}
+.pill-flag{display:inline-block;padding:6px 8px;border-radius:999px;background:#eefaf3;color:var(--accent-1);font-weight:800;font-size:12px}
+
+/* aside mentor */
+.mentor-compact{display:flex;gap:12px;align-items:center}
+.mentor-avatar{width:56px;height:56px;border-radius:12px;background:linear-gradient(90deg,#fff,#f8fffb);display:grid;place-items:center;overflow:hidden}
+.mentor-avatar img{width:48px;height:48px;object-fit:cover;border-radius:10px}
+.mentor-card .floating{animation: pulseFloat 3.5s ease-in-out infinite}
+
+/* progress & stats */
+.stat-row{display:flex;justify-content:space-between;align-items:center}
+.progress-track{background:#f1f5f9;height:10px;border-radius:999px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent-1),var(--accent-2));border-radius:999px;transition:width .8s ease}
+
+/* bottom nav */
+.bottom-nav{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid rgba(2,6,23,0.04);box-shadow:0 -8px 24px rgba(2,6,23,0.04);padding:10px 0}
+.nav-inner{max-width:var(--maxw);margin:0 auto;display:flex;justify-content:space-around;align-items:center}
+.nav-item{color:var(--muted);font-weight:700;text-decoration:none}
+.nav-item.active{color:var(--accent-1)}
+
+/* small utilities */
+.muted.small{font-size:12px;color:var(--muted)}
+.rewards strong{color:var(--accent-1)}
+
+/* tour overlay / bubble */
+.tour-overlay{position:fixed;inset:0;background:rgba(2,6,23,0.6);z-index:9998;backdrop-filter:blur(2px)}
+.tour-bubble{position:fixed;z-index:10000;background:white;padding:14px;border-radius:12px;box-shadow:0 30px 80px rgba(2,6,23,0.45);max-width:420px}
+
+/* toast */
+#carlitos-toast{transition:opacity .3s ease}

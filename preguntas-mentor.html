@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Onboarding simple</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #07121a; color: #e6fbf5; font-family: Inter, system-ui, -apple-system; }
+    .glass { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.03); backdrop-filter: blur(6px); }
+    .option { transition: transform .12s, box-shadow .12s; }
+    .option:active { transform: translateY(2px); }
+    .selected { box-shadow: 0 8px 24px rgba(0,255,150,0.08); transform: translateY(-4px); }
+    /* mentor card specifics */
+    .mentor-icon { width: 48px; height: 48px; border-radius: 999px; object-fit: cover; }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+
+  <div class="w-full max-w-xl glass rounded-2xl p-6">
+    <!-- Progress -->
+    <div class="mb-4">
+      <div class="h-2 bg-white/6 rounded-full overflow-hidden">
+        <div id="progressBar" class="h-2 bg-gradient-to-r from-green-400 to-green-500" style="width:0%"></div>
+      </div>
+      <div class="text-xs opacity-70 mt-2" id="progressText">Paso 1/7</div>
+    </div>
+
+    <!-- Top: avatar + prompt -->
+    <div class="flex items-center gap-4 mb-4">
+      <img id="avatar" src="leopardonormal.png" alt="avatar" class="w-16 h-16 rounded-full shadow-sm" />
+      <div>
+        <div id="questionTitle" class="font-semibold text-lg">Bienvenido</div>
+        <div id="questionSub" class="text-xs opacity-70">Responde de forma rápida — una pregunta a la vez.</div>
+      </div>
+    </div>
+
+    <!-- Card with question -->
+    <div class="bg-white/5 rounded-xl p-4 mb-4">
+      <div id="questionText" class="text-md font-medium">Hola — ¿cómo te llamas o cuál es tu apodo?</div>
+      <!-- quick reply options container (hidden when free text) -->
+      <div id="options" class="grid grid-cols-1 gap-3 mt-4"></div>
+
+      <!-- free text input (only when needed) -->
+      <div id="freeInputWrap" class="mt-3 hidden">
+        <input id="freeInput" class="w-full p-3 rounded-lg text-black" placeholder="Escribe aquí..." />
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="flex items-center gap-3">
+      <button id="prevBtn" class="px-4 py-2 rounded-lg bg-white/6" disabled>← Atrás</button>
+      <button id="nextBtn" class="ml-auto px-4 py-2 rounded-lg bg-[#00FF8E] text-[#01210b] font-semibold">Siguiente</button>
+    </div>
+
+    <!-- Summary (shown at end) -->
+    <div id="summary" class="mt-5 hidden bg-white/5 p-4 rounded-lg text-sm">
+      <div class="font-semibold mb-2">Resumen</div>
+      <div id="summaryList" class="space-y-1 text-xs opacity-90"></div>
+      <div class="mt-3">
+        <button id="finishBtn" class="w-full py-2 rounded-lg bg-gradient-to-r from-green-400 to-green-500 text-[#062014] font-semibold">Continuar a mi perfil</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =========== Simple onboarding one-question-at-time (actualizado con mentores) =========== */
+
+/* Asset map (archivos en la MISMA carpeta que el HTML) */
+const ASSETS = {
+  gato: { normal: 'leopardonormal.png', ensenando: 'leopardoenseñando.png', riendo: 'leopardoriendo.png', confundido: 'leopardoconfundido.png' },
+  ardilla: { normal: 'ardillanormal.png', ensenando: 'ardillaenseñando.png', riendo: 'ardillariendo.png', confundido: 'ardillaconfundida.png' },
+  condor: { normal: 'condornormal.png', ensenando: 'condorenseñando.png', riendo: 'condorriendo.png', confundido: 'condorconfundido.png' },
+  mono: { normal: 'mononormal.png', ensenando: 'monoenseñando.png', riendo: 'monoriendo.png', confundido: 'monoconfundido.png' }
+};
+
+/* Questions array */
+const questions = [
+  { id: 'q1', text: '¿Cómo te llamas o cuál es tu apodo?', type: 'text' },
+  { id: 'q2', text: '¿En qué gastas más?', type: 'options', options: ['Comida', 'Ropa', 'Salidas', 'Transporte', 'Suscripciones'] },
+  { id: 'q3', text: 'Tu meta mensual (S/)', type: 'options', options: ['500','1000','1500','2000+','Prefiero no decir'] },
+  { id: 'q4', text: '¿Quieres recordatorios inteligentes?', type: 'options', options: ['Sí','No'] },
+  { id: 'q5', text: '¿Qué estilo de mentor prefieres?', type: 'options', options: ['Estricto','Motivador','Estratégico','Chill'] },
+  { id: 'q6', text: '¿Cuánto tiempo semanal planeas dedicar?', type: 'options', options: ['15 min','30 min','1 hora','2 horas','Más de 2 horas'] },
+  { id: 'q7', text: 'Elige tu mentor (luego podrás cambiarlo)', type: 'options', options: ['Carlitos - Balance','EcoMaster - Discipline','Coach Pro - Emprender','InvestorX - Riesgo controlado'] }
+];
+
+/* Estado */
+let idx = 0;
+const answers = JSON.parse(localStorage.getItem('onboard-simple')) || {};
+
+/* DOM refs */
+const progressBar = document.getElementById('progressBar');
+const progressText = document.getElementById('progressText');
+const avatar = document.getElementById('avatar');
+const questionText = document.getElementById('questionText');
+const optionsWrap = document.getElementById('options');
+const freeInputWrap = document.getElementById('freeInputWrap');
+const freeInput = document.getElementById('freeInput');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const summary = document.getElementById('summary');
+const summaryList = document.getElementById('summaryList');
+const finishBtn = document.getElementById('finishBtn');
+
+/* Helpers: preload (misma carpeta) y fallback onerror */
+(function preload(){
+  // personajes
+  Object.values(ASSETS).forEach(obj => {
+    Object.values(obj).forEach(fname => {
+      const i = new Image();
+      i.src = fname; // archivos en misma carpeta
+    });
+  });
+  // iconos de mentores (asegúrate que existan)
+  ['iconoardilla.png','iconomono.png','iconocondor.png','iconoleopardo.png'].forEach(f => { const i = new Image(); i.src = f; });
+})();
+
+function setAvatar(characterKey, mood='normal'){
+  const fname = (ASSETS[characterKey] && ASSETS[characterKey][mood]) ? ASSETS[characterKey][mood] : ASSETS.gato.normal;
+  const url = fname;
+  avatar.onerror = () => {
+    console.error('Error cargando avatar ->', url);
+    // fallback: intenta versión normal del gato
+    try { avatar.src = ASSETS.gato.normal; } catch(e) { avatar.src = ''; }
+  };
+  avatar.src = url;
+}
+
+/* Mentor definitions (rich cards) */
+const MENTORS = [
+  {
+    key: 'Saison',
+    label: 'Saison — La Ardilla Visionaria',
+    icon: 'iconoardilla.png',
+    frase: 'Soñar está bien, pero construirlo día a día es mejor.',
+    desc: 'Ágil, curiosa y previsora. Planea con anticipación y ama ahorrar con propósito.'
+  },
+  {
+    key: 'Kantu',
+    label: 'Kantu — El Mono Peruano Emprendedor',
+    icon: 'iconomono.png',
+    frase: 'Si el camino no existe, ¡yo lo invento!',
+    desc: 'Creativo, sociable y entusiasta. Ideal para quienes quieren emprender.'
+  },
+  {
+    key: 'Inti',
+    label: 'Inti — El Cóndor Sabio',
+    icon: 'iconocondor.png',
+    frase: 'Solo quien se eleva ve el camino completo.',
+    desc: 'Serio y estratégico. Perfecto si buscas visión y calma en decisiones.'
+  },
+  {
+    key: 'Sumaq',
+    label: 'Sumaq — El Gato Andino Protector',
+    icon: 'iconoleopardo.png',
+    frase: 'El silencio también enseña a decidir.',
+    desc: 'Intuitivo y noble. Para quienes confían en su instinto y buscan equilibrio.'
+  }
+];
+
+/* Render current question */
+function render(){
+  const q = questions[idx];
+  questionText.textContent = q.text;
+  const pct = Math.round(((idx)/ (questions.length)) * 100);
+  progressBar.style.width = pct + '%';
+  progressText.textContent = `Paso ${idx+1}/${questions.length}`;
+  optionsWrap.innerHTML = '';
+  freeInputWrap.classList.add('hidden');
+
+  const charKeys = ['gato','ardilla','condor','mono'];
+  setAvatar(charKeys[idx % charKeys.length], 'ensenando');
+
+  if (q.type === 'options'){
+    // If it's the mentor question, render rich mentor cards
+    if (q.id === 'q7') {
+      MENTORS.forEach(m => {
+        const card = document.createElement('button');
+        card.type = 'button';
+        card.className = 'option w-full p-4 rounded-xl bg-white/5 border border-white/6 flex items-start gap-4';
+        card.style.alignItems = 'center';
+        card.innerHTML = `
+          <img src="${m.icon}" alt="${m.key}" class="mentor-icon" />
+          <div class="flex-1 text-left">
+            <div class="font-semibold">${m.label}</div>
+            <div class="text-xs opacity-70 mt-1">${m.desc}</div>
+            <div class="text-xs text-green-200 mt-2 italic">"${m.frase}"</div>
+          </div>
+        `;
+
+        card.addEventListener('mouseenter', () => {
+          // show mentor icon in avatar when hovering
+          avatar.src = m.icon;
+          card.classList.add('selected');
+        });
+        card.addEventListener('mouseleave', () => {
+          const charKeysInner = ['gato','ardilla','condor','mono'];
+          setAvatar(charKeysInner[idx % charKeysInner.length], 'ensenando');
+          card.classList.remove('selected');
+        });
+
+        card.addEventListener('click', () => {
+          // visual persist
+          optionsWrap.querySelectorAll('button').forEach(x => x.classList.remove('selected'));
+          card.classList.add('selected');
+
+          // save selection (label and key)
+          answers[q.id] = { label: m.label, key: m.key };
+          localStorage.setItem('onboard-simple', JSON.stringify(answers));
+
+          // avatar reaction using mapping
+          const iconKeyMap = { 'Saison': 'ardilla', 'Kantu': 'mono', 'Inti': 'condor', 'Sumaq': 'gato' };
+          const ik = iconKeyMap[m.key];
+          if (ik) setAvatar(ik, 'riendo');
+
+          // snack confirm + auto-advance
+          const snack = document.createElement('div');
+          snack.textContent = `Elegiste a ${m.key}. Avanzando...`;
+          snack.style.position = 'fixed';
+          snack.style.left = '50%';
+          snack.style.transform = 'translateX(-50%)';
+          snack.style.bottom = '18px';
+          snack.style.background = 'rgba(0,0,0,0.6)';
+          snack.style.color = '#eafff0';
+          snack.style.padding = '8px 12px';
+          snack.style.borderRadius = '8px';
+          document.body.appendChild(snack);
+          setTimeout(()=> snack.remove(), 900);
+
+          setTimeout(()=> { idx++; (idx < questions.length) ? render() : showSummary(); }, 520);
+        });
+
+        optionsWrap.appendChild(card);
+      });
+    } else {
+      // regular options rendering
+      q.options.forEach(opt => {
+        const b = document.createElement('button');
+        b.className = 'option w-full text-left p-4 rounded-xl bg-white/5 border border-white/6 flex items-center gap-3';
+        b.innerHTML = `<span class="flex-1">${opt}</span>`;
+        b.addEventListener('click', ()=> {
+          optionsWrap.querySelectorAll('button').forEach(x => x.classList.remove('selected'));
+          b.classList.add('selected');
+          answers[q.id] = opt;
+          localStorage.setItem('onboard-simple', JSON.stringify(answers));
+          setAvatar(charKeys[idx % charKeys.length], 'riendo');
+          setTimeout(()=> { idx++; (idx < questions.length) ? render() : showSummary(); }, 450);
+        });
+        optionsWrap.appendChild(b);
+      });
+    }
+  } else {
+    freeInputWrap.classList.remove('hidden');
+    freeInput.value = answers[q.id] || '';
+    freeInput.focus();
+    freeInput.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        const v = freeInput.value.trim();
+        if (!v) return;
+        answers[q.id] = v;
+        localStorage.setItem('onboard-simple', JSON.stringify(answers));
+        setAvatar(charKeys[idx % charKeys.length], 'riendo');
+        idx++;
+        render();
+      }
+    };
+  }
+
+  prevBtn.disabled = idx === 0;
+  summary.classList.add('hidden');
+}
+
+/* Show summary */
+function showSummary(){
+  progressBar.style.width = '100%';
+  progressText.textContent = `Completado ${questions.length}/${questions.length}`;
+  summaryList.innerHTML = '';
+  questions.forEach(q => {
+    const raw = answers[q.id];
+    const val = (raw === undefined) ? '—' : (typeof raw === 'object' ? raw.label : raw);
+    const el = document.createElement('div');
+    el.className = 'flex justify-between border-b border-white/6 py-2';
+    el.innerHTML = `<div class="text-sm opacity-90">${q.text}</div><div class="text-sm font-semibold text-green-200">${val}</div>`;
+    summaryList.appendChild(el);
+  });
+  summary.classList.remove('hidden');
+  setAvatar('gato','riendo');
+
+  // auto-redirect after short delay (user sees summary)
+  setTimeout(()=> {
+    localStorage.setItem('onboard-simple', JSON.stringify(answers));
+    window.location.href = 'Carlitos.html';
+  }, 1600);
+}
+
+/* Buttons */
+prevBtn.addEventListener('click', ()=> {
+  if (idx > 0) { idx--; render(); }
+});
+nextBtn.addEventListener('click', ()=> {
+  const q = questions[idx];
+  if (q.type === 'text') {
+    const v = freeInput.value.trim();
+    if (!v) { freeInput.focus(); return; }
+    answers[q.id] = v; localStorage.setItem('onboard-simple', JSON.stringify(answers));
+    idx++; (idx < questions.length) ? render() : showSummary();
+  } else {
+    const selected = optionsWrap.querySelector('.selected');
+    if (selected) {
+      idx++; (idx < questions.length) ? render() : showSummary();
+    } else {
+      const first = optionsWrap.querySelector('button');
+      if (first) {
+        first.classList.add('selected');
+        setTimeout(()=> first.classList.remove('selected'), 600);
+      }
+    }
+  }
+});
+
+/* Finish button: redirect immediately to profile (Carlitos.html) */
+if (finishBtn) {
+  finishBtn.addEventListener('click', ()=> {
+    localStorage.setItem('onboard-simple', JSON.stringify(answers));
+    window.location.href = 'Carlitos.html';
+  });
+}
+
+/* Inicial */
+render();
+
+/* ====== Diagnóstico rápido (imprime en consola y muestra aviso si hay fallos) ======
+   Comprueba que todos los archivos de ASSETS existen (misma carpeta).
+*/
+(async function quickDiagnostic(){
+  const flat = [];
+  Object.values(ASSETS).forEach(o => { Object.values(o).forEach(f => flat.push(f)); });
+  // add mentor icons
+  ['iconoardilla.png','iconomono.png','iconocondor.png','iconoleopardo.png'].forEach(f => flat.push(f));
+  const missing = [];
+  for (const f of flat) {
+    try {
+      const r = await fetch(f, { method: 'HEAD' });
+      if (!r.ok) missing.push(f);
+    } catch(e){
+      missing.push(f);
+    }
+  }
+  if (missing.length) {
+    console.warn('Archivos faltantes o inaccesibles (revisa mayúsculas / rutas):', missing);
+    const note = document.createElement('div');
+    note.style.position = 'fixed';
+    note.style.left = '12px';
+    note.style.bottom = '12px';
+    note.style.background = 'rgba(255,80,80,0.14)';
+    note.style.padding = '8px 12px';
+    note.style.borderRadius = '8px';
+    note.style.color = '#fff';
+    note.style.fontSize = '13px';
+    note.textContent = 'Algunas imágenes no se encontraron (abre consola para ver la lista).';
+    document.body.appendChild(note);
+  } else {
+    console.log('Diagnóstico OK: todas las imágenes encontradas (misma carpeta).');
+  }
+})();
+</script>
+
+</body>
+</html>

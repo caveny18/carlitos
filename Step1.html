@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Carlitos - Crear Cuenta</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="favicon.ico">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at 20% 10%, #072337, #02060B 70%);
+            min-height: 100vh;
+            color: #e6faff;
+            animation: bgfloat 9s ease-in-out infinite alternate;
+        }
+
+        @keyframes bgfloat {
+            0% { background-position: 0px 0px; }
+            100% { background-position: 0px 140px; }
+        }
+
+        .card {
+            background: rgba(5, 25, 41, 0.45);
+            border: 1px solid rgba(0,255,150,0.25);
+            backdrop-filter: blur(18px);
+            box-shadow: 0 0 35px rgba(0,255,150,0.15);
+        }
+
+        .glow:hover {
+            box-shadow: 0 0 14px #00FF8E;
+            transform: scale(1.02);
+        }
+
+        .pulse {
+            animation: pulse 2.2s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { opacity: .65 }
+            50% { opacity: 1 }
+            100% { opacity: .65 }
+        }
+
+        button:disabled {
+            opacity: .55;
+            cursor: not-allowed;
+            filter: grayscale(75%);
+        }
+    </style>
+</head>
+
+<body class="flex flex-col items-center justify-center px-4">
+
+    <!-- CONTAINER -->
+    <div id="onboarding-container"
+        class="card rounded-3xl w-full max-w-lg p-7 pt-9">
+
+        <!-- HEADER -->
+        <h1 class="text-4xl font-extrabold text-center mb-3 tracking-tight">
+            <span class="text-[#00B2FF]">Carlitos</span>
+            <span class="block text-base mt-1 text-[#00FF8E] opacity-80">
+                Tu asistente financiero personal
+            </span>
+        </h1>
+
+        <!-- Smaller Avatar -->
+        <div class="flex justify-center mb-4">
+            <img src="carlitosyamigos.png"
+                class="rounded-full border-2 border-[#00B2FF] shadow-lg pulse w-28 h-28 object-cover">
+        </div>
+
+        <!-- STEP 1: Perfil -->
+        <h2 class="text-xl font-semibold mb-3 text-[#00B2FF]">Tu Perfil</h2>
+
+        <div class="mb-6">
+            <label class="block text-lg mb-2 text-cyan-200">¿Con qué perfil te identificas?</label>
+
+            <select id="userRole"
+                    class="w-full p-3 bg-[#031520] border border-[#00FF8E]/50 text-white rounded-xl focus:outline-[#00FF8E]">
+                <option value="Estudiante">Estudiante</option>
+                <option value="Profesional">Profesional</option>
+                <option value="Emprendedor">Emprendedor</option>
+                <option value="Otro">Otro</option>
+            </select>
+        </div>
+
+        <!-- GOOGLE -->
+        <button id="googleLogin"
+                class="w-full bg-[#00B2FF] hover:bg-[#0093CC] py-3 rounded-xl text-white font-semibold glow mb-3 transition">
+            🌐 Continuar con Google
+        </button>
+
+        <!-- CONTINUAR PREGUNTAS (DESACTIVADO HASTA LOGIN) -->
+        <button id="continueQuiz"
+            disabled
+            class="w-full bg-[#00FF8E] hover:bg-[#02D374] text-[#061520] py-3 rounded-xl font-bold glow transition">
+            Continuar ➜ Preguntas
+        </button>
+    </div>
+
+    <!-- MODAL Usuario Existente -->
+    <div id="userExistsModal" class="fixed inset-0 bg-black/80 flex items-center justify-center hidden">
+        <div class="card p-8 rounded-2xl max-w-sm text-center">
+            <h2 class="text-2xl font-bold text-[#00B2FF]">¡Hola de nuevo!</h2>
+            <p class="mt-3 opacity-90">Ya tienes una cuenta registrada 😎</p>
+            <button id="goDashboard"
+                    class="mt-6 bg-[#00FF8E] hover:bg-[#02C774] py-2 px-6 rounded-xl glow transition text-[#061520]">
+                Ir al Dashboard
+            </button>
+        </div>
+    </div>
+
+<script type="module" src="./firebase-config.js"></script>
+<script type="module" src="./onboarding.js"></script>
+</body>
+</html>
