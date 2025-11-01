@@ -1,23 +1,20 @@
-// aprender.js — adaptado a finanzas personales con movimiento, mentor y tour
+// aprender.js (module)
+// Mapa interactivo + modo oscuro gamer pro
 const PROFILE_KEY = 'carlitos_profile_data';
-const IMG_PATH = ''; // coloca ruta si las imágenes están en carpeta
-const TUTOR_IMG_VARIANTS = {
-  'Mono': ['mononormal.png','iconomono.png'],
-  'Ardilla': ['ardillanormal.png','iconoardilla.png'],
-  'Condor': ['condornormal.png','iconocondor.png'],
-  'Gata': ['gatanormal.png','iconogata.png']
-};
+const LEVELS_PROGRESS_KEY = 'carlitos_levels_progress';
+const THEME_KEY = 'carlitos_learn_theme';
+const IMG_PATH = ''; // ajusta si tus imágenes están en subcarpeta
 
-// DOM helpers
+// DOM
 const $ = s => document.querySelector(s);
 const $$ = s => Array.from(document.querySelectorAll(s));
 
-// Elements
 const playerNameEl = $('#player-name');
 const badgeStars = $('#badge-stars');
 const badgeCoins = $('#badge-coins');
 const badgeLives = $('#badge-lives');
-const levelsGrid = $('#levels-grid');
+const levelsGridWrap = $('#map-nodes');
+const svgEl = $('#map-svg');
 const detailPanel = $('#detail-panel');
 const detailTitle = $('#detail-title');
 const detailDesc = $('#detail-desc');
@@ -25,19 +22,33 @@ const detailIcon = $('#detail-icon');
 const btnStartSection = $('#btn-start-section');
 const btnPreview = $('#btn-preview');
 const btnSimulate = $('#btn-simulate');
-const mentorImg = $('#mentor-aside-img');
-const mentorName = $('#mentor-name');
-const mentorAdvice = $('#mentor-advice');
 const streakEl = $('#streak');
 const currentLevelEl = $('#current-level');
 const progressMonthEl = $('#progress-month');
+const toggleThemeBtn = $('#toggle-theme-btn');
+const mapWrap = $('#map-canvas-wrap');
+const btnTour = $('#btn-tour');
+const btnQuick = $('#btn-quick');
+const filterSelect = $('#filter-mode');
 
-// load local profile (onboarding should have saved)
+// CATEGORIES (map nodes)
+const CATEGORIES = [
+  { id:'presupuesto', title:'Presupuesto', desc:'Divide ingresos con la regla 50/30/20. Ajusta tu flujo.', color:'#10B981', difficulty:'beginner' },
+  { id:'ahorro', title:'Ahorro', desc:'Cajas, metas y automatización del ahorro.', color:'#F97316', difficulty:'beginner' },
+  { id:'deuda', title:'Deuda', desc:'Prioriza y reduce deuda con estrategia.', color:'#FB7185', difficulty:'beginner' },
+  { id:'fondo_emergencia', title:'Fondo Emergencia', desc:'Construye un colchón de 3–6 meses.', color:'#8B5CF6', difficulty:'med' },
+  { id:'inversion', title:'Inversión', desc:'Riesgo, diversificación y horizonte temporal.', color:'#06B6D4', difficulty:'med' },
+  { id:'seguros', title:'Seguros', desc:'Protege tu salud y bienes eficientemente.', color:'#F59E0B', difficulty:'med' },
+  { id:'impuestos', title:'Impuestos', desc:'Optimiza impuestos dentro de la ley.', color:'#9333EA', difficulty:'adv' },
+  { id:'retiro', title:'Retiro', desc:'Planifica tu jubilación con anticipación.', color:'#0EA5A4', difficulty:'adv' }
+];
+
+// cargar perfil local
 function loadProfile(){
   try{
-    const pRaw = localStorage.getItem(PROFILE_KEY);
-    if (!pRaw) return { name:'Explorador', totalXP:0, carlitosCoins:0, badgeStars:0, lives:5, assignedTutor:'Ardilla', streak:0, levelName:'Novato' };
-    const p = JSON.parse(pRaw);
+    const raw = localStorage.getItem(PROFILE_KEY);
+    if (!raw) return { name:'Explorador', totalXP:0, carlitosCoins:0, badgeStars:0, lives:5, assignedTutor:'Ardilla', streak:0, levelName:'Novato' };
+    const p = JSON.parse(raw);
     return {
       name: p.name || p.nombre || 'Explorador',
       totalXP: Number(p.totalXP || p.xp || 0),
@@ -48,104 +59,158 @@ function loadProfile(){
       streak: Number(p.streak || 0),
       levelName: p.levelName || 'Novato'
     };
-  } catch(e){
-    return { name:'Explorador', totalXP:0, carlitosCoins:0, badgeStars:0, lives:5, assignedTutor:'Ardilla', streak:0, levelName:'Novato' };
-  }
+  } catch(e){ return { name:'Explorador', totalXP:0, carlitosCoins:0, badgeStars:0, lives:5, assignedTutor:'Ardilla', streak:0, levelName:'Novato' }; }
 }
 let profile = loadProfile();
+
+// progress
+let progressState = JSON.parse(localStorage.getItem(LEVELS_PROGRESS_KEY) || 'null') || {};
+if (!progressState || Object.keys(progressState).length === 0) {
+  CATEGORIES.forEach((c,i) => {
+    progressState[c.id] = { pct: i===0 ? 20 : 0, completed: i===0, unlocked: i<2 };
+  });
+  localStorage.setItem(LEVELS_PROGRESS_KEY, JSON.stringify(progressState));
+}
+
+// RENDER HEADER
 function renderHeader(){
   playerNameEl.textContent = profile.name;
-  badgeStars.textContent = profile.badgeStars;
-  badgeCoins.textContent = profile.carlitosCoins;
-  badgeLives.textContent = profile.lives;
+  badgeStars.textContent = profile.badgeStars || 0;
+  badgeCoins.textContent = profile.carlitosCoins || 0;
+  badgeLives.textContent = profile.lives || 5;
   streakEl.textContent = (profile.streak || 0) + ' días';
-  currentLevelEl.textContent = profile.levelName;
+  currentLevelEl.textContent = profile.levelName || 'Novato';
   const monthly = Math.min(100, (profile.totalXP % 800) / 8);
   if (progressMonthEl) progressMonthEl.style.width = monthly + '%';
 }
 renderHeader();
 
-// FINANCE topics as categories
-const CATEGORIES = [
-  { id:'presupuesto', title:'Presupuesto', desc:'Aprende a dividir ingresos y gasto en 50/30/20 y ajustar tu flujo.', color:'#10B981', difficulty:'beginner' },
-  { id:'ahorro', title:'Ahorro', desc:'Métodos de ahorro, cajas, metas y automatización.', color:'#F97316', difficulty:'beginner' },
-  { id:'deuda', title:'Deuda', desc:'Prioriza y paga de forma eficiente (avalancha vs bola de nieve).', color:'#FB7185', difficulty:'beginner' },
-  { id:'inversion', title:'Inversión', desc:'Conceptos básicos: riesgo, diversificación y horizonte.', color:'#06B6D4', difficulty:'med' },
-  { id:'fondo_emergencia', title:'Fondo Emergencia', desc:'Cuándo y cómo construir tu colchón de 3–6 meses.', color:'#8B5CF6', difficulty:'med' },
-  { id:'seguros', title:'Seguros', desc:'Seguro de salud, vida y bienes — por qué son importantes.', color:'#F59E0B', difficulty:'med' },
-  { id:'impuestos', title:'Impuestos', desc:'Conceptos básicos y cómo optimizar dentro de la ley.', color:'#9333EA', difficulty:'adv' },
-  { id:'retiro', title:'Retiro', desc:'Planificación temprana: cuentas y composición a largo plazo.', color:'#0EA5A4', difficulty:'adv' }
+// MAP LAYOUT: predefined coordinates for nodes (you can tweak positions)
+const NODE_LAYOUT = [
+  { x: 120, y: 60 },   // presupuesto
+  { x: 340, y: 40 },   // ahorro
+  { x: 560, y: 90 },   // deuda
+  { x: 780, y: 150 },  // fondo_emergencia
+  { x: 980, y: 220 },  // inversion
+  { x: 760, y: 320 },  // seguros
+  { x: 520, y: 360 },  // impuestos
+  { x: 300, y: 300 }   // retiro
 ];
 
-// progress state in localStorage
-let progressState = JSON.parse(localStorage.getItem('carlitos_levels_progress') || 'null') || {};
-if (!progressState || Object.keys(progressState).length === 0) {
-  CATEGORIES.forEach((c, i) => {
-    progressState[c.id] = { pct: i===0 ? 14 : 0, completed: false, unlocked: i<2 };
-  });
-  localStorage.setItem('carlitos_levels_progress', JSON.stringify(progressState));
-}
-
-// create ring svg (to avoid blurry canvas)
-function createRingSVG(pct, color){
-  const size = 56, stroke = 6, r = (size - stroke)/2;
-  const c = 2 * Math.PI * r;
-  const offs = c * (1 - pct/100);
-  const ns = 'http://www.w3.org/2000/svg';
-  const svg = document.createElementNS(ns,'svg');
-  svg.setAttribute('width', size); svg.setAttribute('height', size);
-  svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
-  svg.classList.add('ring');
-  const bg = document.createElementNS(ns,'circle'); bg.setAttribute('cx',size/2); bg.setAttribute('cy',size/2); bg.setAttribute('r', r);
-  bg.setAttribute('stroke','#ffffff66'); bg.setAttribute('stroke-width', stroke); bg.setAttribute('fill','none');
-  const fg = document.createElementNS(ns,'circle'); fg.setAttribute('cx',size/2); fg.setAttribute('cy',size/2); fg.setAttribute('r', r);
-  fg.setAttribute('stroke', color); fg.setAttribute('stroke-width', stroke); fg.setAttribute('fill','none');
-  fg.setAttribute('stroke-dasharray', c); fg.setAttribute('stroke-dashoffset', offs); fg.setAttribute('stroke-linecap','round');
-  svg.appendChild(bg); svg.appendChild(fg);
-  return svg;
-}
-
-// render grid
-function renderLevelsGrid(filter='all'){
-  levelsGrid.innerHTML = '';
-  const list = CATEGORIES.filter(c => filter==='all' ? true : c.difficulty === filter);
-  list.forEach(c => {
+// create node DOM + attach
+function buildMap(filter='all'){
+  levelsGridWrap.innerHTML = '';
+  svgEl.innerHTML = '';
+  // place nodes
+  CATEGORIES.forEach((c, idx) => {
+    if (filter !== 'all' && c.difficulty !== filter) return;
+    const pos = NODE_LAYOUT[idx] || { x: 120 + idx*100, y: 80 + (idx%3)*80 };
+    const node = document.createElement('div');
+    node.className = 'map-node';
+    node.dataset.id = c.id;
+    node.dataset.index = idx;
+    node.style.left = pos.x + 'px';
+    node.style.top = pos.y + 'px';
+    node.style.background = `linear-gradient(180deg, ${c.color}, ${shadeColor(c.color,-12)})`;
+    // locked / completed
     const st = progressState[c.id] || { pct:0, completed:false, unlocked:false };
-    const card = document.createElement('div'); card.className = 'level-card';
-    if (!st.unlocked) card.classList.add('locked');
+    if (!st.unlocked) node.classList.add('locked');
+    if (st.completed) node.classList.add('completed');
 
-    const icon = document.createElement('div'); icon.className = 'level-icon floating';
-    icon.style.background = `linear-gradient(180deg, ${c.color}, ${shadeColor(c.color, -12)})`;
-    // add ring + center
-    const ring = createRingSVG(st.pct, 'rgba(255,255,255,0.95)');
-    icon.appendChild(ring);
-    const center = document.createElement('div'); center.className = 'center-dot';
-    center.textContent = st.completed ? '★' : c.title[0];
-    icon.appendChild(center);
+    // inner content
+    node.innerHTML = `
+      <div class="node-ring" aria-hidden="true"></div>
+      <div class="node-core">${c.title[0]}</div>
+      <div class="node-sparkle" aria-hidden="true"></div>
+      <div class="node-label">${c.title}</div>
+    `;
+    // attach events
+    node.addEventListener('click', () => openDetail(c));
+    node.addEventListener('touchstart', () => openDetail(c));
+    levelsGridWrap.appendChild(node);
+  });
 
-    const label = document.createElement('div'); label.className = 'level-label'; label.textContent = c.title;
-
-    card.appendChild(icon); card.appendChild(label);
-
-    // subtle bounce on appear
-    card.animate([{transform:'translateY(12px)', opacity:0},{transform:'translateY(0)', opacity:1}],{duration:520, fill:'forwards', easing:'cubic-bezier(.2,.9,.3,1)'});
-
-    card.addEventListener('click', () => {
-      if (!st.unlocked) {
-        card.animate([{transform:'translateX(0)'},{transform:'translateX(-8px)'},{transform:'translateX(8px)'},{transform:'translateX(0)'}],{duration:240});
-        showToast('Nivel bloqueado — completa niveles anteriores');
-        return;
-      }
-      openDetail(c);
-    });
-
-    levelsGrid.appendChild(card);
+  // draw connections (simple: connect sequential nodes; also connect branches)
+  drawConnections();
+  // add small entrance animations
+  $$('.map-node').forEach((n,i)=> {
+    n.animate([{ transform: 'translateY(18px)', opacity: 0 }, { transform: 'translateY(0px)', opacity: 1 }], { duration: 450, easing: 'cubic-bezier(.2,.9,.3,1)', delay: i*60, fill:'forwards' });
   });
 }
-renderLevelsGrid();
-// --- Reemplaza la función openDetail existente por esta ---
+
+// draw svg paths connecting nodes (basic polyline between center points)
+function drawConnections(){
+  const nodes = $$('.map-node');
+  if (!nodes.length) return;
+  // build map of id->center
+  const centers = nodes.map(n => {
+    const r = n.getBoundingClientRect();
+    const parent = levelsGridWrap.getBoundingClientRect();
+    return {
+      id: n.dataset.id,
+      x: (r.left - parent.left) + r.width/2,
+      y: (r.top - parent.top) + r.height/2
+    };
+  });
+  // helper to create path between two points
+  function makePath(p1, p2){
+    const dx = p2.x - p1.x;
+    const dy = p2.y - p1.y;
+    const mx = p1.x + dx/2;
+    // cubic bezier control points for smooth curve
+    const cp1x = p1.x + Math.sign(dx) * Math.abs(dx) * 0.25;
+    const cp1y = p1.y;
+    const cp2x = p2.x - Math.sign(dx) * Math.abs(dx) * 0.25;
+    const cp2y = p2.y;
+    return `M ${p1.x} ${p1.y} C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${p2.x} ${p2.y}`;
+  }
+  // simple strategy: connect in index order and a few cross-links for map feeling
+  const order = centers; // index order
+  const paths = [];
+  for (let i=0;i<order.length-1;i++){
+    paths.push(makePath(order[i], order[i+1]));
+  }
+  // add a couple of extra links to look like a map
+  if (order.length >= 5) paths.push(makePath(order[1], order[4]));
+  if (order.length >= 7) paths.push(makePath(order[2], order[6]));
+
+  // render paths to svg
+  svgEl.innerHTML = '';
+  paths.forEach((d,i) => {
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d', d);
+    path.setAttribute('fill','none');
+    path.setAttribute('stroke', (document.body.classList.contains('dark-theme') ? 'rgba(0,255,213,0.22)' : 'rgba(15,23,42,0.06)'));
+    path.setAttribute('stroke-width','3');
+    path.setAttribute('stroke-linecap','round');
+    path.setAttribute('stroke-linejoin','round');
+    path.style.opacity = 0;
+    svgEl.appendChild(path);
+    // animate stroke draw
+    const len = path.getTotalLength();
+    path.style.strokeDasharray = len;
+    path.style.strokeDashoffset = len;
+    setTimeout(()=> {
+      path.style.transition = 'stroke-dashoffset 900ms ease, opacity 600ms ease';
+      path.style.strokeDashoffset = '0';
+      path.style.opacity = 1;
+    }, 200 + i*120);
+  });
+}
+
+// shade color (helper)
+function shadeColor(hex, percent) {
+  const f = hex.slice(1), t = percent < 0 ? 0 : 255, p = Math.abs(percent)/100;
+  const R = parseInt(f.substring(0,2),16), G = parseInt(f.substring(2,4),16), B = parseInt(f.substring(4,6),16);
+  const newR = Math.round((t - R) * p) + R;
+  const newG = Math.round((t - G) * p) + G;
+  const newB = Math.round((t - B) * p) + B;
+  return `rgb(${newR},${newG},${newB})`;
+}
+
+// OPEN DETAIL CARD
 function openDetail(category){
-  detailPanel.classList.remove('hidden');
+  detailPanel.scrollIntoView({behavior:'smooth', block:'center'});
   detailTitle.textContent = category.title;
   detailDesc.textContent = category.desc;
   detailIcon.innerHTML = `<div style="width:72px;height:72px;border-radius:12px;background:${category.color};display:grid;place-items:center;color:white;font-weight:900">${category.title[0]}</div>`;
@@ -153,57 +218,39 @@ function openDetail(category){
   $('#detail-xp').textContent = '+50';
   $('#detail-difficulty').textContent = category.difficulty === 'beginner' ? 'Principiante' : (category.difficulty === 'med' ? 'Intermedio' : 'Avanzado');
   detailPanel.dataset.selected = category.id;
-  detailPanel.scrollIntoView({behavior:'smooth', block:'center'});
 
-  // --- importante: asignamos el comportamiento de "EMPEZAR" ---
-  // Navegará a "leccion_<id>.html". Ej: leccion_presupuesto.html
-  if (btnStartSection) {
-    btnStartSection.onclick = (e) => {
-      e.preventDefault();
-      const targetId = category.id;
-      const filename = `leccion_${targetId}.html`;
-      // si quieres abrir en nueva pestaña: window.open(filename, '_blank');
-      window.location.href = filename;
-    };
-  }
+  // Setup start button
+  btnStartSection.onclick = () => {
+    simulateCompleteLevel(category.id);
+  };
 
-  // Preview: por defecto solo muestra una vista previa modal (opcional)
-  if (btnPreview) {
-    btnPreview.onclick = (ev) => {
-      ev.preventDefault();
-      const html = `<h3 style="margin:0">${category.title} — Vista previa</h3>
-        <p class="muted" style="margin-top:8px">${category.desc}</p>
-        <div style="margin-top:12px"><strong>Contenido:</strong> Mini juego de decisiones + 5 preguntas rápidas.</div>
-        <div style="display:flex;justify-content:flex-end;margin-top:12px">
-          <button id="pv-close" class="btn-ghost">Cerrar</button>
-          <button id="pv-go" class="btn-primary-sm" style="margin-left:8px">Ir a lección</button>
-        </div>`;
-      const modal = openModal(html);
-      modal.querySelector('#pv-close').onclick = closeModal;
-      modal.querySelector('#pv-go').onclick = () => {
-        closeModal();
-        window.location.href = `leccion_${category.id}.html`;
-      };
+  // Preview modal
+  btnPreview.onclick = () => {
+    const html = `<h3 style="margin:0">${category.title} — Vista previa</h3>
+    <p class="muted" style="margin-top:8px">${category.desc}</p>
+    <div style="margin-top:12px"><strong>Contenido:</strong> Mini juego de decisiones + 5 preguntas rápidas.</div>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px">
+      <button id="pv-close" class="btn-ghost">Cerrar</button>
+      <button id="pv-go" class="btn-primary-sm" style="margin-left:8px">Ir a lección</button>
+    </div>`;
+    const modal = openModal(html);
+    modal.querySelector('#pv-close').onclick = closeModal;
+    modal.querySelector('#pv-go').onclick = () => {
+      closeModal();
+      window.location.href = `leccion_${category.id}.html`;
     };
-  }
+  };
 }
 
-
-// complete level (simulate) => reward, confetti, mentor advice update
-btnStartSection.addEventListener('click', () => {
-  const id = detailPanel.dataset.selected;
-  if (!id) return showToast('Selecciona una sección primero');
-  simulateCompleteLevel(id);
-});
-
+// simulate completing a level (rewards + confetti)
 function simulateCompleteLevel(id){
   const st = progressState[id] || { pct:0, unlocked:true };
   st.pct = Math.min(100, (st.pct || 0) + (st.pct > 60 ? 40 : 30));
   if (st.pct >= 100) st.completed = true;
   progressState[id] = st;
-  localStorage.setItem('carlitos_levels_progress', JSON.stringify(progressState));
+  localStorage.setItem(LEVELS_PROGRESS_KEY, JSON.stringify(progressState));
 
-  // award rewards based on topic type (finance)
+  // award
   const awardCoins = 25;
   const awardXP = 75;
   profile.carlitosCoins = (profile.carlitosCoins || 0) + awardCoins;
@@ -212,106 +259,57 @@ function simulateCompleteLevel(id){
 
   localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
   renderHeader();
-  renderLevelsGrid($('#filter-mode').value);
+  buildMap(filterSelect.value);
 
-  // confetti & pulse
+  // effects
   if (st.completed) {
-    confetti({ particleCount: 80, spread: 70, origin: { y: 0.3 }});
+    confetti({ particleCount: 70, spread: 70, origin: { y: 0.3 }});
     showToast(`¡Sección completada! +${awardCoins} coins · +${awardXP} XP`);
   } else {
     showToast(`Progreso guardado +${awardXP} XP`);
   }
-
-  // update mentor advice depending on spending-like mapping
-  mentorAdvice.textContent = getAdviceBySpendingPattern();
 }
 
-// load mentor image and advice
-(async function loadMentor(){
-  const key = profile.assignedTutor || 'Ardilla';
-  mentorName.textContent = key;
-  mentorAdvice.textContent = getAdviceBySpendingPattern();
-  for (const fn of (TUTOR_IMG_VARIANTS[key] || [])){
-    const url = fn.startsWith('http') ? fn : (IMG_PATH + fn);
-    try {
-      const res = await fetch(url, { method:'HEAD' });
-      if (res.ok) { mentorImg.src = url; return; }
-    } catch(e){}
-  }
-  mentorImg.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="96" height="96"><rect width="100%" height="100%" fill="%23ecfccb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="%236b7280" font-size="14">Mentor</text></svg>';
-})();
-
-// advice generator (finance oriented) — simple heuristic using progress & coins
-function getAdviceBySpendingPattern(){
-  const xp = profile.totalXP || 0;
-  if (xp < 150) return 'Empieza con el reto de presupuesto: separa 50% necesidades, 30% deseos, 20% ahorro.';
-  if (xp < 500) return 'Buen ritmo. Automatiza tu ahorro mensual y crea un fondo de emergencia de 3 meses.';
-  return 'Avanzado: diversifica, revisa comisiones y optimiza impuestos dentro de la ley.';
+// MODALS (simple)
+function openModal(html){
+  const backdrop = document.createElement('div');
+  backdrop.className = 'tour-overlay';
+  const box = document.createElement('div');
+  box.className = 'tour-bubble';
+  box.innerHTML = html;
+  backdrop.appendChild(box);
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', (e)=> { if (e.target === backdrop) closeModal(); });
+  return box;
 }
+function closeModal(){ const el = document.querySelector('.tour-overlay'); if (el) el.remove(); }
 
-// shade color helper
-function shadeColor(hex, percent) {
-  const f = hex.slice(1), t = percent<0?0:255, p = Math.abs(percent)/100;
-  const R = parseInt(f.substring(0,2),16), G = parseInt(f.substring(2,4),16), B = parseInt(f.substring(4,6),16);
-  const newR = Math.round((t - R) * p) + R;
-  const newG = Math.round((t - G) * p) + G;
-  const newB = Math.round((t - B) * p) + B;
-  return `rgb(${newR},${newG},${newB})`;
-}
-
-// simulate demo data
-btnSimulate.addEventListener('click', async () => {
-  if (!confirm('Generar demo local de progreso? (no tocará datos reales en Firestore)')) return;
-  CATEGORIES.forEach((c,i) => {
-    progressState[c.id] = { pct: Math.floor(Math.random()*100), completed: Math.random()>.6, unlocked: true };
-  });
-  localStorage.setItem('carlitos_levels_progress', JSON.stringify(progressState));
-  showToast('Demo de lecciones creado (local)');
-  renderLevelsGrid($('#filter-mode').value);
-});
-
-// quick action: Button "Ir" (reto rápido)
-$('#btn-quick').addEventListener('click', ()=> {
-  const unlocked = Object.keys(progressState).find(k => progressState[k].unlocked);
-  if (!unlocked) return showToast('Aún no hay niveles desbloqueados');
-  progressState[unlocked].pct = Math.min(100, (progressState[unlocked].pct||0) + 25);
-  if (progressState[unlocked].pct >= 100) progressState[unlocked].completed = true;
-  localStorage.setItem('carlitos_levels_progress', JSON.stringify(progressState));
-  showToast('Reto rápido completado — revisa tu mentor');
-  renderLevelsGrid($('#filter-mode').value);
-});
-
-// filter
-$('#filter-mode').addEventListener('change', (e)=> renderLevelsGrid(e.target.value));
-
-// toast helper
-function showToast(msg, ttl=1600){
+// TOAST
+function showToast(msg, ttl=1700){
   let el = document.getElementById('carlitos-toast');
   if (!el){
     el = document.createElement('div'); el.id = 'carlitos-toast';
     el.style.position = 'fixed'; el.style.left = '50%'; el.style.transform = 'translateX(-50%)';
     el.style.bottom = '110px'; el.style.background = 'rgba(2,6,23,0.9)'; el.style.color = '#fff';
-    el.style.padding = '10px 14px'; el.style.borderRadius = '999px'; el.style.zIndex = 9999; el.style.opacity='0';
+    el.style.padding = '10px 14px'; el.style.borderRadius = '999px'; el.style.zIndex = 99999; el.style.opacity='0';
     document.body.appendChild(el);
   }
   el.textContent = msg; el.style.opacity = '1';
   setTimeout(()=> el.style.opacity = '0', ttl);
 }
 
-// TOUR / spotlight
+// TOUR: simple spotlight
 function startTour(){
   const steps = [
-    { sel: '.topbar', title: 'Panel superior', text: 'Aquí ves tus monedas, estrellas y vidas. Mantén la racha diaria.' },
-    { sel: '#levels-grid', title: 'Niveles de Finanzas', text: 'Cada círculo es una sección (presupuesto, ahorro, deuda...). Completa anillos y gana rewards.' },
-    { sel: '#mentor-aside-img', title: 'Tu Mentor', text: 'Tu mentor ofrece consejos personalizados según tu progreso y gastos.' },
-    { sel: '.mentor-card', title: 'Analizar gastos', text: 'Usa "Analizar mis gastos" para recibir tips prácticos según tus patrones.' }
+    { sel: '.topbar', title: 'Panel superior', text: 'Aquí ves tus monedas, estrellas y vidas.' },
+    { sel: '#map-canvas-wrap', title: 'Mapa interactivo', text: 'Explora los nodos, completa niveles y gana recompensas.' },
+    { sel: '#detail-panel', title: 'Panel detalle', text: 'Desde aquí puedes empezar la sección o ver una vista previa.' },
+    { sel: '.stat-card', title: 'Progreso', text: 'Mira tu racha, nivel y progreso mensual.' }
   ];
   const root = $('#tour-root'); root.innerHTML = '';
-
   const overlay = document.createElement('div'); overlay.className = 'tour-overlay';
   const bubble = document.createElement('div'); bubble.className = 'tour-bubble';
   root.appendChild(overlay); root.appendChild(bubble);
-
   let idx = 0;
   function showStep(n){
     if (n < 0 || n >= steps.length) return endTour();
@@ -321,22 +319,115 @@ function startTour(){
     let left = Math.min(window.innerWidth - 460, Math.max(12, rect.left + rect.width/2 - 200));
     let top = rect.top - 160; if (top < 20) top = rect.bottom + 12;
     bubble.style.left = left + 'px'; bubble.style.top = top + 'px';
-    bubble.innerHTML = `<strong style="display:block;margin-bottom:6px">${step.title}</strong><div style="color:#334155">${step.text}</div>
+    bubble.innerHTML = `<strong style="display:block;margin-bottom:6px">${step.title}</strong><div style="color:var(--muted)">${step.text}</div>
       <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
         <button id="tour-prev" class="btn-ghost">Atrás</button>
         <button id="tour-next" class="btn-primary-sm">${n===steps.length-1 ? 'Finalizar' : 'Siguiente'}</button>
       </div>`;
-    document.getElementById('tour-next').onclick = ()=> { idx++; showStep(idx); };
-    document.getElementById('tour-prev').onclick = ()=> { idx = Math.max(0, idx-1); showStep(idx); };
+    $('#tour-next').onclick = ()=> { idx++; showStep(idx); };
+    $('#tour-prev').onclick = ()=> { idx = Math.max(0, idx-1); showStep(idx); };
     overlay.onclick = endTour;
     if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
   }
   function endTour(){ root.innerHTML = ''; }
   showStep(0);
 }
-$('#btn-tour').addEventListener('click', startTour);
 
-// init
+// THEME TOGGLE (persistente)
+function initTheme(){
+  const stored = localStorage.getItem(THEME_KEY) || 'light';
+  applyTheme(stored);
+  toggleThemeBtn.onclick = () => {
+    const cur = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+    applyTheme(cur === 'dark' ? 'light' : 'dark');
+  };
+}
+function applyTheme(theme){
+  if (theme === 'dark') {
+    document.body.classList.add('dark-theme');
+    toggleThemeBtn.textContent = '💡 Modo Gamer (ON)';
+    toggleThemeBtn.classList.remove('btn-ghost');
+    toggleThemeBtn.classList.add('btn-primary-sm');
+  } else {
+    document.body.classList.remove('dark-theme');
+    toggleThemeBtn.textContent = '🌙 Modo Oscuro';
+    toggleThemeBtn.classList.remove('btn-primary-sm');
+    toggleThemeBtn.classList.add('btn-ghost');
+  }
+  localStorage.setItem(THEME_KEY, theme);
+  // redraw connections to apply color
+  setTimeout(()=> drawConnections(), 120);
+}
+
+// DRAG / PAN for map (desktop & mobile)
+let isDown = false, startX=0, startY=0, scrollLeft=0, scrollTop=0;
+mapWrap.addEventListener('pointerdown', (e) => {
+  isDown = true;
+  startX = e.clientX;
+  startY = e.clientY;
+  scrollLeft = mapWrap.scrollLeft;
+  scrollTop = mapWrap.scrollTop;
+  mapWrap.setPointerCapture(e.pointerId);
+});
+mapWrap.addEventListener('pointermove', (e) => {
+  if (!isDown) return;
+  const dx = startX - e.clientX;
+  const dy = startY - e.clientY;
+  mapWrap.scrollLeft = scrollLeft + dx;
+  mapWrap.scrollTop = scrollTop + dy;
+});
+mapWrap.addEventListener('pointerup', (e) => { isDown = false; mapWrap.releasePointerCapture?.(e.pointerId); });
+mapWrap.addEventListener('pointerleave', ()=> isDown = false);
+
+// SIMULATE DATA
+btnSimulate.addEventListener('click', () => {
+  if (!confirm('Generar demo local de progreso? (no tocará datos reales)')) return;
+  CATEGORIES.forEach((c,i) => {
+    progressState[c.id] = { pct: Math.floor(Math.random()*100), completed: Math.random()>.6, unlocked: true };
+  });
+  localStorage.setItem(LEVELS_PROGRESS_KEY, JSON.stringify(progressState));
+  showToast('Demo creado (local)');
+  buildMap(filterSelect.value);
+});
+
+// QUICK action
+btnQuick.addEventListener('click', ()=> {
+  const unlocked = Object.keys(progressState).find(k => progressState[k].unlocked);
+  if (!unlocked) return showToast('Aún no hay niveles desbloqueados');
+  progressState[unlocked].pct = Math.min(100, (progressState[unlocked].pct||0) + 25);
+  if (progressState[unlocked].pct >= 100) progressState[unlocked].completed = true;
+  localStorage.setItem(LEVELS_PROGRESS_KEY, JSON.stringify(progressState));
+  showToast('Reto rápido completado — revisa tu mentor');
+  buildMap(filterSelect.value);
+});
+
+// filter
+filterSelect.addEventListener('change', (e)=> buildMap(e.target.value));
+
+// Start tour
+btnTour.addEventListener('click', startTour);
+
+// initial render
 (function init(){
-  renderLevelsGrid();
+  initTheme();
+  renderHeader();
+  buildMap();
 })();
+
+// resize observer: redraw connections when layout changes
+const ro = new ResizeObserver(()=> drawConnections());
+ro.observe(levelsGridWrap);
+
+// Helper: open modal reused in this file
+function openModal(html){
+  const backdrop = document.createElement('div');
+  backdrop.className = 'tour-overlay';
+  const box = document.createElement('div');
+  box.className = 'tour-bubble';
+  box.innerHTML = html;
+  backdrop.appendChild(box);
+  document.body.appendChild(backdrop);
+  backdrop.addEventListener('click', (e)=> { if (e.target === backdrop) closeModal(); });
+  return box;
+}
+function closeModal(){ const el = document.querySelector('.tour-overlay'); if (el) el.remove(); }

@@ -326,7 +326,6 @@ function openAddTransactionModal(prefill = {}) {
       </div>
     </div>
   `;
-  
   const modal = openModal(html);
   const sel = modal.querySelector('#tx-category');
   const cats = readLocalCategories();
@@ -965,6 +964,87 @@ window.addEventListener('resize', () => {
 
 /* ========= POLLING / AUTO REFRESH ========= */
 setInterval(() => { if (currentUser) refreshData(); }, 60_000);
+/* ========= THEME TOGGLE: light <-> dark (gamer pro) ========= */
+(function themeToggleInit() {
+  const THEME_KEY = 'carlitos_theme';
+  const stored = localStorage.getItem(THEME_KEY) || 'light';
+  const body = document.body;
+
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      body.classList.add('dark-theme');
+      // quick neon flash for effect
+      body.style.transition = 'box-shadow 260ms ease, background 420ms ease';
+      // small glow pulse
+      document.querySelectorAll('.card').forEach((c,i) => {
+        c.style.transition = 'box-shadow 420ms ease, transform 420ms ease';
+        if (i % 2 === 0) c.classList.add('neon-outline');
+        setTimeout(()=> c.classList.remove('neon-outline'), 900 + (i*40));
+      });
+    } else {
+      body.classList.remove('dark-theme');
+    }
+    // persist
+    localStorage.setItem(THEME_KEY, theme);
+    updateToggleBtn(theme);
+  }
+
+  // create button in header if not exists
+  function ensureToggleButton() {
+    const header = document.querySelector('header');
+    if (!header) return null;
+    // try to find existing
+    let btn = document.getElementById('toggle-theme-btn');
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.id = 'toggle-theme-btn';
+      btn.title = 'Cambiar tema (Claro / Oscuro)';
+      btn.className = 'btn-ghost';
+      btn.style.marginLeft = '6px';
+      btn.innerHTML = `<span id="toggle-theme-icon">🌙</span><span id="toggle-theme-text" style="font-weight:700; margin-left:6px;">Modo Oscuro</span>`;
+      // place before logout if exists, else append
+      const logout = document.getElementById('logout');
+      if (logout && logout.parentElement) logout.parentElement.insertBefore(btn, logout);
+      else header.appendChild(btn);
+    }
+    btn.onclick = () => {
+      const current = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    };
+    return btn;
+  }
+
+  function updateToggleBtn(theme) {
+    const icon = document.getElementById('toggle-theme-icon');
+    const text = document.getElementById('toggle-theme-text');
+    if (!icon || !text) return;
+    if (theme === 'dark') {
+      icon.textContent = '💡';
+      text.textContent = 'Modo Gamer (ON)';
+      // neon style
+      const btn = document.getElementById('toggle-theme-btn');
+      if (btn) {
+        btn.classList.remove('btn-ghost'); btn.classList.add('btn-primary');
+        btn.style.boxShadow = '0 8px 30px rgba(0,255,213,0.08)';
+      }
+    } else {
+      icon.textContent = '🌙';
+      text.textContent = 'Modo Oscuro';
+      const btn = document.getElementById('toggle-theme-btn');
+      if (btn) {
+        btn.classList.remove('btn-primary'); btn.classList.add('btn-ghost');
+        btn.style.boxShadow = '';
+      }
+    }
+  }
+
+  // Init: ensure button and apply stored theme
+  const btn = ensureToggleButton();
+  applyTheme(stored === 'dark' ? 'dark' : 'light');
+
+  // minor: also allow quick toggle with "T" key (dev)
+  window.addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 't' && (e.ctrlKey || e.metaKey)) { const cur = body.classList.contains('dark-theme') ? 'dark' : 'light'; applyTheme(cur === 'dark' ? 'light' : 'dark'); }});
+})();
 
 /* ========= FIN ========= */
 // ya está todo: funciones para CRUD local + sync firestore, simulador, limpieza selectiva,

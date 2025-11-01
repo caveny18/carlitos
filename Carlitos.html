@@ -1,297 +1,281 @@
-<!-- === PARTE 1 DE 3 === -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Carlitos Home | Mi Progreso</title>
+
+  <!-- Tailwind para utilidades rápidas (puedes quitarlo si ya lo tienes) -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- FUENTE -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
     :root{
-      --accent-1: #6b46c1;
-      --accent-2: #9f7aea;
-      --accent-cyan: #06b6d4;
-      --text: #0f172a;
-      --muted: #475569;
+      --bg: #f7fbfc;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --accent-1: #6366f1;
+      --accent-2: #a855f7;
+      --glass: rgba(255,255,255,0.7);
+      --round: 14px;
     }
 
-    html,body{height:100%}
-    body {
-      font-family: 'Inter', sans-serif;
-      background: #ffffff; /* toda la pagina blanca */
-      color: var(--text);
-      padding-bottom: 100px;
+    html,body { height:100%; }
+    body{
+      font-family: 'Inter', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, #f8fbff 0%, var(--bg) 100%);
+      margin:0;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      color:#0f172a;
+      padding-bottom: 110px;
     }
 
-    /* Cards & general */
+    /* Layout */
+    .container { max-width: 980px; margin: 28px auto; padding: 0 16px; }
+    header.app-header {
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+      margin-bottom:16px;
+    }
+    .brand-title { font-weight:800; font-size:28px; background: linear-gradient(90deg,var(--accent-1),var(--accent-2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+
+    /* Cards */
     .card {
-      background-color: #ffffff;
-      border: 1px solid rgba(99,102,241,0.08);
-      box-shadow: 0 8px 20px rgba(15,23,42,0.04);
+      background:var(--card);
+      border-radius: var(--round);
+      border: 1px solid rgba(7,22,41,0.06);
+      box-shadow: 0 12px 30px rgba(8,20,34,0.04);
+      padding: 18px;
+      transition: transform 260ms cubic-bezier(.2,.9,.3,1), box-shadow 260ms;
     }
-    .text-gradient {
-      background-image: linear-gradient(90deg,var(--accent-1),var(--accent-2));
-      -webkit-background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
+    .card:hover { transform: translateY(-6px); box-shadow: 0 26px 60px rgba(7,22,41,0.08); }
 
-    /* Mentor floating (idle) */
-    @keyframes floaty { 0% { transform: translateY(0); } 50% { transform: translateY(-6px); } 100% { transform: translateY(0); } }
-    .mentor-float { animation: floaty 3s ease-in-out infinite; border-radius: 12px; }
+    .muted { color: var(--muted); font-size: 14px; }
 
-    .mentor-image-tour {
-      width: 120px; height: 120px; border-radius: 12px; overflow: hidden;
-      display:flex; align-items:center; justify-content:center; background: transparent;
-      border: 3px solid rgba(111,66,193,0.12); position: fixed; z-index: 10090;
-      transition: transform 700ms cubic-bezier(.22,.9,.32,1), left 700ms cubic-bezier(.22,.9,.32,1), top 700ms cubic-bezier(.22,.9,.32,1), opacity 250ms;
-      box-shadow: 0 20px 50px rgba(6,8,15,0.08);
-      background-color: #fff;
-      pointer-events: none; /* mentor image shouldn't block clicks — bubble handles interactions */
-    }
-
-    /* speech bubble anchored to mentor */
-    .mentor-bubble {
-      position: fixed;
-      z-index: 10095; /* above mentor image */
-      max-width: 420px;
-      background: linear-gradient(180deg,#f8fafc,#f1f5f9);
-      border:1px solid rgba(159,122,234,0.12);
-      color: var(--text);
-      padding: 12px 14px;
+    /* Buttons */
+    .btn-primary {
+      background: linear-gradient(90deg,var(--accent-1),var(--accent-2));
+      color: white;
+      padding: 8px 12px;
       border-radius: 12px;
-      box-shadow: 0 18px 50px rgba(2,6,23,0.08);
-      transition: left 700ms cubic-bezier(.22,.9,.32,1), top 700ms cubic-bezier(.22,.9,.32,1), transform 300ms;
-      font-size: 14px;
-      pointer-events: auto; /* bubble must receive clicks */
+      cursor:pointer;
+      font-weight:700;
+      box-shadow: 0 12px 36px rgba(8,20,34,0.06);
+      transition: transform 160ms ease, filter 160ms;
+      border: none;
     }
-    .mentor-bubble strong { display:block; color:var(--accent-1); margin-bottom:6px; font-weight:700; }
-    .mentor-bubble:after {
-      content: '';
-      position: absolute;
-      width: 16px; height: 16px;
-      background: linear-gradient(180deg,#f8fafc,#f1f5f9);
-      border-left:1px solid rgba(159,122,234,.12);
-      border-bottom:1px solid rgba(159,122,234,.12);
-      transform: rotate(45deg);
-      left: 18px;
-      bottom: -8px;
+    .btn-primary:hover { transform: translateY(-2px); filter:brightness(1.03); }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(7,22,41,0.06);
+      padding: 8px 12px;
+      border-radius: 12px;
+      color: var(--muted);
+      cursor:pointer;
+      font-weight:600;
     }
 
-    /* bubble tiny helper for controls */
-    .tour-controls { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
-    .btn-ghost { background: transparent; border: 1px solid rgba(15,23,42,0.06); padding:8px 12px; border-radius: 10px; color: var(--text); cursor:pointer; }
-    .btn-primary { background: linear-gradient(90deg,var(--accent-2),var(--accent-1)); color: white; padding:8px 14px; border-radius: 10px; font-weight:700; cursor:pointer; }
+    /* XP bar */
+    .xp-bar { width:100%; height:14px; background: linear-gradient(90deg,#eef7f6,#f5fbfa); border-radius:999px; overflow:hidden; border:1px solid rgba(3,105,161,0.03); }
+    .xp-fill { height:100%; width:0%; background: linear-gradient(90deg,#10b981,#0369a1); transition: width 700ms cubic-bezier(.2,.9,.3,1); }
 
-    /* Spotlight overlay (circular by default) */
+    /* Tutor icon */
+    #tutorIcon { width:72px; height:72px; border-radius:999px; display:flex; align-items:center; justify-content:center; font-weight:700; overflow:hidden; box-shadow: 0 10px 30px rgba(3,105,161,0.06); }
+
+    /* Mentor tour UI */
     .tour-overlay {
       position: fixed;
       inset: 0;
       z-index: 10050;
-      pointer-events: auto;
-      transition: background 400ms ease;
-      /* default center & radius (will be set via JS) */
-      --spot-x: 50px;
-      --spot-y: 50px;
+      pointer-events: none;
+      transition: background 380ms ease;
+      --spot-x: 120px;
+      --spot-y: 120px;
       --spot-r: 80px;
       background:
-        radial-gradient(circle at var(--spot-x) var(--spot-y), rgba(0,0,0,0) calc(var(--spot-r) - 6px), rgba(0,0,0,0.55) calc(var(--spot-r) - 6px + 8px));
-      backdrop-filter: blur(0.3px);
+        radial-gradient(circle at var(--spot-x) var(--spot-y), rgba(0,0,0,0) calc(var(--spot-r) - 8px), rgba(0,0,0,0.55) calc(var(--spot-r) - 8px + 10px));
+      backdrop-filter: blur(1px) saturate(1.03);
     }
 
-    /* highlighted target (gives it higher z so it shows above overlay) */
+    .mentor-image-tour {
+      width: 120px; height:120px; border-radius: 18px; overflow: hidden;
+      display:flex; align-items:center; justify-content:center;
+      border: 3px solid rgba(3,105,161,0.08);
+      position: fixed; z-index: 10090;
+      transition: transform 700ms cubic-bezier(.22,.9,.32,1), left 700ms cubic-bezier(.22,.9,.32,1), top 700ms cubic-bezier(.22,.9,.32,1), opacity 250ms;
+      box-shadow: 0 26px 60px rgba(6,8,15,0.08);
+      background-color: var(--card);
+      pointer-events: none;
+      animation: floaty 3.2s ease-in-out infinite;
+    }
+    @keyframes floaty { 0% { transform: translateY(0);} 50% { transform: translateY(-8px);} 100% { transform: translateY(0);} }
+
+    .mentor-bubble {
+      position: fixed;
+      z-index: 10095;
+      max-width: 460px;
+      background: linear-gradient(180deg,#ffffff,#f8fbfc);
+      border:1px solid rgba(3,105,161,0.06);
+      color: var(--text);
+      padding: 14px 16px;
+      border-radius: 14px;
+      box-shadow: 0 24px 60px rgba(7,22,41,0.09);
+      transition: left 420ms cubic-bezier(.22,.9,.32,1), top 420ms cubic-bezier(.22,.9,.32,1), transform 260ms;
+      font-size: 14px;
+      pointer-events: auto;
+      opacity: 0; transform: translateY(8px) scale(.98);
+    }
+    .mentor-bubble.show { opacity: 1; transform: translateY(0) scale(1); }
+    .mentor-bubble strong { display:block; color:var(--accent-1); margin-bottom:6px; font-weight:800; }
+    .mentor-bubble .bubble-text { min-height:42px; color:#0f172a; line-height:1.3; }
+
     .tour-highlight {
       position: relative;
-      z-index: 10080; /* above overlay but below bubble (10095) and mentor image (10090) */
-      box-shadow: 0 0 0 12px rgba(111,66,193,0.04), 0 20px 40px rgba(15,23,42,0.06);
-      border-radius: .75rem;
-      transition: box-shadow 300ms, transform 300ms;
+      z-index: 10080;
+      box-shadow: 0 0 0 12px rgba(3,105,161,0.04), 0 20px 40px rgba(7,22,41,0.06);
+      border-radius: 0.9rem;
+      transition: box-shadow 260ms, transform 260ms;
       transform-origin: center;
+      animation: pulseHighlight 1.6s infinite;
+    }
+    @keyframes pulseHighlight {
+      0% { box-shadow: 0 0 0 0 rgba(3,105,161,0.06); }
+      50% { box-shadow: 0 0 0 8px rgba(3,105,161,0.02); }
+      100% { box-shadow: 0 0 0 0 rgba(3,105,161,0.06); }
     }
 
-    /* small responsive tweaks */
-    @media (max-width:640px) {
-      .mentor-image-tour { width: 92px; height: 92px; }
-      .mentor-bubble { max-width: 260px; padding: 10px 12px; }
+    /* RESPONSIVE tweaks */
+    @media (max-width: 900px) {
+      .mentor-image-tour { width: 96px; height:96px; border-radius:12px; }
+      .mentor-bubble { max-width: 320px; padding: 12px; font-size:13px; }
+      .card { padding: 14px; }
+    }
+    @media (max-width: 640px) {
+      body { padding-bottom: 140px; }
+      .mentor-image-tour { width: 84px; height:84px; }
+      .mentor-bubble { left: 10px !important; right: 10px !important; top: auto !important; bottom: 18% !important; transform: none !important; max-width: calc(100% - 40px); }
+      .tour-overlay { background: rgba(0,0,0,0.75) !important; backdrop-filter: none !important; }
     }
 
-    /* XP bar styling example */
-    #xp-bar-container { width:100%; height:12px; background:#f1f5f9; border-radius:999px; overflow:hidden; margin-top:6px; }
-    #xp-bar-fill { height:100%; width:0%; background: linear-gradient(90deg,var(--accent-2),var(--accent-1)); transition: width 700ms ease; }
-
-    /* Tutor icon circle */
-    #tutor-icon-container { border-radius: 999px; overflow:hidden; color:white; font-weight:700; display:flex; align-items:center; justify-content:center; }
-
-    .muted { color: var(--muted); }
-
-    /* small color badges for tutor description (set via JS inline style for flexibility) */
-    .tutor-desc { font-size: 14px; margin-top: 6px; line-height: 1.3; }
-    .tutor-role { font-weight:700; margin-bottom:6px; }
-/* 🌟 Ajustes generales del tour (para todos los dispositivos) */
-.spotlight-content,
-.shepherd-content,
-.introjs-tooltip {
-  max-width: 400px;
-  border-radius: 1rem;
-  box-shadow: 0 0 20px rgba(0,0,0,0.4);
-  transition: all 0.3s ease-in-out;
-}
-
-/* 📱 Mejoras exclusivas para pantallas móviles */
-@media (max-width: 768px) {
-  .spotlight-content,
-  .shepherd-content,
-  .introjs-tooltip {
-    position: fixed !important;
-    bottom: 10% !important;
-    left: 5% !important;
-    right: 5% !important;
-    top: auto !important;
-    transform: none !important;
-    max-width: 90vw !important;
-    background: rgba(0, 0, 0, 0.9) !important;
-    color: #fff !important;
-    text-align: center;
-    font-size: 0.9rem !important;
-    line-height: 1.4rem;
-    padding: 1.2rem 1rem !important;
-    border-radius: 1rem;
-    z-index: 9999 !important;
-  }
-
-  .spotlight-overlay,
-  .shepherd-modal-overlay-container,
-  .introjs-overlay {
-    background: rgba(0, 0, 0, 0.7) !important;
-  }
-
-  .shepherd-button,
-  .introjs-button {
-    font-size: 0.8rem !important;
-    padding: 0.4rem 0.8rem !important;
-  }
-}
+    /* bottom nav */
+    #bottom-nav {
+      height:78px;
+      border-top: 1px solid rgba(7,22,41,0.06);
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(250,252,253,0.98));
+      box-shadow: 0 -8px 30px rgba(7,22,41,0.03);
+      position: fixed; left:0; right:0; bottom:0; z-index:60;
+    }
+    #bottom-nav .nav-item { display:inline-flex; flex-direction:column; align-items:center; justify-content:center; padding:10px; font-size:12px; color:var(--muted); }
 
   </style>
 </head>
-<body class="p-4 sm:p-8 flex justify-center min-h-screen">
 
-  <div class="w-full max-w-2xl space-y-8 mt-6">
-
-    <header class="flex items-start justify-between">
-      <div>
-        <h1 class="text-5xl font-extrabold text-gradient">Carlitos Home</h1>
-        <p id="welcome-message" class="text-xl muted mt-2">¡Bienvenido a tu viaje financiero!</p>
+<body>
+  <div class="container">
+    <header class="app-header">
+      <div style="display:flex; gap:12px; align-items:center;">
+        <h1 class="brand-title">Carlitos Home</h1>
+        <p class="muted hidden sm:block">Tu viaje financiero — aprende, registra y crece</p>
       </div>
-      <div class="flex items-start gap-3">
-        <button id="repeat-tour-btn" class="btn-ghost" title="Repetir Tour">🎓 Repetir Tour Guiado</button>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button id="repeat-tour-btn" class="btn-ghost" title="Repetir Tour Guiado">🎓 Repetir Tour</button>
         <button id="signout-btn" class="btn-ghost" title="Cerrar sesión">Salir</button>
       </div>
     </header>
 
-    <!-- Profile + XP -->
-    <section id="progress-card" class="card rounded-2xl p-6 sm:p-8 space-y-5">
-      <div class="flex flex-col sm:flex-row items-center justify-between border-b pb-4 border-gray-100">
-        <div class="flex items-center space-x-4">
-          <div id="user-avatar" class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-xl flex-shrink-0">
-            <span id="name-initial">C</span>
+    <main class="space-y-6">
+      <!-- Profile + XP -->
+      <section id="progress-card" class="card rounded-2xl p-6 sm:p-8 space-y-5">
+        <div class="flex flex-col sm:flex-row items-center justify-between border-b pb-4 border-gray-100">
+          <div class="flex items-center space-x-4">
+            <div id="user-avatar" class="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-3xl font-bold text-white shadow-xl">
+              <span id="name-initial">C</span>
+            </div>
+            <div>
+              <p class="text-2xl font-bold" id="user-name-display">Usuario</p>
+              <p class="text-sm font-semibold muted" id="user-role-display">Aprendiz</p>
+            </div>
           </div>
-          <div>
-            <p class="text-2xl font-bold" id="user-name-display"></p>
-            <p class="text-sm font-semibold muted" id="user-role-display"></p>
-          </div>
-        </div>
 
-        <div class="flex items-center space-x-3 mt-4 sm:mt-0 bg-white px-4 py-2 rounded-full border border-gray-100">
-          <span class="text-xl" style="color: #f59e0b">💰</span>
-          <div class="text-right">
-            <p class="text-xs text-yellow-500 font-medium uppercase">Mi CarlitosCoin</p>
-            <p class="text-xl font-bold" id="user-coins">0</p>
-          </div>
-          <div class="ml-4">
-            <button id="coins-details" class="btn-ghost">Ver más detalles</button>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="flex justify-between items-end mb-2">
-          <p class="text-lg font-bold" id="user-level-title">Nivel: Novato</p>
-          <p class="text-sm muted">XP: <span id="user-xp-current">0</span>/<span id="user-xp-next">100</span></p>
-        </div>
-        <div id="xp-bar-container">
-          <div id="xp-bar-fill" style="width:0%"></div>
-        </div>
-        <p class="text-xs muted mt-2 text-center" id="next-level-message">Sigue completando misiones para alcanzar el siguiente nivel.</p>
-      </div>
-    </section>
-
-    <!-- Tools -->
-    <section id="tools-section" class="card rounded-2xl p-6 sm:p-8">
-      <h2 class="text-2xl font-bold mb-5 flex items-center" style="color:var(--accent-cyan)">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11.42 15.17L17.25 21 21 17.25M12 1.5l8.69 8.69a1.688 1.688 0 0 1 .286 1.15l-.675 6.471a1.5 1.5 0 0 1-1.472 1.393H9.866a1.5 1.5 0 0 1-1.472-1.393L7.72 12.01l-5.694-5.694a1.875 1.875 0 0 1 2.652-2.652L10.5 10.5M4.125 15.875a1.875 1.875 0 1 0 0-3.75 1.875 1.875 0 0 0 0 3.75Z"/></svg>
-        Mi Caja de Herramientas
-      </h2>
-
-      <div id="tool-list" class="space-y-3">
-        <!-- populated by JS -->
-      </div>
-
-      <p class="text-xs muted mt-4 text-center">Las herramientas se irán desbloqueando conforme avances en tus sesiones de aprendizaje — úsalas luego desde el Dashboard para registrar ingresos/gastos y ver tu flujo de dinero.</p>
-    </section>
-<!-- === PARTE 2 DE 3 === -->
-    <!-- Goals -->
-    <section id="goals-section" class="card rounded-2xl p-6 sm:p-8">
-      <h2 class="text-2xl font-bold mb-5 flex items-center" style="color:#db2777">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.079 0-2.157.26-3.228.784-0.124.057-0.209.18-0.209.311v11.977c0 0.285.231.516.516.516h13.048c.285 0 .516-.231.516-.516V4.845c0-.131-.085-.254-.209-.311A8.967 8.967 0 0 0 18 3.75c1.079 0 2.157.26 3.228.784"/></svg>
-        Tus Metas Financieras
-      </h2>
-
-      <div id="user-goals-summary" class="muted space-y-3">
-        <!-- metas renderizadas por JS -->
-      </div>
-
-      <div class="pt-4 border-t border-gray-100 flex justify-between items-center">
-        <p class="text-xs text-pink-300">Gestiona y crea metas desde el Dashboard.</p>
-        <div class="flex gap-3">
-          <button id="add-goal-btn" class="btn-primary">Agregar nueva meta</button>
-          <button id="view-dashboard-btn" class="btn-ghost">Ir al Dashboard</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Mentor card -->
-    <section id="mentor-section" class="card rounded-2xl p-6 sm:p-8">
-      <h2 class="text-2xl font-bold mb-5 flex items-center" style="color:var(--accent-1)">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12h3.75M9 15h3.75M9 18h3.75m-4.5 0A2.25 2.25 0 0 1 7.5 21h4.5a2.25 2.25 0 0 1 2.25-2.25m3.75-9a4.5 4.5 0 1 1-9 0"/></svg>
-        Tu Carlitos Mentor:
-      </h2>
-
-      <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 bg-white p-4 rounded-xl border border-gray-100">
-        <div class="w-20 h-20 flex-shrink-0">
-          <div id="tutor-icon-container" class="w-full h-full tutor-image-active flex items-center justify-center text-4xl" style="background:linear-gradient(90deg,var(--accent-1),var(--accent-2)); border-radius:50%;">
-            <!-- here we place only the mentor image (no text) -->
+          <div class="flex items-center space-x-3 mt-4 sm:mt-0 bg-white px-4 py-2 rounded-full border border-gray-100">
+            <span class="text-xl" style="color: #f59e0b">💰</span>
+            <div class="text-right">
+              <p class="text-xs text-yellow-500 font-medium uppercase">Mi CarlitosCoin</p>
+              <p class="text-xl font-bold" id="user-coins">0</p>
+            </div>
+            <div class="ml-4">
+              <button id="coins-details" class="btn-ghost">Ver más</button>
+            </div>
           </div>
         </div>
 
-        <div class="text-center sm:text-left">
-          <p id="tutor-role-display" class="tutor-role"></p>
-          <p id="tutor-description" class="tutor-desc"></p>
-          <div class="pt-4 mt-4 border-t border-gray-100">
-            <p class="text-lg font-semibold">Próxima Misión:</p>
-            <p class="text-purple-500 font-medium" id="first-mission-text"></p>
+        <div>
+          <div class="flex justify-between items-end mb-2">
+            <p class="text-lg font-bold" id="user-level-title">Nivel: Novato</p>
+            <p class="text-sm muted">XP: <span id="user-xp-current">0</span>/<span id="user-xp-next">100</span></p>
+          </div>
+          <div class="xp-bar">
+            <div id="xp-bar-fill" class="xp-fill" style="width:0%"></div>
+          </div>
+          <p class="text-xs muted mt-2 text-center" id="next-level-message">Sigue completando misiones para alcanzar el siguiente nivel.</p>
+        </div>
+      </section>
+
+      <!-- Tools -->
+      <section id="tools-section" class="card rounded-2xl p-6 sm:p-8">
+        <h2 class="text-2xl font-bold mb-5">Mi Caja de Herramientas</h2>
+        <div id="tool-list" class="space-y-3"></div>
+        <p class="text-xs muted mt-4 text-center">Las herramientas se irán desbloqueando conforme avances.</p>
+      </section>
+
+      <!-- Goals -->
+      <section id="goals-section" class="card rounded-2xl p-6 sm:p-8">
+        <h2 class="text-2xl font-bold mb-5">Tus Metas Financieras</h2>
+        <div id="user-goals-summary" class="muted space-y-3"></div>
+        <div class="pt-4 border-t border-gray-100 flex justify-between items-center">
+          <p class="text-xs">Gestiona tus metas desde el Dashboard.</p>
+          <div class="flex gap-3">
+            <button id="add-goal-btn" class="btn-primary">Agregar nueva meta</button>
+            <button id="view-dashboard-btn" class="btn-ghost">Ir al Dashboard</button>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <div class="text-center pt-2 pb-10">
+      <!-- Mentor -->
+      <section id="mentor-section" class="card rounded-2xl p-6 sm:p-8">
+        <h2 class="text-2xl font-bold mb-5">Tu Carlitos Mentor:</h2>
+
+        <div class="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-6 bg-white p-4 rounded-xl border border-gray-100">
+          <div class="w-20 h-20 flex-shrink-0">
+            <div id="tutor-icon-container" style="width:100%; height:100%; border-radius:999px; overflow:hidden; display:flex; align-items:center; justify-content:center; font-size:28px; background:linear-gradient(90deg,var(--accent-1),var(--accent-2)); color:white;">
+              <!-- imagen de tutor -->
+              <span id="tutor-icon">🧑‍🏫</span>
+            </div>
+          </div>
+
+          <div class="text-center sm:text-left">
+            <p id="tutor-role-display" class="tutor-role font-semibold text-lg">El Mentor</p>
+            <p id="tutor-description" class="tutor-desc muted">Te acompaño en cada paso.</p>
+            <div class="pt-4 mt-4 border-t border-gray-100">
+              <p class="text-lg font-semibold">Próxima Misión:</p>
+              <p class="text-purple-500 font-medium" id="first-mission-text">Completa tu primer registro</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <div class="text-center pt-6 pb-20">
       <button id="reset-button" class="bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-8 rounded-full">Reiniciar Onboarding (Borrar Perfil)</button>
     </div>
   </div>
 
-  <!-- Nav -->
-  <nav id="bottom-nav" class="nav-menu fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40">
+  <!-- Bottom nav -->
+<nav id="bottom-nav" class="nav-menu fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40">
     <div class="flex justify-around max-w-2xl mx-auto py-2">
       <a href="./dashboard.html" class="nav-item text-center">
         <div class="nav-item inline-flex flex-col items-center muted">
@@ -301,7 +285,7 @@
       </a>
       <a href="./Aprender.html" class="nav-item text-center">
         <div class="inline-flex flex-col items-center muted">
-          <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21.5L4 17.5V7.5L12 3.5L20 7.5V17.5L12 21.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 12L20 7.5M12 12V21.5M12 12L4 7.5M4 17.5L12 12M20 17.5L12 12" /></svg>
+          <svg class="w-6 h6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21.5L4 17.5V7.5L12 3.5L20 7.5V17.5L12 21.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 12L20 7.5M12 12V21.5M12 12L4 7.5M4 17.5L12 12M20 17.5L12 12" /></svg>
           <span class="text-xs">Aprender</span>
         </div>
       </a>
@@ -320,50 +304,37 @@
     </div>
   </nav>
 
-  <!-- TOUR overlay + mentor UI are created by JS -->
-<!-- === PARTE 3 DE 3 === -->
+  <!-- TOUR overlay + mentor UI created by JS -->
+
+  <!-- =========================
+       SCRIPT: perfil + tour mejorado
+       ========================= -->
   <script type="module">
-    // usa tu firebase-config.js (asegúrate de que existe en el mismo directorio)
-    import { db, auth } from './firebase-config.js';
-    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js';
-    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js';
-
-    // LOCAL STORAGE KEY (coincide con onboarding.js)
+    /* -----------------------------
+       CONFIG & CONSTANTS
+       ----------------------------- */
     const PROFILE_KEY = 'carlitos_profile_data';
-
-    // IMG_PATH vacío porque las imágenes están en el mismo directorio (según lo confirmaste)
-    const IMG_PATH = '';
-
-    // Map de variantes de imagen por tutor (tratamos de cubrir nombres posibles que mencionaste)
     const TUTOR_IMG_VARIANTS = {
-      'Mono': [
-        'mononormal.png','mononormal.webp','mononormal.jpg',
-        'monoenseñando.png','monoenseñando.webp','monoriendo.png','monoriendo.webp','iconomono.png'
-      ],
-      'Ardilla': [
-        'ardillanormal.png','ardillanormal.webp',
-        'ardillaenseñando.png','ardillaenseñando.webp',
-        'ardillariendo.png','ardillariendo.webp',
-        'ardillaconfundida.png','ardillaconfundida.webp',
-        'iconoardilla.png'
-      ],
-      'Condor': [
-        'condornormal.png','condornormal.webp',
-        'condorenseñando.png','condorenseñando.webp',
-        'condorriendo.png','condorriendo.webp',
-        'condorconfundido.png','condorconfundido.webp',
-        'iconocondor.png'
-      ],
-      'Gata': [
-        'gatanormal.png','gatanormal.webp',
-        'gataenseñando.png','gataenseñando.webp',
-        'gatariendo.png','gatariendo.webp',
-        'gataconfundida.png','gataconfundida.webp',
-        'iconoleopardo.png','iconogata.png',
-        // fallback legacy names
-        'leopardonormal.png','leopardoenselando.png','leopardoriendo.png','leopardoconfundido.png'
-      ]
+      'Mono': ['mononormal.png','mononormal.webp','iconomono.png'],
+      'Ardilla': ['ardillanormal.png','iconoardilla.png'],
+      'Condor': ['condornormal.png','iconocondor.png'],
+      'Gata': ['gatanormal.png','iconogata.png'],
     };
+
+    const LEVELS = [
+      { name: "Novato", minXP: 0, maxXP: 100, title: "El Curioso" },
+      { name: "Aprendiz", minXP: 100, maxXP: 350, title: "El Experimentador" },
+      { name: "Estratega", minXP: 350, maxXP: 800, title: "El Analista" },
+      { name: "Maestro", minXP: 800, maxXP: 1500, title: "El Optimizador" },
+      { name: "Leyenda", minXP: 1500, maxXP: 99999, title: "El Inmortal" },
+    ];
+
+    const ALL_TOOLS = [
+      { id: 'registro_gastos', name: 'Registro de Ingresos y Gastos', requiredLevel: 1 },
+      { id: 'planificador_presupuesto', name: 'Planificador de Presupuesto (50/30/20)', requiredLevel: 2 },
+      { id: 'simulador_inversiones', name: 'Simulador de Inversiones Básicas', requiredLevel: 3 },
+      { id: 'control_deuda', name: 'Control de Deuda', requiredLevel: 4 },
+    ];
 
     // DOM refs
     const DOM = {
@@ -391,61 +362,22 @@
       signoutBtn: document.getElementById('signout-btn'),
     };
 
-    // Levels & Tools (las mismas)
-    const LEVELS = [
-      { name: "Novato", minXP: 0, maxXP: 100, title: "El Curioso", toolsRequired: 0 },
-      { name: "Aprendiz", minXP: 100, maxXP: 350, title: "El Experimentador", toolsRequired: 1 },
-      { name: "Estratega", minXP: 350, maxXP: 800, title: "El Analista", toolsRequired: 3 },
-      { name: "Maestro", minXP: 800, maxXP: 1500, title: "El Optimizador", toolsRequired: 6 },
-      { name: "Leyenda", minXP: 1500, maxXP: 99999, title: "El Inmortal", toolsRequired: 10 },
-    ];
-    const ALL_TOOLS = [
-      { id: 'registro_gastos', name: 'Registro de Ingresos y Gastos', requiredLevel: 1 },
-      { id: 'planificador_presupuesto', name: 'Planificador de Presupuesto (50/30/20)', requiredLevel: 2 },
-      { id: 'simulador_inversiones', name: 'Simulador de Inversiones Básicas', requiredLevel: 3 },
-      { id: 'control_deuda', name: 'Control de Deuda', requiredLevel: 4 },
-    ];
-
-    // Tutor info (roles & descriptions — ampliadas)
-    const TUTOR_DATA = {
-      'Mono': {
-        role: 'El Ilustrador (Empezando)',
-        description: 'Alegre y cercano: te enseña con ejemplos cotidianos, pequeñas prácticas y humor para que lo aprendas paso a paso. Ideal si empiezas y quieres aprender jugando.',
-        mission: (goal) => `Haz el reto de presupuesto de 5 minutos para avanzar en ${goal || 'tu objetivo'}.`,
-        color: '#10b981' // verde
-      },
-      'Ardilla': {
-        role: 'La Ardilla (Emprendedora)',
-        description: 'Enérgica y práctica: te impulsa a probar nuevas rutinas de ahorro y recompensas rápidas. Perfecta para quienes quieren resultados inmediatos y mantener motivación.',
-        mission: (goal) => `Crea un plan semanal de ahorro para avanzar en ${goal || 'tu meta'}.`,
-        color: '#f97316' // naranja
-      },
-      'Condor': {
-        role: 'El Estratega (Mejorando)',
-        description: 'Analítico y visionario: te ayuda a planear a mediano/largo plazo, optimizar flujos y pensar en inversiones. Ideal si quieres estructura y metas ambiciosas.',
-        mission: (goal) => `Analiza tu flujo de caja y busca optimizaciones para ${goal || 'tu meta'}.`,
-        color: '#1e40af' // azul
-      },
-      'Gata': {
-        role: 'La Analítica (Avanzado)',
-        description: 'Precisa y práctica: te reta con datos, revisa detalles y te guía en simulaciones. Recomendada si buscas perfeccionar estrategias y entender números.',
-        mission: (goal) => `Revisa o simula un portafolio para optimizar ${goal || 'tu meta'}.`,
-        color: '#7c3aed' // violeta
-      }
-    };
-
-    // ----------------- Utils -----------------
+    /* -----------------------------
+       UTIL: normalize tutor key
+       ----------------------------- */
     function normalizeTutorKey(raw) {
       if (!raw) return 'Mono';
       const s = raw.toString().toLowerCase();
       if (s.includes('condor') || s.includes('cóndor') || s.includes('inti')) return 'Condor';
       if (s.includes('ardilla') || s.includes('saison')) return 'Ardilla';
       if (s.includes('gata') || s.includes('leopardo') || s.includes('auri') || s.includes('gato')) return 'Gata';
-      if (s.includes('mono') || s.includes('mono choro') || s.includes('kantu')) return 'Mono';
+      if (s.includes('mono') || s.includes('kantu')) return 'Mono';
       return 'Mono';
     }
 
-    // Try a list of filenames until one loads (return the element and set onerror chain)
+    /* -----------------------------
+       UTIL: load image with fallbacks (returns HTMLImageElement)
+       ----------------------------- */
     function createImgWithFallbacks(variants = [], onReady) {
       const img = new Image();
       img.style.width = '100%';
@@ -453,26 +385,22 @@
       img.style.objectFit = 'cover';
       let i = 0;
       function tryNext() {
-        if (i >= variants.length) {
-          if (onReady) onReady(img);
-          return;
-        }
-        const candidate = variants[i];
-        img.onerror = () => { i++; tryNext(); };
+        if (i >= variants.length) { if (onReady) onReady(img); return; }
+        const candidate = variants[i++];
+        img.onerror = tryNext;
         img.onload = () => { if (onReady) onReady(img); };
-        img.src = candidate.startsWith('http') || candidate.startsWith('/') ? candidate : (IMG_PATH + candidate);
+        img.src = candidate.startsWith('http') || candidate.startsWith('/') ? candidate : (candidate);
       }
       tryNext();
       return img;
     }
-
     function getFirstValidImage(variantList) {
-      return new Promise(resolve => {
-        createImgWithFallbacks(variantList, (el) => resolve(el));
-      });
+      return new Promise(resolve => createImgWithFallbacks(variantList, (el) => resolve(el)));
     }
 
-    // Progress util
+    /* -----------------------------
+       Progress util
+       ----------------------------- */
     function calculateProgress(totalXp) {
       let currentLevel = LEVELS[0];
       let progressPercentage = 0;
@@ -489,7 +417,9 @@
       return { level: lastLevel, progressPercentage: 100, xpToNextLevel: lastLevel.maxXP, currentLevelXp: totalXp };
     }
 
-    // Rendering helpers
+    /* -----------------------------
+       RENDER helpers
+       ----------------------------- */
     function renderToolList(level) {
       const container = DOM.toolList;
       container.innerHTML = '';
@@ -548,7 +478,9 @@
       });
     }
 
-    // Display profile: fills UI and places tutor image + description with themed color
+    /* -----------------------------
+       DISPLAY profile
+       ----------------------------- */
     async function displayProfile(profile = {}) {
       profile.totalXP = Number(profile.totalXP || 0);
       profile.carlitosCoins = Number(profile.carlitosCoins || 0);
@@ -556,156 +488,131 @@
       profile.goals = profile.goals || [];
 
       const prog = calculateProgress(profile.totalXP);
-      DOM.welcome.textContent = `¡Bienvenido, ${profile.name || 'amigo'}!`;
-      DOM.nameInitial.textContent = (profile.name || 'C')[0]?.toUpperCase() || 'C';
-      DOM.userName.textContent = profile.name || 'Usuario';
-      DOM.userRole.textContent = profile.role || '';
-      DOM.userCoins.textContent = profile.carlitosCoins.toLocaleString('es-CL');
-      DOM.xpCurrent.textContent = prog.currentLevelXp;
-      DOM.xpNext.textContent = prog.level.name === 'Leyenda' ? 'MAX' : prog.xpToNextLevel.toLocaleString('es-CL');
-      DOM.levelTitle.textContent = `${prog.level.name} (${prog.level.title})`;
-      DOM.xpFill.style.width = `${prog.progressPercentage}%`;
-      DOM.nextLevelMsg.textContent = prog.level.name === 'Leyenda' ? '¡Has alcanzado el máximo dominio!' : `Te faltan ${prog.xpToNextLevel - prog.currentLevelXp} XP para ser ${LEVELS[Math.min(LEVELS.length-1, LEVELS.findIndex(l => l.name === prog.level.name) + 1)].name}.`;
+      document.getElementById('user-name-display').textContent = profile.name || 'Usuario';
+      document.getElementById('name-initial').textContent = (profile.name || 'C')[0]?.toUpperCase() || 'C';
+      document.getElementById('user-role-display').textContent = profile.role || '';
+      document.getElementById('user-coins').textContent = profile.carlitosCoins.toLocaleString('es-CL');
+      document.getElementById('user-xp-current').textContent = prog.currentLevelXp;
+      document.getElementById('user-xp-next').textContent = prog.level.name === 'Leyenda' ? 'MAX' : prog.xpToNextLevel.toLocaleString('es-CL');
+      document.getElementById('user-level-title').textContent = `${prog.level.name} (${prog.level.title})`;
+      document.getElementById('xp-bar-fill').style.width = `${prog.progressPercentage}%`;
+      document.getElementById('next-level-message').textContent = prog.level.name === 'Leyenda' ? '¡Has alcanzado el máximo dominio!' : `Te faltan ${prog.xpToNextLevel - prog.currentLevelXp} XP para ser ${LEVELS[Math.min(LEVELS.length-1, LEVELS.findIndex(l => l.name === prog.level.name) + 1)].name}.`;
 
       renderToolList(prog.level);
       renderGoals(profile.goals);
 
-      // Tutor image and description with theme color
+      // Tutor icon
       const rawAssigned = profile.assignedTutor || '';
       const tutorKey = normalizeTutorKey(rawAssigned);
       const variants = TUTOR_IMG_VARIANTS[tutorKey] || [];
-      DOM.tutorIcon.innerHTML = '';
+      const tutorIconEl = document.getElementById('tutor-icon');
+      tutorIconEl.innerHTML = ''; // clear
+      // load first valid image (if any) — otherwise show emoji fallback
       const img = await getFirstValidImage(variants);
-      DOM.tutorIcon.appendChild(img);
+      if (img && img.src) {
+        img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit='cover';
+        const container = document.getElementById('tutor-icon-container') || document.getElementById('tutor-icon');
+        // if we have a container to append (tutorIcon is simple span), replace
+        if (document.getElementById('tutor-icon-container')) {
+          const c = document.getElementById('tutor-icon-container');
+          c.innerHTML = ''; c.appendChild(img);
+        } else {
+          tutorIconEl.appendChild(img);
+        }
+      } else {
+        // fallback emoji
+        tutorIconEl.textContent = tutorKey === 'Ardilla' ? '🐿️' : tutorKey === 'Condor' ? '🦅' : tutorKey === 'Gata' ? '🐱' : '🐵';
+      }
 
-      // Set description & role and theme color
+      // tutor text
+      const TUTOR_DATA = {
+        'Mono': { role: 'El Ilustrador', description: 'Alegre y cercano: te enseña con ejemplos y humor.', mission: (g)=>`Haz el reto de presupuesto de 5 minutos para avanzar en ${g}.`, color:'#10b981'},
+        'Ardilla': { role: 'La Ardilla', description: 'Enérgica y práctica: rutinas rápidas de ahorro.', mission: (g)=>`Crea un plan semanal de ahorro para ${g}.`, color:'#f97316' },
+        'Condor': { role: 'El Estratega', description: 'Analítico y visionario para metas largas.', mission: (g)=>`Analiza tu flujo de caja para ${g}.`, color:'#1e40af' },
+        'Gata': { role: 'La Analítica', description: 'Precisa: te reta con datos y simulaciones.', mission: (g)=>`Simula un portafolio para ${g}.`, color:'#7c3aed'}
+      };
       const tutorInfo = TUTOR_DATA[tutorKey] || TUTOR_DATA['Mono'];
-      DOM.tutorRoleDisplay.textContent = tutorInfo.role;
-      DOM.tutorDescriptionDisplay.textContent = tutorInfo.description;
-      DOM.tutorDescriptionDisplay.style.color = tutorInfo.color;
-      DOM.tutorRoleDisplay.style.color = tutorInfo.color;
-      DOM.tutorMission.textContent = tutorInfo.mission(profile.primaryGoal || '');
+      document.getElementById('tutor-role-display').textContent = tutorInfo.role;
+      document.getElementById('tutor-description').textContent = tutorInfo.description;
+      document.getElementById('first-mission-text').textContent = tutorInfo.mission(profile.primaryGoal || 'tu meta');
 
       profile.assignedTutor = rawAssigned || tutorKey;
       localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
     }
 
-    // Load profile preferring Firestore when signed in
+    /* -----------------------------
+       LOAD profile from localStorage (or fallback demo)
+       ----------------------------- */
     async function loadProfile() {
-      return new Promise((resolve) => {
-        onAuthStateChanged(auth, async (user) => {
-          if (user) {
-            try {
-              const docRef = doc(db, 'usuarios', user.uid);
-              const snap = await getDoc(docRef);
-              if (snap.exists()) {
-                const data = snap.data();
-                const profile = {
-                  name: data.name || data.nombre || user.displayName || '',
-                  role: data.role || data.rol || '',
-                  totalXP: data.totalXP || data.xp || 0,
-                  carlitosCoins: data.carlitosCoins || data.coins || 0,
-                  primaryGoal: data.primaryGoal || data.meta || '',
-                  goals: data.goals || data.metas || [],
-                  assignedTutor: data.assignedTutor || (data.profile && data.profile.assignedTutor) || 'Mono',
-                  createdAt: data.createdAt || data.fecha || new Date().toISOString()
-                };
-                localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-                resolve(profile);
-              } else {
-                const local = localStorage.getItem(PROFILE_KEY);
-                if (local) resolve(JSON.parse(local));
-                else resolve({ name: user.displayName || 'Usuario', role: '', totalXP:0, carlitosCoins:0, goals: [], assignedTutor: 'Mono', primaryGoal: '' });
-              }
-            } catch (e) {
-              console.error('Error leyendo Firestore:', e);
-              const local = localStorage.getItem(PROFILE_KEY);
-              resolve(local ? JSON.parse(local) : null);
-            }
-          } else {
-            const local = localStorage.getItem(PROFILE_KEY);
-            resolve(local ? JSON.parse(local) : null);
-          }
-        });
-      });
+      const raw = localStorage.getItem(PROFILE_KEY);
+      if (raw) return JSON.parse(raw);
+      // demo fallback
+      const demo = {
+        name: 'Carla',
+        role: 'Aprendiz',
+        totalXP: 65,
+        carlitosCoins: 150,
+        primaryGoal: 'Fondo de Emergencia',
+        goals: [{ title: 'Fondo Emergencia', current: 12000, target: 50000 }],
+        assignedTutor: 'Mono'
+      };
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(demo));
+      return demo;
     }
-// 🌍 Configuración adaptativa del tour
-if (window.innerWidth < 768) {
-  // Cambia la posición de los tooltips para que aparezcan arriba del elemento
-  if (window.tourSteps) {
-    tourSteps.forEach(step => {
-      if (step.attachTo) step.attachTo.on = 'top';
-    });
-  }
 
-  // Si usas Spotlight:
-  if (window.Spotlight) {
-    Spotlight.config({
-      scrollTo: true,
-      scrollOffset: 120,
-    });
-  }
-
-  // Si usas Shepherd:
-  if (window.Shepherd) {
-    Shepherd.Tour.prototype.options.scrollTo = true;
-  }
-}
-
-    /* -----------------------
-       TOUR: floating mentor + speech bubble + scroll + spotlight (circular salvo nav)
-       ----------------------- */
-    let tourState = { active: false, step: 0, steps: [], overlayEl: null, mentorEl: null, bubbleEl: null, typingLock: false };
+    /* -----------------------------
+       TOUR: state + builders
+       ----------------------------- */
+    let tourState = { active:false, step:0, steps:[], overlayEl:null, mentorEl:null, bubbleEl:null, typingLock:false, typingTimer:null };
 
     function buildTourSteps(profile) {
-      const rawAssigned = profile.assignedTutor || '';
-      const tutorKey = normalizeTutorKey(rawAssigned);
-      const tutorVariants = TUTOR_IMG_VARIANTS[tutorKey] || [];
+      const tutorKey = normalizeTutorKey(profile.assignedTutor || '');
       return [
-        { sel: '#progress-card', title: 'Bienvenida', text: `¡Hola! Soy tu mentor. Te guiaré por Carlitos Home para que aproveches todas las funciones.`, imgVariantList: tutorVariants },
-        { sel: '#user-avatar', title: 'Tu perfil', text: `Aquí puedes ver tu avatar, nombre y rol. Personaliza tu apodo en el Dashboard.`, imgVariantList: tutorVariants },
-        { sel: '#coins-details', title: 'Tus CarlitosCoins', text: 'Tus CarlitosCoins se obtienen por cada sesión de aprendizaje registrada y por usar herramientas desbloqueadas. ¡Úsalos para recompensas!', imgVariantList: tutorVariants },
-        { sel: '#goals-section', title: 'Tus metas', text: 'En esta sección gestiona y revisa tus metas con barras de progreso. Pulsa "Ver detalle" para ir al Dashboard y editar la meta.', imgVariantList: tutorVariants },
-        { sel: '#tools-section', title: 'Herramientas', text: 'En el Dashboard encontrarás las herramientas que desbloqueas (registro de gastos, planificador, simulador). Úsalas para entender tu flujo de dinero.', imgVariantList: tutorVariants },
-        { sel: '#mentor-section', title: 'Tu Mentor', text: 'Aquí aparezco yo (imagen y descripción). Revisaré tu progreso y te asignaré misiones prácticas.', imgVariantList: tutorVariants },
-        { sel: '#bottom-nav', title: 'Menú inferior', text: 'Navega por: Dashboard (herramientas y registros), Aprender (lecciones de 5 min) y Micro (videos cortos, entretenidos y educativos).', imgVariantList: tutorVariants },
-        { sel: '#progress-card', title: 'Siguiente paso', text: '¡Listo! Si quieres repetir este recorrido, pulsa "🎓 Repetir Tour Guiado". ¡A aprender!', imgVariantList: tutorVariants }
+        { sel: '#progress-card', title: 'Bienvenida', text: `¡Hola ${profile.name || 'amigo'}! Soy tu mentor. Te guiaré por Carlitos Home para que aproveches todas las funciones.`, imgVariantList: TUTOR_IMG_VARIANTS[tutorKey] || [] },
+        { sel: '#user-avatar', title: 'Tu perfil', text: `Aquí ves tu avatar, nombre y rol. Personaliza tu apodo en el Dashboard.`, imgVariantList: TUTOR_IMG_VARIANTS[tutorKey] || [] },
+        { sel: '#coins-details', title: 'Tus CarlitosCoins', text: `Tus CarlitosCoins se obtienen por sesiones y retos. Úsalos en la tienda de recompensas.`, imgVariantList: TUTOR_IMG_VARIANTS[tutorKey] || [] },
+        { sel: '#goals-section', title: 'Tus metas', text: `Aquí gestionas metas con barras de progreso. Pulsa "Ver detalle" para editar en el Dashboard.`, imgVariantList: TUTOR_IMG_VARIANTS[tutorKey] || [] },
+        { sel: '#tools-section', title: 'Herramientas', text: `Estas son las herramientas desbloqueables: registro, planificador y simulador. Usa la práctica para ganar XP.`, imgVariantList: TUTOR_IMG_VARIANTS[tutorKey] || [] },
+        { sel: '#mentor-section', title: 'Tu Mentor', text: `Aquí aparezco yo con mi descripción y mis misiones. ¡A completar retos!`, imgVariantList: TUTOR_IMG_VARIANTS[tutorKey] || [] },
+        { sel: '#bottom-nav', title: 'Menú inferior', text: `Usa el menú inferior para navegar: Dashboard, Aprender y Microaprendizaje.`, imgVariantList: TUTOR_IMG_VARIANTS[tutorKey] || [] },
+        { sel: '#progress-card', title: 'Final', text: `¡Listo! Si quieres repetir el recorrido usa "Repetir Tour". ¡A aprender!`, imgVariantList: TUTOR_IMG_VARIANTS[tutorKey] || [] }
       ];
     }
 
+    /* -----------------------------
+       TOUR: UI creation + helpers
+       ----------------------------- */
     function createTourUI(profile) {
-      // cleanup existing
-      const old = document.getElementById('tour-overlay');
-      if (old) old.remove();
-      const oldMent = document.getElementById('tour-mentor-image');
-      if (oldMent) oldMent.remove();
-      const oldBubble = document.getElementById('tour-mentor-bubble');
-      if (oldBubble) oldBubble.remove();
+      // remove previous
+      const oldO = document.getElementById('tour-overlay'); if (oldO) oldO.remove();
+      const oldM = document.getElementById('tour-mentor-image'); if (oldM) oldM.remove();
+      const oldB = document.getElementById('tour-mentor-bubble'); if (oldB) oldB.remove();
 
-      // overlay (spotlight)
+      // overlay
       const overlay = document.createElement('div');
       overlay.className = 'tour-overlay';
       overlay.id = 'tour-overlay';
       document.body.appendChild(overlay);
       tourState.overlayEl = overlay;
 
-      // mentor image element (pointer-events none)
+      // mentor image
       const mentorImg = document.createElement('img');
       mentorImg.id = 'tour-mentor-image';
-      mentorImg.className = 'mentor-image-tour mentor-float';
-      mentorImg.src = '';
+      mentorImg.className = 'mentor-image-tour';
       mentorImg.alt = 'Mentor';
+      mentorImg.style.left = '16px';
+      mentorImg.style.top = '120px';
       document.body.appendChild(mentorImg);
       tourState.mentorEl = mentorImg;
 
-      // speech bubble
+      // bubble
       const bubble = document.createElement('div');
       bubble.id = 'tour-mentor-bubble';
       bubble.className = 'mentor-bubble';
       bubble.style.left = '24px';
       bubble.style.top = '24px';
-      bubble.innerHTML = `<div id="tour-bubble-content"><strong>Hola</strong><div class="bubble-text" style="min-height:36px;"></div></div>
-        <div class="tour-controls" style="margin-top:10px;">
+      bubble.innerHTML = `<div id="tour-bubble-content"><strong>Hola</strong><div class="bubble-text"></div></div>
+        <div class="tour-controls" style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
           <button id="tour-skip" class="btn-ghost">Omitir</button>
           <button id="tour-prev" class="btn-ghost">Atrás</button>
           <button id="tour-next" class="btn-primary">Siguiente</button>
@@ -713,6 +620,7 @@ if (window.innerWidth < 768) {
       document.body.appendChild(bubble);
       tourState.bubbleEl = bubble;
 
+      // controls
       bubble.querySelector('#tour-skip').onclick = () => endTour(true);
       bubble.querySelector('#tour-prev').onclick = () => { if (tourState.step > 0) { tourState.step--; showTourStep(); } };
       bubble.querySelector('#tour-next').onclick = () => {
@@ -723,20 +631,15 @@ if (window.innerWidth < 768) {
       };
     }
 
-    // compute spotlight (circular) or rectangular for bottom nav
+    // compute spotlight for rect (rect is DOMRect)
     function setSpotlightForRect(rect) {
       const overlay = tourState.overlayEl;
       if (!overlay) return;
 
-      // detect nav bar: if selector height small and bottom area
       const isNav = rect.top > (window.innerHeight - 160) || rect.id === 'bottom-nav' || rect.top > window.innerHeight - 160;
       if (isNav) {
-        // rectangular spotlight covering the nav bar (soft edges)
         const top = Math.max(0, rect.top - 12);
         const bottom = Math.min(window.innerHeight, rect.bottom + 12);
-        const left = Math.max(0, rect.left - 12);
-        const right = Math.min(window.innerWidth, rect.right + 12);
-        // build a gradient that is transparent at the nav band and dark elsewhere (vertical)
         overlay.style.background = `linear-gradient(to bottom,
           rgba(0,0,0,0.55) 0%,
           rgba(0,0,0,0.55) ${top}px,
@@ -747,7 +650,6 @@ if (window.innerWidth < 768) {
         return;
       }
 
-      // else circular default: set CSS variables used by radial-gradient in CSS
       const cx = Math.round(rect.left + rect.width / 2);
       const cy = Math.round(rect.top + rect.height / 2);
       const halfW = rect.width / 2;
@@ -788,6 +690,9 @@ if (window.innerWidth < 768) {
       if (bubbleTop < 12) bubbleTop = top + mentor.offsetHeight + 12;
       bubble.style.left = `${Math.max(12, Math.min(window.innerWidth - bubble.offsetWidth - 12, bubbleLeft))}px`;
       bubble.style.top = `${Math.max(12, Math.min(window.innerHeight - bubble.offsetHeight - 12, bubbleTop))}px`;
+
+      // show bubble with animation
+      bubble.classList.add('show');
     }
 
     function focusOnSelector(selector) {
@@ -803,21 +708,42 @@ if (window.innerWidth < 768) {
           }, 520);
         });
       } else {
+        // placeholder rect (center)
         return new Promise((resolve) => {
           setTimeout(() => resolve({ left: window.innerWidth / 2 - 60, top: window.innerHeight / 2 - 60, right: window.innerWidth / 2 + 60, width:120, height:120 }), 350);
         });
       }
     }
 
-    // Typing effect ---------------------------------------------------------
+    /* -----------------------------
+       Typing effect helpers
+       ----------------------------- */
+    function setMentorStateImage(tutorKeyRaw, state = 'normal') {
+      const tutorKey = normalizeTutorKey(tutorKeyRaw);
+      const list = (TUTOR_IMG_VARIANTS[tutorKey] || []).slice();
+      const prioritized = [];
+      const stateLower = state.toLowerCase().replace('ñ','n');
+      list.forEach(fn => {
+        const lower = fn.toLowerCase();
+        if (lower.includes(stateLower) || lower.includes(stateLower.replace('n','ñ'))) prioritized.push(fn);
+      });
+      const combined = prioritized.concat(list.filter(x => !prioritized.includes(x)));
+      // set first valid
+      getFirstValidImage(combined).then(img => {
+        if (img && tourState.mentorEl) {
+          tourState.mentorEl.src = img.src;
+        }
+      });
+    }
+
     let typingTimer = null;
     function typeText(containerEl, text, speed = 18, cb) {
       tourState.typingLock = true;
       containerEl.innerHTML = '';
       let i = 0;
+      // set mentor to 'enseñando' state
       const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
-      const tutorKey = normalizeTutorKey(profile.assignedTutor || '');
-      setMentorStateImage(tutorKey, 'enseñando');
+      setMentorStateImage(profile.assignedTutor || '', 'enseñando');
 
       typingTimer = setInterval(() => {
         containerEl.innerHTML += text[i] === ' ' ? ' ' : text[i];
@@ -827,7 +753,7 @@ if (window.innerWidth < 768) {
           typingTimer = null;
           tourState.typingLock = false;
           setTimeout(() => {
-            setMentorStateImage(tutorKey, 'normal');
+            setMentorStateImage(profile.assignedTutor || '', 'normal');
           }, 350);
           if (cb) cb();
         }
@@ -842,25 +768,12 @@ if (window.innerWidth < 768) {
       bubbleTextEl.innerHTML = step ? step.text : '';
       tourState.typingLock = false;
       const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
-      const tutorKey = normalizeTutorKey(profile.assignedTutor || '');
-      setMentorStateImage(tutorKey, 'normal');
-    }
-    // ----------------------------------------------------------------------
-
-    async function setMentorStateImage(tutorKeyRaw, state = 'normal') {
-      const tutorKey = normalizeTutorKey(tutorKeyRaw);
-      const list = (TUTOR_IMG_VARIANTS[tutorKey] || []).slice();
-      const prioritized = [];
-      const stateLower = state.toLowerCase().replace('ñ','n');
-      list.forEach(fn => {
-        const lower = fn.toLowerCase();
-        if (lower.includes(stateLower) || lower.includes(stateLower.replace('n','ñ'))) prioritized.push(fn);
-      });
-      const combined = prioritized.concat(list.filter(x => !prioritized.includes(x)));
-      const img = await getFirstValidImage(combined);
-      if (img && tourState.mentorEl) tourState.mentorEl.src = img.src;
+      setMentorStateImage(profile.assignedTutor || '', 'normal');
     }
 
+    /* -----------------------------
+       show step & navigation
+       ----------------------------- */
     async function showTourStep() {
       const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
       const step = tourState.steps[tourState.step];
@@ -900,18 +813,18 @@ if (window.innerWidth < 768) {
       if (tourState.overlayEl) tourState.overlayEl.remove();
       if (tourState.mentorEl) tourState.mentorEl.remove();
       if (tourState.bubbleEl) tourState.bubbleEl.remove();
-      tourState = { active: false, step: 0, steps: [], overlayEl: null, mentorEl: null, bubbleEl: null, typingLock: false };
+      tourState = { active:false, step:0, steps:[], overlayEl:null, mentorEl:null, bubbleEl:null, typingLock:false, typingTimer:null };
       if (!skipSave) localStorage.setItem('tutorialCompleted', 'true');
     }
 
-    /* -----------------------
+    /* -----------------------------
        UI events wiring
-       ----------------------- */
-    DOM.addGoalBtn?.addEventListener('click', () => window.location.href = 'dashboard.html');
-    DOM.viewDashboardBtn?.addEventListener('click', () => window.location.href = 'dashboard.html');
-    DOM.coinsDetailsBtn?.addEventListener('click', () => window.location.href = 'dashboard.html');
+       ----------------------------- */
+    document.getElementById('add-goal-btn')?.addEventListener('click', () => window.location.href = 'dashboard.html');
+    document.getElementById('view-dashboard-btn')?.addEventListener('click', () => window.location.href = 'dashboard.html');
+    document.getElementById('coins-details')?.addEventListener('click', () => window.location.href = 'dashboard.html');
 
-    DOM.resetBtn?.addEventListener('click', () => {
+    document.getElementById('reset-button')?.addEventListener('click', () => {
       const confirmText = prompt('Escribe "CONFIRMAR" para borrar tu perfil y reiniciar:');
       if (confirmText && confirmText.toUpperCase() === 'CONFIRMAR') {
         localStorage.removeItem(PROFILE_KEY);
@@ -920,37 +833,18 @@ if (window.innerWidth < 768) {
       }
     });
 
-    DOM.repeatTourBtn?.addEventListener('click', async () => {
+    document.getElementById('repeat-tour-btn')?.addEventListener('click', async () => {
       const profile = JSON.parse(localStorage.getItem(PROFILE_KEY) || '{}') || {};
+      // remove completed flag so it restarts
+      localStorage.removeItem('tutorialCompleted');
       startTour(profile);
     });
 
-    DOM.signoutBtn?.addEventListener('click', async () => {
-      try {
-        await signOut(auth);
-        localStorage.removeItem('userUID');
-        window.location.href = './index.html';
-      } catch (e) {
-        console.error('Error sign out', e);
-        alert('No se pudo cerrar sesión');
-      }
+    document.getElementById('signout-btn')?.addEventListener('click', async () => {
+      // stub sign out: implement your sign out (firebase or other)
+      alert('Cerrar sesión (implementa signOut real).');
     });
 
-    // Init: load profile and maybe auto-start tour AFTER firebase auth resolved
-    (async function init() {
-      const profile = await loadProfile();
-      if (!profile) {
-        window.location.href = './onboarding.html';
-        return;
-      }
-      await displayProfile(profile);
-      const seen = localStorage.getItem('tutorialCompleted');
-      if (!seen) {
-        setTimeout(() => startTour(profile), 650);
-      }
-    })();
-
-    // keep overlay spotlight responsive on resize
     window.addEventListener('resize', () => {
       if (tourState.active && tourState.steps.length > 0) {
         const step = tourState.steps[tourState.step];
@@ -963,7 +857,24 @@ if (window.innerWidth < 768) {
       }
     });
 
+    /* -----------------------------
+       INIT: load profile and maybe auto-start tour
+       ----------------------------- */
+    (async function init() {
+      const profile = await loadProfile();
+      if (!profile) {
+        window.location.href = './onboarding.html';
+        return;
+      }
+      await displayProfile(profile);
+      const seen = localStorage.getItem('tutorialCompleted');
+      if (!seen) {
+        // delay small para que UI termine de pintar
+        setTimeout(() => startTour(profile), 650);
+      }
+    })();
+
   </script>
+
 </body>
 </html>
-<!-- === FIN DEL ARCHIVO === -->

@@ -3,22 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Carlitos Academy — Finanzas</title>
+  <title>Carlitos Academy — Finanzas (Mapa)</title>
 
-  <!-- Tailwind (utilities rápidas) -->
+  <!-- Tailwind util (opcional, mantuve clases para compatibilidad) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+  <!-- Estilos -->
   <link rel="stylesheet" href="./aprender.css" />
 </head>
-<body class="bg-gradient-to-b from-emerald-50 to-white min-h-screen antialiased">
+<body>
 
-  <div class="app-max mx-auto px-4 py-6">
-
+  <div class="app-wrap">
     <!-- TOP BAR -->
-    <header class="topbar card-row mb-5">
+    <header class="topbar">
       <div class="brand-info">
         <div class="brand-badge" id="brand-badge">
           <img src="iconocarlitos.png" alt="Carlitos" id="brand-img" onerror="this.style.display='none'">
@@ -26,7 +26,7 @@
         </div>
         <div>
           <div class="hello">¡Hola, <span id="player-name">Amigo</span>!</div>
-          <div class="muted">Aprende finanzas personales jugando — 5 minutos al día</div>
+          <div class="muted">Aprende finanzas jugando — 5 minutos al día</div>
         </div>
       </div>
 
@@ -45,46 +45,48 @@
         </div>
 
         <button id="btn-tour" class="btn-ghost">🎓 Tour</button>
+
+        <!-- Theme toggle (insertado por JS si no existe) -->
+        <button id="toggle-theme-btn" class="btn-ghost" title="Cambiar tema">🌙 Modo Oscuro</button>
       </div>
     </header>
 
-    <!-- MAIN GRID -->
-    <main class="grid lg:grid-cols-3 gap-6">
-
-      <!-- LEVELS + PATH (big) -->
-      <section class="lg:col-span-2">
-        <div class="card card-pad">
-          <div class="card-header">
-            <div>
-              <h2 class="title">Camino de aprendizaje — Finanzas Personales</h2>
-              <p class="muted">Microlecciones, retos y misiones para llevar tus finanzas al siguiente nivel.</p>
-            </div>
-
-            <div class="controls-inline">
-              <select id="filter-mode" class="select">
-                <option value="all">Todas</option>
-                <option value="beginner">Principiante</option>
-                <option value="med">Intermedio</option>
-                <option value="adv">Avanzado</option>
-              </select>
-              <button id="btn-simulate" class="btn-primary-sm">🎲 Generar demo</button>
-            </div>
-          </div>
-
-          <!-- Grid of circular levels -->
-          <div id="levels-grid" class="levels-grid mt-4">
-            <!-- JS inyecta los niveles -->
+    <main class="map-layout">
+      <!-- MAP VISUAL -->
+      <section class="map-panel card">
+        <div class="map-top">
+          <h2 class="map-title">Camino de aprendizaje · Finanzas</h2>
+          <div class="map-controls">
+            <select id="filter-mode" class="select">
+              <option value="all">Todas</option>
+              <option value="beginner">Principiante</option>
+              <option value="med">Intermedio</option>
+              <option value="adv">Avanzado</option>
+            </select>
+            <button id="btn-simulate" class="btn-primary-sm">🎲 Generar demo</button>
           </div>
         </div>
 
-        <!-- DETAIL / PATH PANEL -->
-        <div id="detail-panel" class="card card-pad mt-4 hidden">
+        <!-- Scrollable canvas-like area -->
+        <div id="map-canvas-wrap" class="map-canvas-wrap">
+          <!-- SVG connections -->
+          <svg id="map-svg" class="map-svg" preserveAspectRatio="none"></svg>
+
+          <!-- nodes container -->
+          <div id="map-nodes" class="map-nodes"></div>
+        </div>
+        <div class="map-legend muted">Arrastra (móvil: desliza) para explorar el mapa. Toca un nodo para ver detalles.</div>
+      </section>
+
+      <!-- DETAIL / SIDE PANEL -->
+      <aside class="side-panel">
+        <div class="card detail-card" id="detail-panel">
           <div class="detail-layout">
-            <div id="detail-icon" class="detail-icon"></div>
+            <div id="detail-icon" class="detail-icon">?</div>
             <div class="detail-body">
               <div class="pill-flag" id="detail-difficulty">Principiante</div>
-              <h3 id="detail-title" class="detail-title">Sección</h3>
-              <p id="detail-desc" class="muted">Descripción breve de la lección o sección.</p>
+              <h3 id="detail-title" class="detail-title">Selecciona un nivel</h3>
+              <p id="detail-desc" class="muted">Aquí verás la descripción y recompensas.</p>
 
               <div class="detail-actions mt-3">
                 <button id="btn-start-section" class="btn-primary">EMPEZAR</button>
@@ -98,28 +100,8 @@
             </div>
           </div>
         </div>
-      </section>
 
-      <!-- ASIDE: Mentor, Racha & Quick -->
-      <aside>
-        <div class="card card-pad mentor-card">
-          <div class="mentor-compact">
-            <div class="mentor-avatar floating" id="mentor-avatar">
-              <img id="mentor-aside-img" src="" alt="mentor" onerror="this.style.display='none'">
-            </div>
-            <div class="mentor-meta">
-              <div id="mentor-role" class="muted small">Tu Mentor</div>
-              <div id="mentor-name" class="font-semibold">La Ardilla</div>
-            </div>
-          </div>
-
-          <p id="mentor-advice" class="muted mt-3">Consejos útiles aparecerán según tu estilo de consumo y progreso.</p>
-          <div class="mt-4">
-            <button id="mentor-action" class="btn-primary-sm w-full">📈 Analizar mis gastos</button>
-          </div>
-        </div>
-
-        <div class="card card-pad mt-4">
+        <div class="card stat-card mt-4">
           <div class="stat-row">
             <div>
               <div class="muted small">Racha</div>
@@ -139,7 +121,7 @@
           </div>
         </div>
 
-        <div class="card card-pad mt-4">
+        <div class="card mt-4">
           <div class="flex justify-between items-center">
             <div>
               <div class="muted small">Siguiente reto</div>
@@ -150,23 +132,43 @@
           <p class="muted text-xs mt-3">Pequeños retos diarios para ganar monedas y experiencia.</p>
         </div>
       </aside>
-
     </main>
   </div>
 
-  <!-- Bottom nav (coherente con Carlitos) -->
-  <nav id="bottom-nav" class="bottom-nav">
-    <div class="nav-inner">
-      <a href="./dashboard.html" class="nav-item">Dashboard</a>
-      <a href="./Aprender.html" class="nav-item active">Aprender</a>
-      <a href="./Microaprendizaje.html" class="nav-item">Micro</a>
-      <a href="./Carlitos.html" class="nav-item">Perfil</a>
+  <!-- Bottom nav -->
+<nav id="bottom-nav" class="nav-menu fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40">
+    <div class="flex justify-around max-w-2xl mx-auto py-2">
+      <a href="./dashboard.html" class="nav-item text-center">
+        <div class="nav-item inline-flex flex-col items-center muted">
+          <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 10.5h19.5m-4.5 4.5h-10.5m10.5 0a1.5 1.5 0 0 1 1.5 1.5v3.75a1.5 1.5 0 0 1-1.5 1.5h-10.5a1.5 1.5 0 0 1-1.5-1.5V16.5m1.5-6.042V4.5a1.5 1.5 0 0 1 1.5-1.5h7.5" /></svg>
+          <span class="text-xs">Dashboard</span>
+        </div>
+      </a>
+      <a href="./Aprender.html" class="nav-item text-center">
+        <div class="inline-flex flex-col items-center muted">
+          <svg class="w-6 h6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21.5L4 17.5V7.5L12 3.5L20 7.5V17.5L12 21.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 12L20 7.5M12 12V21.5M12 12L4 7.5M4 17.5L12 12M20 17.5L12 12" /></svg>
+          <span class="text-xs">Aprender</span>
+        </div>
+      </a>
+      <a href="./Microaprendizaje.html" class="nav-item text-center">
+        <div class="inline-flex flex-col items-center muted">
+          <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="m15 10.5 4.793-4.793a1 1 0 0 0 0-1.414l-2.06-2.06a1 1 0 0 0-1.414 0L12 7.086 8.707 3.793a1 1 0 0 0-1.414 0l-2.06 2.06a1 1 0 0 0 0 1.414L9 10.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="text-xs">Micro</span>
+        </div>
+      </a>
+      <a href="./Carlitos.html" class="nav-item active text-center">
+        <div class="inline-flex flex-col items-center" style="color:var(--accent-1)">
+          <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="text-xs">Perfil</span>
+        </div>
+      </a>
     </div>
   </nav>
 
-  <!-- TOUR root (spotlight + bubble) -->
+  <!-- TOUR root -->
   <div id="tour-root"></div>
 
+  <!-- Script -->
   <script type="module" src="./aprender.js"></script>
 </body>
 </html>

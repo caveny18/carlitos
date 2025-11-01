@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Bienvenido a Carlitos</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -39,11 +39,19 @@
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* small helpers */
+    .btn-disabled { opacity: .6; pointer-events: none; }
   </style>
 </head>
-
 <body class="flex flex-col items-center justify-center text-center px-6 py-10">
-  
+
+  <noscript>
+    <div class="max-w-md mx-auto bg-red-600 text-white p-3 rounded mb-4">
+      JavaScript está desactivado — algunas funciones (inicio de sesión) no funcionarán.
+    </div>
+  </noscript>
+
   <!-- Imagen principal -->
   <div class="fade-in mb-8">
     <img src="./bienvenida.png" alt="Carlitos Bienvenida" class="w-80 sm:w-96 md:w-[480px] mx-auto rounded-3xl shadow-2xl border border-purple-600/30">
@@ -68,42 +76,134 @@
     </button>
   </div>
 
-  <!-- Scripts -->
   <script type="module">
-    import { auth, db, provider } from './firebase-config.js';
-    import { signInWithPopup } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-    import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-
+    // Código robusto: intenta importar firebase-config, si no -> fallback local
     const loginBtn = document.getElementById('btnLogin');
     const registerBtn = document.getElementById('btnRegister');
 
-    // Iniciar sesión con Google
-    loginBtn.addEventListener('click', async () => {
+    // Rutas seguras (ajusta si tus archivos están en otras carpetas)
+    const ROUTES = {
+      onboarding: 'onboarding.html',
+      preguntasMentor: 'preguntas-mentor.html',
+      carlitosHome: 'Carlitos.html',
+      index: 'index.html'
+    };
+
+    // Helper redirigir con verificación simple de existencia de archivo (fetch HEAD)
+    async function safeNavigate(url) {
       try {
-        const result = await signInWithPopup(auth, provider);
-        const user = result.user;
-        console.log("Usuario:", user.email);
-
-        // Verificar si el usuario ya tiene perfil
-        const userDoc = await getDoc(doc(db, "usuarios", user.uid));
-
-        if (userDoc.exists()) {
-          console.log("✅ Perfil encontrado → Redirigiendo a Carlitos.html");
-          window.location.href = "Carlitos.html";
+        // intenta comprobar si existe (esto puede fallar si servidor no permite HEAD)
+        const r = await fetch(url, { method: 'HEAD' });
+        if (r.ok) {
+          window.location.href = url;
         } else {
-          console.log("🆕 Nuevo usuario → Redirigiendo al Onboarding");
-          window.location.href = "onboarding.html";
+          // fallback a onboarding
+          console.warn('Ruta no encontrada (HEAD):', url, r.status);
+          window.location.href = ROUTES.onboarding;
+        }
+      } catch (e) {
+        // si fetch falla (file:// por ejemplo) navegar directo (mejor UX local)
+        console.warn('No se pudo resolver la ruta con HEAD — navegando directamente:', url, e);
+        window.location.href = url;
+      }
+    }
+
+    // Intentar integrar con Firebase (si existe firebase-config.js)
+    let firebaseAvailable = false;
+    let auth = null, db = null, provider = null;
+    try {
+      // intenta importar el módulo de configuración (puede lanzar si no existe)
+      const cfg = await import('./firebase-config.js');
+      // espera que firebase-config exporte: auth, db, provider (GoogleAuthProvider instancia)
+      auth = cfg.auth ?? cfg.default?.auth ?? null;
+      db = cfg.db ?? cfg.default?.db ?? null;
+      provider = cfg.provider ?? cfg.default?.provider ?? null;
+      firebaseAvailable = !!(auth && db && provider);
+      console.log('Firebase config cargado. Disponible:', firebaseAvailable);
+    } catch (e) {
+      console.warn('firebase-config.js no cargado o tiene errores. Funcionalidad de login con Firebase deshabilitada.', e);
+      firebaseAvailable = false;
+    }
+
+    // función para comprobar perfil en Firestore (si está disponible)
+    async function checkUserProfileAndRedirect(user) {
+      try {
+        if (!db) {
+          console.warn('No hay instancia Firestore — redirigiendo a onboarding por defecto.');
+          await safeNavigate(ROUTES.onboarding);
+          return;
+        }
+        const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
+        const ref = doc(db, 'usuarios', user.uid);
+        const snap = await getDoc(ref);
+        if (snap && snap.exists && snap.exists()) {
+          // perfil en Firestore -> Carlitos.html
+          await safeNavigate(ROUTES.carlitosHome);
+        } else {
+          // no existe -> onboarding
+          await safeNavigate(ROUTES.onboarding);
         }
       } catch (err) {
-        console.error("❌ Error al iniciar sesión:", err);
-        alert("No se pudo iniciar sesión. Inténtalo de nuevo.");
+        console.error('Error verificando perfil en Firestore:', err);
+        // fallback seguro
+        await safeNavigate(ROUTES.onboarding);
+      }
+    }
+
+    // Listener Login
+    loginBtn.addEventListener('click', async () => {
+      // deshabilitar mientras procesa
+      loginBtn.classList.add('btn-disabled');
+      try {
+        if (firebaseAvailable && auth && provider) {
+          // usar signInWithPopup si firebase presente
+          const { signInWithPopup } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+          try {
+            const result = await signInWithPopup(auth, provider);
+            const user = result.user;
+            // guarda uid local por si lo necesitas
+            if (user && user.uid) localStorage.setItem('carlitos_user_uid', user.uid);
+            // verificar perfil en Firestore y redirigir apropiadamente
+            await checkUserProfileAndRedirect(user);
+          } catch (popupErr) {
+            console.error('Error en signInWithPopup:', popupErr);
+            alert('No se pudo iniciar sesión con Google. Revisa la consola para más detalles. Se abrirá el onboarding.');
+            await safeNavigate(ROUTES.onboarding);
+          }
+        } else {
+          // Firebase no disponible -> fallback local: ir a onboarding para pruebas
+          console.warn('Firebase no disponible — navegación local a onboarding.');
+          await safeNavigate(ROUTES.onboarding);
+        }
+      } finally {
+        loginBtn.classList.remove('btn-disabled');
       }
     });
 
-    // Crear cuenta → siempre lleva al Onboarding
-    registerBtn.addEventListener('click', () => {
-      window.location.href = "preguntas-mentor.html";
+    // Listener Register (crear cuenta) -> siempre lleva al flujo de onboarding / preguntas-mentor
+    registerBtn.addEventListener('click', async () => {
+      // preferimos preguntas-mentor si existe, si no -> onboarding
+      try {
+        // intenta HEAD a preguntas-mentor
+        await safeNavigate(ROUTES.preguntasMentor);
+      } catch (e) {
+        // fallback
+        await safeNavigate(ROUTES.onboarding);
+      }
     });
+
+    // Mejora: tecla Enter para accesibilidad (opcional)
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        // si el foco está en algún input o modal, no interceptar
+        if (document.activeElement && ['INPUT','TEXTAREA','SELECT','BUTTON'].includes(document.activeElement.tagName)) return;
+        // por defecto abre login
+        loginBtn.click();
+      }
+    });
+
+    // Debug helper: si quieres forzar comportamiento local durante desarrollo
+    // localStorage.setItem('forceLocalAuth', '1');
   </script>
 </body>
 </html>

@@ -3,115 +3,176 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Carlitos — Aprender</title>
+  <title>Carlitos — Dashboard (Simulador & Categorías)</title>
 
-  <!-- Tailwind (utilidades) -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Chart / Confetti optional (keeps perf) -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <link rel="stylesheet" href="./aprender.css">
+  <!-- Estilos separados -->
+  <link rel="stylesheet" href="./dashboard.css" />
 </head>
-<body class="bg-slate-50 text-slate-900">
+<body>
 
-  <div class="page-container max-w-6xl mx-auto p-4">
-    <header class="flex items-center justify-between gap-4 mb-6">
+  <div class="max-w-3xl mx-auto p-4">
+    <header class="flex items-center justify-between mb-6">
       <div>
-        <h1 class="title">Aprende • Carlitos Academy</h1>
-        <p class="subtitle">Lecciones por niveles — Interactivo, limpio y pro</p>
+        <h1 class="text-3xl font-extrabold" id="page-title">Dashboard</h1>
+        <p id="welcome-small" class="small-muted mt-1">Tu panel para gestionar metas, gastos y progreso.</p>
       </div>
-
       <div class="flex items-center gap-3">
-        <button id="btn-tour" class="btn-outline">🎓 Tour</button>
-        <button id="btn-simulate" class="btn-primary">⚡ Demo</button>
-        <button id="btn-reset" class="btn-ghost">Reset</button>
+        <button id="start-tour" class="btn btn-primary">🎓 Tour rápido</button>
+        <button id="simulate-data" class="btn btn-ghost">⚡ Simular datos</button>
+        <button id="clear-test-data" class="btn btn-ghost">🗑️ Limpiar prueba</button>
+        <button id="logout" class="btn btn-ghost">Salir</button>
       </div>
     </header>
 
-    <!-- HERO -->
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start mb-6">
-      <div class="hero card col-span-2">
-        <div class="flex items-center gap-4">
-          <div id="hero-avatar" class="avatar">C</div>
-          <div>
-            <div id="hero-name" class="hero-name">Usuario</div>
-            <div id="hero-role" class="muted">Explorador</div>
-            <div class="mt-3">
-              <div class="small-muted">XP</div>
-              <div class="xp-wrap mt-2">
-                <div id="xp-fill" class="xp-fill" style="width:0%"></div>
-              </div>
-              <div id="xp-meta" class="muted text-xs mt-2">0 XP • Próximo 100</div>
-            </div>
+    <!-- Top: profile & XP -->
+    <section class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+      <div class="card flex items-center gap-4">
+        <div id="avatar-circle" class="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white text-2xl font-bold">C</div>
+        <div>
+          <div class="text-lg font-bold" id="user-name">Usuario</div>
+          <div class="small-muted" id="user-role">Rol</div>
+          <div class="mt-2 flex items-center gap-3">
+            <div class="text-xs small-muted">Nivel</div>
+            <div id="user-level-badge" class="pill bg-indigo-50 text-indigo-600">Novato</div>
           </div>
-
-          <div class="ml-auto text-right">
-            <div class="muted text-xs">Nivel</div>
-            <div id="level-badge" class="level-badge">Novato</div>
-            <div class="mt-2"><button id="btn-first-lesson" class="btn-primary-sm">Ir a lección 1</button></div>
-          </div>
-        </div>
-
-        <!-- mentor small -->
-        <div id="mentor-small" class="mentor-small" title="Tu mentor">
-          <img id="mentor-small-img" alt="Mentor" draggable="false"/>
         </div>
       </div>
 
-      <aside class="card">
-        <div>
-          <div class="muted text-xs">Progreso</div>
-          <div id="stats" class="mt-2 font-semibold">0 XP • 0 Coins</div>
+      <div class="card">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="small-muted">CarlitosCoins</div>
+            <div class="text-2xl font-bold" id="coins-amount">0</div>
+          </div>
+          <div style="width:48%" class="text-right">
+            <div class="small-muted">XP</div>
+            <div id="xp-bar-wrapper" class="w-full bg-gray-100 h-3 rounded-full overflow-hidden mt-2">
+              <div id="xp-bar" style="width:0%;" class="h-3 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+            </div>
+            <div class="small-muted mt-2" id="xp-text">0 / 100 XP</div>
+          </div>
         </div>
-        <div class="mt-4 border-t pt-3">
-          <div class="muted text-xs">Consejo del mentor</div>
-          <div id="mentor-advice" class="mt-2 text-sm">Tu mentor te dará recomendaciones según tu actividad.</div>
-        </div>
-      </aside>
+      </div>
     </section>
 
-    <!-- MAPA NIVELES (minimal) -->
-    <section class="card mb-20">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="font-semibold">Mapa de Niveles</h2>
-        <div class="flex items-center gap-2">
-          <select id="mode" class="select-min">
-            <option value="adventure">Aventura</option>
-            <option value="practice">Práctica</option>
-            <option value="exam">Examen</option>
+    <!-- Controls: chart type & categories -->
+    <section class="card mb-4">
+      <div class="flex items-center justify-between mb-3">
+        <div>
+          <div class="font-semibold">Gráficos</div>
+          <div class="small-muted text-xs">Cambia visualización o administra categorías</div>
+        </div>
+        <div class="flex items-center gap-3">
+          <select id="chart-type" class="border px-3 py-2 rounded">
+            <option value="doughnut">Circular</option>
+            <option value="bar">Barras</option>
+            <option value="line">Línea</option>
           </select>
-          <button id="unlock-demo" class="btn-outline-sm">Desbloquear demo</button>
+          <button id="manage-categories" class="btn btn-ghost">Categorías</button>
         </div>
       </div>
 
-      <!-- svg path + nodes container -->
-      <div id="map-wrap" class="map-wrap">
-        <svg id="curve-svg" viewBox="0 0 1200 260" class="w-full h-36" preserveAspectRatio="none">
-          <defs>
-            <linearGradient id="lg" x1="0" x2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#06b6d4"/></linearGradient>
-          </defs>
-          <path id="curve-path" d="M40 200 C 240 40, 460 320, 660 200 C 860 80, 1080 320, 1160 200"
-            stroke="url(#lg)" stroke-width="6" fill="none" stroke-linecap="round" />
-        </svg>
-        <div id="nodes-root" class="nodes-root"></div>
+      <div style="height:280px;">
+        <canvas id="balanceChart" style="height:100%; width:100%;"></canvas>
+      </div>
+    </section>
+
+    <!-- Main grid -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+      <div class="card lg:col-span-2">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold">Resumen mensual</h3>
+          <div class="small-muted">Últimos 6 meses</div>
+        </div>
+        <div id="chart-legend" class="flex gap-2 flex-wrap small-muted mb-3"></div>
+        <div style="height:260px;"></div>
+      </div>
+
+      <div class="card space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="small-muted">Registrar</div>
+            <div class="text-lg font-bold">Nueva transacción</div>
+          </div>
+          <button id="open-add-transaction" class="btn btn-primary">+ Añadir</button>
+        </div>
+
+        <div>
+          <div class="small-muted mb-2">Atajos rápidos</div>
+          <div class="flex gap-2 flex-wrap">
+            <button id="fast-income" class="btn">Ingreso rápido</button>
+            <button id="fast-expense" class="btn">Gasto rápido</button>
+            <button id="open-add-goal" class="btn btn-accent">Crear meta</button>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t">
+          <div class="small-muted">Caja de Herramientas</div>
+          <div id="tools-compact" class="mt-2 space-y-2"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transactions & Goals -->
+    <section class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-12">
+      <div class="card">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold">Transacciones</h3>
+          <div class="small-muted">Últimas 50</div>
+        </div>
+        <div id="transactions-list" class="space-y-2 max-h-72 overflow-auto"></div>
+      </div>
+
+      <div class="card">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="font-semibold">Metas</h3>
+          <div class="small-muted">Avance y opciones</div>
+        </div>
+        <div id="goals-list" class="space-y-3"></div>
       </div>
     </section>
   </div>
 
-  <!-- Bottom nav (coherencia) -->
-  <nav id="bottom-nav" class="nav fixed bottom-0 left-0 right-0 bg-white border-t z-40">
-    <div class="max-w-2xl mx-auto flex justify-around py-2">
-      <a href="./dashboard.html" class="muted">Dashboard</a>
-      <a href="./Aprender.html" class="active">Aprender</a>
-      <a href="./Microaprendizaje.html" class="muted">Micro</a>
-      <a href="./Carlitos.html" class="muted">Perfil</a>
+  <!-- Bottom navigation (idéntica a la tuya) -->
+  <nav id="bottom-nav" class="nav-menu fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40">
+    <div class="flex justify-around max-w-2xl mx-auto py-2">
+      <a href="./dashboard.html" class="nav-item text-center">
+        <div class="nav-item inline-flex flex-col items-center muted">
+          <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 10.5h19.5m-4.5 4.5h-10.5m10.5 0a1.5 1.5 0 0 1 1.5 1.5v3.75a1.5 1.5 0 0 1-1.5 1.5h-10.5a1.5 1.5 0 0 1-1.5-1.5V16.5m1.5-6.042V4.5a1.5 1.5 0 0 1 1.5-1.5h7.5" /></svg>
+          <span class="text-xs">Dashboard</span>
+        </div>
+      </a>
+      <a href="./Aprender.html" class="nav-item text-center">
+        <div class="inline-flex flex-col items-center muted">
+          <svg class="w-6 h6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21.5L4 17.5V7.5L12 3.5L20 7.5V17.5L12 21.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 12L20 7.5M12 12V21.5M12 12L4 7.5M4 17.5L12 12M20 17.5L12 12" /></svg>
+          <span class="text-xs">Aprender</span>
+        </div>
+      </a>
+      <a href="./Microaprendizaje.html" class="nav-item text-center">
+        <div class="inline-flex flex-col items-center muted">
+          <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="m15 10.5 4.793-4.793a1 1 0 0 0 0-1.414l-2.06-2.06a1 1 0 0 0-1.414 0L12 7.086 8.707 3.793a1 1 0 0 0-1.414 0l-2.06 2.06a1 1 0 0 0 0 1.414L9 10.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="text-xs">Micro</span>
+        </div>
+      </a>
+      <a href="./Carlitos.html" class="nav-item active text-center">
+        <div class="inline-flex flex-col items-center" style="color:var(--accent-1)">
+          <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="text-xs">Perfil</span>
+        </div>
+      </a>
     </div>
   </nav>
 
-  <!-- TOUR overlay root -->
-  <div id="tour-root"></div>
+  <!-- Modal root -->
+  <div id="modal-root"></div>
 
-  <script type="module" src="./aprender.js"></script>
+  <!-- Lógica separada (módulo) -->
+  <script type="module" src="./dashboard.js"></script>
 </body>
 </html>
