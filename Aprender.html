@@ -3,172 +3,70 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Carlitos Academy — Finanzas (Mapa)</title>
+  <title>Carlitos Academy — Niveles</title>
 
-  <!-- Tailwind util (opcional, mantuve clases para compatibilidad) -->
+  <!-- Tailwind util (opcional) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
-  <!-- Estilos -->
-  <link rel="stylesheet" href="./aprender.css" />
+  <link rel="stylesheet" href="./aprender.css">
 </head>
 <body>
-
-  <div class="app-wrap">
-    <!-- TOP BAR -->
-    <header class="topbar">
-      <div class="brand-info">
-        <div class="brand-badge" id="brand-badge">
-          <img src="iconocarlitos.png" alt="Carlitos" id="brand-img" onerror="this.style.display='none'">
-          <span id="brand-initial" class="brand-initial">C</span>
-        </div>
+  <div id="app" class="wrap">
+    <header class="header">
+      <div class="brand">
+        <div class="logo">C</div>
         <div>
-          <div class="hello">¡Hola, <span id="player-name">Amigo</span>!</div>
-          <div class="muted">Aprende finanzas jugando — 5 minutos al día</div>
+          <div class="title">Carlitos Academy</div>
+          <div class="subtitle muted">Niveles - Finanzas · Estilo gamer</div>
         </div>
       </div>
 
-      <div class="top-controls">
-        <div class="status-pill" title="Estrellas por retos completados">
-          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#FBBF24" d="M12 2l2.6 5.3L20 8l-4 3.8L17 20l-5-2.6L7 20l1-8.2L4 8l5.4-.7L12 2z"/></svg>
-          <span id="badge-stars">0</span>
+      <div class="actions">
+        <div class="stats">
+          <span class="stat"><strong id="coins">0</strong> 🪙</span>
+          <span class="stat"><strong id="xp">0</strong> XP</span>
         </div>
-        <div class="status-pill" title="Monedas (recompensas)">
-          <svg viewBox="0 0 24 24" width="18" height="18"><circle cx="12" cy="12" r="9" fill="#06B6D4"/></svg>
-          <span id="badge-coins">0</span>
+        <div class="controls">
+          <button id="btn-tour" class="btn ghost">🎓 Tour</button>
+          <button id="toggle-theme-btn" class="btn ghost">🌙</button>
         </div>
-        <div class="status-pill" title="Vidas / energía">
-          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#EF4444" d="M12 21s-8-4.5-8-11a5 5 0 0 1 10 0 5 5 0 0 1 10 0c0 6.5-8 11-8 11z"/></svg>
-          <span id="badge-lives">5</span>
-        </div>
-
-        <button id="btn-tour" class="btn-ghost">🎓 Tour</button>
-
-        <!-- Theme toggle (insertado por JS si no existe) -->
-        <button id="toggle-theme-btn" class="btn-ghost" title="Cambiar tema">🌙 Modo Oscuro</button>
       </div>
     </header>
 
-    <main class="map-layout">
-      <!-- MAP VISUAL -->
-      <section class="map-panel card">
-        <div class="map-top">
-          <h2 class="map-title">Camino de aprendizaje · Finanzas</h2>
-          <div class="map-controls">
+    <main class="main">
+      <!-- Filters / header -->
+      <div class="panel controls-panel card">
+        <div class="controls-row">
+          <div class="left">
+            <h2 class="panel-title">Niveles</h2>
+            <p class="muted">Selecciona una categoría para empezar — diseño por tiles grandes.</p>
+          </div>
+          <div class="right">
             <select id="filter-mode" class="select">
               <option value="all">Todas</option>
               <option value="beginner">Principiante</option>
               <option value="med">Intermedio</option>
               <option value="adv">Avanzado</option>
             </select>
-            <button id="btn-simulate" class="btn-primary-sm">🎲 Generar demo</button>
+            <button id="btn-simulate" class="btn primary">🎲 Demo</button>
           </div>
         </div>
+      </div>
 
-        <!-- Scrollable canvas-like area -->
-        <div id="map-canvas-wrap" class="map-canvas-wrap">
-          <!-- SVG connections -->
-          <svg id="map-svg" class="map-svg" preserveAspectRatio="none"></svg>
-
-          <!-- nodes container -->
-          <div id="map-nodes" class="map-nodes"></div>
-        </div>
-        <div class="map-legend muted">Arrastra (móvil: desliza) para explorar el mapa. Toca un nodo para ver detalles.</div>
+      <!-- GRID OF TILES -->
+      <section id="tiles-grid" class="tiles-grid">
+        <!-- Tiles inserted by JS -->
       </section>
 
-      <!-- DETAIL / SIDE PANEL -->
-      <aside class="side-panel">
-        <div class="card detail-card" id="detail-panel">
-          <div class="detail-layout">
-            <div id="detail-icon" class="detail-icon">?</div>
-            <div class="detail-body">
-              <div class="pill-flag" id="detail-difficulty">Principiante</div>
-              <h3 id="detail-title" class="detail-title">Selecciona un nivel</h3>
-              <p id="detail-desc" class="muted">Aquí verás la descripción y recompensas.</p>
-
-              <div class="detail-actions mt-3">
-                <button id="btn-start-section" class="btn-primary">EMPEZAR</button>
-                <button id="btn-preview" class="btn-outline">Vista previa</button>
-                <button id="btn-favorite" class="btn-ghost" title="Marcar favorito">⭐</button>
-              </div>
-
-              <div class="rewards mt-3 muted">Recompensas:
-                <strong id="detail-coins">+20</strong> · XP: <strong id="detail-xp">+50</strong>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card stat-card mt-4">
-          <div class="stat-row">
-            <div>
-              <div class="muted small">Racha</div>
-              <div id="streak" class="font-bold">0 días</div>
-            </div>
-            <div>
-              <div class="muted small">Nivel</div>
-              <div id="current-level" class="font-bold">Novato</div>
-            </div>
-          </div>
-
-          <div class="mt-4">
-            <div class="muted small">Progreso mensual</div>
-            <div class="progress-track mt-2">
-              <div id="progress-month" class="progress-fill" style="width:0%"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="card mt-4">
-          <div class="flex justify-between items-center">
-            <div>
-              <div class="muted small">Siguiente reto</div>
-              <div class="font-semibold">Reto Presupuesto 5-min</div>
-            </div>
-            <button id="btn-quick" class="btn-primary-sm">Ir</button>
-          </div>
-          <p class="muted text-xs mt-3">Pequeños retos diarios para ganar monedas y experiencia.</p>
-        </div>
-      </aside>
+      <!-- detail / modal root -->
+      <div id="modal-root"></div>
+      <div id="tour-root"></div>
     </main>
   </div>
 
-  <!-- Bottom nav -->
-<nav id="bottom-nav" class="nav-menu fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-40">
-    <div class="flex justify-around max-w-2xl mx-auto py-2">
-      <a href="./dashboard.html" class="nav-item text-center">
-        <div class="nav-item inline-flex flex-col items-center muted">
-          <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 10.5h19.5m-4.5 4.5h-10.5m10.5 0a1.5 1.5 0 0 1 1.5 1.5v3.75a1.5 1.5 0 0 1-1.5 1.5h-10.5a1.5 1.5 0 0 1-1.5-1.5V16.5m1.5-6.042V4.5a1.5 1.5 0 0 1 1.5-1.5h7.5" /></svg>
-          <span class="text-xs">Dashboard</span>
-        </div>
-      </a>
-      <a href="./Aprender.html" class="nav-item text-center">
-        <div class="inline-flex flex-col items-center muted">
-          <svg class="w-6 h6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21.5L4 17.5V7.5L12 3.5L20 7.5V17.5L12 21.5Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 12L20 7.5M12 12V21.5M12 12L4 7.5M4 17.5L12 12M20 17.5L12 12" /></svg>
-          <span class="text-xs">Aprender</span>
-        </div>
-      </a>
-      <a href="./Microaprendizaje.html" class="nav-item text-center">
-        <div class="inline-flex flex-col items-center muted">
-          <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="m15 10.5 4.793-4.793a1 1 0 0 0 0-1.414l-2.06-2.06a1 1 0 0 0-1.414 0L12 7.086 8.707 3.793a1 1 0 0 0-1.414 0l-2.06 2.06a1 1 0 0 0 0 1.414L9 10.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span class="text-xs">Micro</span>
-        </div>
-      </a>
-      <a href="./Carlitos.html" class="nav-item active text-center">
-        <div class="inline-flex flex-col items-center" style="color:var(--accent-1)">
-          <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          <span class="text-xs">Perfil</span>
-        </div>
-      </a>
-    </div>
-  </nav>
-
-  <!-- TOUR root -->
-  <div id="tour-root"></div>
-
-  <!-- Script -->
   <script type="module" src="./aprender.js"></script>
 </body>
 </html>

@@ -10,10 +10,11 @@
     :root{
       --bg1:#0ea5e9;
       --bg2:#10b981;
-      --glass-bg: rgba(255,255,255,0.12);
-      --glass-border: rgba(255,255,255,0.18);
+      --glass-bg: rgba(255,255,255,0.10);
+      --glass-border: rgba(255,255,255,0.20);
       --accent1: #7dd3fc;
       --accent2: #34d399;
+      --muted: rgba(255,255,255,0.75);
     }
     html,body{height:100%}
     body{
@@ -32,12 +33,12 @@
       border: 1px solid var(--glass-border);
       backdrop-filter: blur(10px) saturate(120%);
       -webkit-backdrop-filter: blur(10px) saturate(120%);
-      box-shadow: 0 10px 30px rgba(2,6,23,0.18);
+      box-shadow: 0 10px 30px rgba(2,6,23,0.14);
       border-radius: 14px;
     }
 
     .card { transition: transform .22s ease, box-shadow .22s ease; border-radius: 12px; overflow: hidden; }
-    .card:hover{ transform: translateY(-6px) scale(1.01); box-shadow:0 20px 40px rgba(2,6,23,0.2); }
+    .card:hover{ transform: translateY(-6px) scale(1.01); box-shadow:0 20px 40px rgba(2,6,23,0.18); }
 
     .btn-accent{
       background: linear-gradient(90deg,var(--accent1), var(--accent2));
@@ -45,21 +46,31 @@
       border-radius: 999px;
       padding: 10px 20px;
       font-weight: 600;
-      box-shadow: 0 8px 20px rgba(16,185,129,0.18);
+      box-shadow: 0 8px 20px rgba(16,185,129,0.14);
+    }
+
+    .btn-secondary{
+      background: rgba(255,255,255,0.1);
+      color: white;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.08);
+      font-weight: 600;
     }
 
     .placeholder {
-      background: linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
       border-radius: 10px;
       padding: 14px;
     }
 
-    .countdown {
-      background: rgba(255,255,255,0.06);
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-weight: 600;
-    }
+    .muted{ color: rgba(255,255,255,0.85); }
+
+    .hero-accent{ background: linear-gradient(90deg,var(--accent1),var(--accent2)); -webkit-background-clip:text; color:transparent }
+
+    /* subtle floating animation for hero illustration */
+    @keyframes floaty { 0%{ transform:translateY(0) } 50%{ transform:translateY(-8px) } 100%{ transform:translateY(0) } }
+    .floaty{ animation: floaty 6s ease-in-out infinite; }
 
     @media (max-width: 768px){ .desktop-only{display:none} }
   </style>
@@ -80,6 +91,7 @@
     <a href="#how" class="hover:underline">Cómo</a>
     <a href="#form" class="hover:underline">Encuesta</a>
     <a href="#community" class="hover:underline">Comunidad</a>
+    <a href="index.html" class="btn-secondary">Inicio</a>
     <button id="openDemo" class="btn-accent ml-2 desktop-only">Ser parte de la comunidad</button>
   </nav>
 </header>
@@ -87,12 +99,11 @@
 <!-- HERO -->
 <section class="grid md:grid-cols-2 gap-6 items-center mb-10">
   <div class="space-y-4">
-    <h1 class="text-4xl md:text-5xl font-extrabold text-white leading-tight">Aprende, mejora y domina tu dinero — <span style="color: white">con <span style="background:linear-gradient(90deg,var(--accent1),var(--accent2)); -webkit-background-clip:text; color:transparent">Carlitos</span></span></h1>
-    <p class="text-white/90 max-w-2xl">Micro-sesiones, simuladores reales y mentoría guiada para quienes aún no empiezan, los que ya comenzaron y los que quieren optimizar. Empieza hoy a tener hábitos financieros saludables y entender el ¿Por qué? de las finanzas y economía.</p>
+    <h1 class="text-4xl md:text-5xl font-extrabold text-white leading-tight">Aprende, mejora y domina tu dinero — <span class="hero-accent">Carlitos</span></h1>
+    <p class="text-white/90 max-w-2xl">Micro-sesiones, simuladores reales y mentoría guiada para quienes aún no empiezan, los que ya comenzaron y los que quieren optimizar. Hoy mismo puedes empezar a construir hábitos financieros que duren.</p>
 
     <div class="flex gap-3 items-center mt-3">
       <button id="ctaDemo" class="btn-accent">Ser parte de la comunidad</button>
-      <div id="countdownTimer" class="countdown text-white/95 ml-2">Cargando temporizador...</div>
       <a href="#features" class="text-white/80 hover:underline">Ver funcionalidades →</a>
     </div>
 
@@ -105,7 +116,7 @@
 
   <div class="flex justify-center">
     <div class="glass card p-6 max-w-md w-full flex items-center justify-center">
-      <img src="bienvenida.png" alt="Carlitos hero" class="w-80 h-auto drop-shadow-2xl">
+      <img src="bienvenida.png" alt="Carlitos hero" class="w-80 h-auto drop-shadow-2xl floaty">
     </div>
   </div>
 </section>
@@ -144,7 +155,6 @@
   <h2 class="text-2xl font-bold text-white mb-4">Funcionalidades completas de Carlitos 🚀</h2>
   <p class="text-white/90 mb-6 max-w-3xl">Carlitos combina educación, herramientas y motivación — todo en una experiencia gamificada y personalizada.</p>
   <div class="grid md:grid-cols-3 gap-4">
-    <!-- algunos features (omitidos para brevedad visual) -->
     <div class="glass card p-5">
       <div class="flex items-start gap-3">
         <div class="text-3xl">🧭</div>
@@ -164,7 +174,6 @@
   <p class="text-white/90 mb-6 max-w-3xl mx-auto">1) Aprende con micro-lecciones → 2) Practica en simuladores → 3) Progresa con tu mentor y gana coins. Todo desde un mismo dashboard.</p>
   <div class="flex items-center justify-center gap-3">
     <button id="ctaDemo2" class="btn-accent">Ser parte de la comunidad</button>
-    <div id="countdownTimerSmall" class="countdown text-white/95">--:--:--</div>
   </div>
 </section>
 
@@ -260,7 +269,10 @@
 <!-- FOOTER -->
 <footer class="text-center mt-8 mb-12 text-white/80">
   <div class="mb-4">¿Listo para empezar? Sé parte de la comunidad o deja tu comentario.</div>
-  <button id="finalDemo" class="btn-accent">Ser parte de la comunidad</button>
+  <div class="flex items-center justify-center gap-3">
+    <button id="finalDemo" class="btn-accent">Ser parte de la comunidad</button>
+    <a href="index.html" class="btn-secondary">Ir al inicio</a>
+  </div>
   <div class="text-xs mt-4">© <span id="year"></span> Carlitos — Comunidad Explorer</div>
 </footer>
 </div>
@@ -338,40 +350,7 @@
   const runDemo = document.getElementById('runDemo');
   const demoOutput = document.getElementById('demoOutput');
 
-  const countdownTimer = document.getElementById('countdownTimer');
-  const countdownTimerSmall = document.getElementById('countdownTimerSmall');
-
-  // ---------- Countdown: 3 días desde la carga ----------
-  // Calculamos una fecha objetivo = ahora + 3 días (72 horas)
-  const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000;
-  const targetTs = Date.now() + THREE_DAYS_MS;
-
-  function formatRemaining(ms){
-    if(ms <= 0) return {d:0,h:0,m:0,s:0};
-    const s = Math.floor(ms/1000);
-    const days = Math.floor(s / (3600*24));
-    const hours = Math.floor((s % (3600*24)) / 3600);
-    const mins = Math.floor((s % 3600) / 60);
-    const secs = s % 60;
-    return {d: days, h: hours, m: mins, s: secs};
-  }
-
-  function pad(n){ return String(n).padStart(2,'0'); }
-
-  function updateCountdown(){
-    const rem = targetTs - Date.now();
-    const t = formatRemaining(rem);
-    if(countdownTimer) countdownTimer.textContent = `Faltan ${t.d}d ${pad(t.h)}h:${pad(t.m)}m:${pad(t.s)}s para probar demo`;
-    if(countdownTimerSmall) countdownTimerSmall.textContent = `${t.d}d ${pad(t.h)}:${pad(t.m)}:${pad(t.s)}`;
-    if(rem <= 0){
-      // cuando llegue el tiempo, mostrar que la demo está disponible (aquí solo texto)
-      if(countdownTimer) countdownTimer.textContent = `¡La demo ya está disponible!`;
-      if(countdownTimerSmall) countdownTimerSmall.textContent = `Demo disponible`;
-      clearInterval(countdownInterval);
-    }
-  }
-  updateCountdown();
-  const countdownInterval = setInterval(updateCountdown, 1000);
+  // ---------- Removed countdown feature as requested ----------
 
   // ---------- CTAs: scroll to community and focus ----------
   function goToCommunityFocus(){
