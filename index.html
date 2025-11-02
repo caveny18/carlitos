@@ -7,203 +7,241 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    :root {
+      --bg1: #0b1020;
+      --bg2: #071129;
+      --accentA: #06b6d4; /* azul/verde Carlitos */
+      --accentB: #10b981;
+    }
     body {
       font-family: 'Inter', sans-serif;
-      background: radial-gradient(circle at top, #1c1630 0%, #0d0a1b 80%);
-      color: white;
+      background: radial-gradient(circle at top, var(--bg1) 0%, var(--bg2) 80%);
+      color: #f8fafc;
       min-height: 100vh;
-      overflow-x: hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:28px;
+      margin:0;
     }
-
-    .text-gradient {
-      background-image: linear-gradient(90deg, #8b5cf6, #d946ef);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+    .card {
+      width:100%;
+      max-width:720px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.04);
+      border-radius: 18px;
+      padding:28px;
+      box-shadow: 0 30px 90px rgba(2,6,23,0.6);
+      text-align:center;
     }
-
-    .btn-glow {
-      transition: all 0.3s ease;
-      box-shadow: 0 0 12px rgba(147, 51, 234, 0.4);
+    .img-welcome { width:280px; max-width:60%; border-radius:16px; display:block; margin:0 auto 18px; }
+    .title { font-size:28px; font-weight:800; margin-bottom:6px; }
+    .subtitle { color: rgba(255,255,255,0.8); margin-bottom:18px; }
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:8px; padding:12px 18px; border-radius:12px; font-weight:700; cursor:pointer;
+      border:0;
     }
+    .btn-google { background: linear-gradient(90deg, var(--accentA), var(--accentB)); color:#042; box-shadow: 0 12px 36px rgba(6,182,212,0.12); }
+    .btn-start { background: linear-gradient(90deg, #16a34a, #10b981); color:#fff; }
+    .btn:active { transform: translateY(1px); }
+    .muted { color: rgba(255,255,255,0.78); }
 
-    .btn-glow:hover {
-      box-shadow: 0 0 25px rgba(147, 51, 234, 0.8);
-      transform: translateY(-2px);
+    /* toast */
+    #toast-root { position: fixed; left:50%; transform: translateX(-50%); bottom:28px; z-index:99999; }
+    .toast {
+      display:flex; align-items:center; gap:12px;
+      background: rgba(2,6,23,0.72); color:#fff;
+      padding:12px 16px; border-radius:12px; min-width:280px;
+      box-shadow: 0 18px 60px rgba(2,6,23,0.6);
+      backdrop-filter: blur(6px);
     }
+    .toast .actions { margin-left:auto; display:flex; gap:8px; }
+    .toast .btn-ghost { background:transparent; border:1px solid rgba(255,255,255,0.06); color:#fff; padding:8px 10px; border-radius:8px; }
+    .toast .btn-primary { background: linear-gradient(90deg,var(--accentA),var(--accentB)); color:#042; padding:8px 10px; border-radius:8px; font-weight:800; }
 
-    .fade-in {
-      animation: fadeIn 1.2s ease-in-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* small helpers */
-    .btn-disabled { opacity: .6; pointer-events: none; }
+    .hidden { display:none; }
   </style>
 </head>
-<body class="flex flex-col items-center justify-center text-center px-6 py-10">
+<body>
+  <div class="card">
+    <img class="img-welcome" src="./bienvenida.png" alt="Bienvenido a Carlitos">
+    <div class="title">👋 Bienvenido a <span style="background:linear-gradient(90deg,var(--accentA),var(--accentB)); -webkit-background-clip:text; -webkit-text-fill-color:transparent">Carlitos</span></div>
+    <div class="subtitle muted">Tu compañero financiero inteligente. Aprende, ahorra e invierte con nuestros mentores.</div>
 
-  <noscript>
-    <div class="max-w-md mx-auto bg-red-600 text-white p-3 rounded mb-4">
-      JavaScript está desactivado — algunas funciones (inicio de sesión) no funcionarán.
+    <div style="display:flex; gap:12px; justify-content:center; margin-top:14px;">
+      <button id="btnLogin" class="btn btn-google">🚀 Ya tengo una cuenta</button>
+      <button id="btnRegister" class="btn btn-start">🌱 Empieza ahora</button>
     </div>
-  </noscript>
-
-  <!-- Imagen principal -->
-  <div class="fade-in mb-8">
-    <img src="./bienvenida.png" alt="Carlitos Bienvenida" class="w-80 sm:w-96 md:w-[480px] mx-auto rounded-3xl shadow-2xl border border-purple-600/30">
+    <p class="muted" style="margin-top:12px; font-size:0.95rem;">Si aún no tienes cuenta, te ayudamos a crear tu perfil en 2 minutos.</p>
   </div>
 
-  <!-- Texto de bienvenida -->
-  <h1 class="text-4xl sm:text-5xl font-extrabold mb-6 leading-tight fade-in">
-    👋 Bienvenido a <span class="text-gradient">Carlitos</span>
-  </h1>
-
-  <p class="text-gray-400 max-w-md mb-10 fade-in text-sm sm:text-base">
-    Tu compañero financiero inteligente. Aprende, ahorra e invierte con la guía de nuestros mentores 🐒🐿️🐈🦅
-  </p>
-
-  <!-- Botones -->
-  <div class="flex flex-col space-y-4 w-64 fade-in">
-    <button id="btnLogin" class="btn-glow bg-purple-600 hover:bg-purple-700 py-3 rounded-xl font-semibold text-white">
-      🚀 Ya tengo una cuenta
-    </button>
-    <button id="btnRegister" class="btn-glow bg-green-600 hover:bg-green-700 py-3 rounded-xl font-semibold text-white">
-      🌱 Empieza ahora
-    </button>
-  </div>
+  <!-- toast mount -->
+  <div id="toast-root" aria-live="polite"></div>
 
   <script type="module">
-    // Código robusto: intenta importar firebase-config, si no -> fallback local
-    const loginBtn = document.getElementById('btnLogin');
-    const registerBtn = document.getElementById('btnRegister');
-
-    // Rutas seguras (ajusta si tus archivos están en otras carpetas)
+    // RUTAS (ajusta si tus archivos están en otras carpetas)
     const ROUTES = {
-      onboarding: 'onboarding.html',
-      preguntasMentor: 'preguntas-mentor.html',
       carlitosHome: 'Carlitos.html',
-      index: 'index.html'
+      preguntasMentor: 'preguntas-mentor.html',
+      onboarding: 'onboarding.html'
     };
 
-    // Helper redirigir con verificación simple de existencia de archivo (fetch HEAD)
-    async function safeNavigate(url) {
-      try {
-        // intenta comprobar si existe (esto puede fallar si servidor no permite HEAD)
-        const r = await fetch(url, { method: 'HEAD' });
-        if (r.ok) {
-          window.location.href = url;
-        } else {
-          // fallback a onboarding
-          console.warn('Ruta no encontrada (HEAD):', url, r.status);
-          window.location.href = ROUTES.onboarding;
-        }
-      } catch (e) {
-        // si fetch falla (file:// por ejemplo) navegar directo (mejor UX local)
-        console.warn('No se pudo resolver la ruta con HEAD — navegando directamente:', url, e);
-        window.location.href = url;
-      }
+    // helpers
+    function safeNavigate(url) {
+      // intento HEAD para mayor robustez; si falla, navega directo
+      return fetch(url, { method: 'HEAD' }).then(r => { window.location.href = url; }).catch(()=>{ window.location.href = url; });
     }
 
-    // Intentar integrar con Firebase (si existe firebase-config.js)
-    let firebaseAvailable = false;
+    // Toast generator
+    const toastRoot = document.getElementById('toast-root');
+    function showToast({ title = '', text = '', cta = null, ctaText = 'OK', duration = 8000 } = {}) {
+      // clear existing
+      toastRoot.innerHTML = '';
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.innerHTML = `
+        <div>
+          <div style="font-weight:800">${title}</div>
+          <div style="font-size:0.95rem; opacity:0.95">${text}</div>
+        </div>
+      `;
+      if (cta) {
+        const actions = document.createElement('div');
+        actions.className = 'actions';
+        const btn = document.createElement('button');
+        btn.className = 'btn-primary';
+        btn.textContent = ctaText;
+        btn.onclick = async () => { await cta(); t.remove(); };
+        const dismiss = document.createElement('button');
+        dismiss.className = 'btn-ghost';
+        dismiss.textContent = 'Cerrar';
+        dismiss.onclick = () => t.remove();
+        actions.appendChild(dismiss);
+        actions.appendChild(btn);
+        t.appendChild(actions);
+      } else {
+        const dismiss = document.createElement('div');
+        dismiss.style.marginLeft = '12px';
+        const close = document.createElement('button');
+        close.className = 'btn-ghost';
+        close.textContent = 'Cerrar';
+        close.onclick = () => t.remove();
+        t.appendChild(close);
+      }
+      toastRoot.appendChild(t);
+      if (duration > 0) setTimeout(()=> t.remove(), duration);
+    }
+
+    // Elementos
+    const btnLogin = document.getElementById('btnLogin');
+    const btnRegister = document.getElementById('btnRegister');
+
+    // Intento importar firebase-config.js que tú tienes/crearás.
+    // firebase-config.js debe exportar: auth, db, provider
+    let firebaseReady = false;
     let auth = null, db = null, provider = null;
     try {
-      // intenta importar el módulo de configuración (puede lanzar si no existe)
       const cfg = await import('./firebase-config.js');
-      // espera que firebase-config exporte: auth, db, provider (GoogleAuthProvider instancia)
       auth = cfg.auth ?? cfg.default?.auth ?? null;
       db = cfg.db ?? cfg.default?.db ?? null;
       provider = cfg.provider ?? cfg.default?.provider ?? null;
-      firebaseAvailable = !!(auth && db && provider);
-      console.log('Firebase config cargado. Disponible:', firebaseAvailable);
+      firebaseReady = !!(auth && provider);
+      console.log('Firebase cargado ->', firebaseReady);
     } catch (e) {
-      console.warn('firebase-config.js no cargado o tiene errores. Funcionalidad de login con Firebase deshabilitada.', e);
-      firebaseAvailable = false;
+      console.warn('firebase-config no encontrado o con error:', e);
+      firebaseReady = false;
     }
 
-    // función para comprobar perfil en Firestore (si está disponible)
-    async function checkUserProfileAndRedirect(user) {
+    // Función: verifica si existe documento de perfil en Firestore
+    async function userHasProfileInFirestore(user) {
+      if (!db || !user || !user.uid) return false;
       try {
-        if (!db) {
-          console.warn('No hay instancia Firestore — redirigiendo a onboarding por defecto.');
-          await safeNavigate(ROUTES.onboarding);
-          return;
-        }
         const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js');
         const ref = doc(db, 'usuarios', user.uid);
         const snap = await getDoc(ref);
-        if (snap && snap.exists && snap.exists()) {
-          // perfil en Firestore -> Carlitos.html
-          await safeNavigate(ROUTES.carlitosHome);
-        } else {
-          // no existe -> onboarding
-          await safeNavigate(ROUTES.onboarding);
-        }
-      } catch (err) {
-        console.error('Error verificando perfil en Firestore:', err);
-        // fallback seguro
-        await safeNavigate(ROUTES.onboarding);
+        return !!(snap && snap.exists && snap.exists());
+      } catch (e) {
+        console.warn('Error consultando Firestore:', e);
+        return false;
       }
     }
 
-    // Listener Login
-    loginBtn.addEventListener('click', async () => {
-      // deshabilitar mientras procesa
-      loginBtn.classList.add('btn-disabled');
+    // Manejo click "Ya tengo una cuenta"
+    btnLogin.addEventListener('click', async () => {
+      btnLogin.disabled = true;
       try {
-        if (firebaseAvailable && auth && provider) {
-          // usar signInWithPopup si firebase presente
-          const { signInWithPopup } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
-          try {
-            const result = await signInWithPopup(auth, provider);
-            const user = result.user;
-            // guarda uid local por si lo necesitas
-            if (user && user.uid) localStorage.setItem('carlitos_user_uid', user.uid);
-            // verificar perfil en Firestore y redirigir apropiadamente
-            await checkUserProfileAndRedirect(user);
-          } catch (popupErr) {
-            console.error('Error en signInWithPopup:', popupErr);
-            alert('No se pudo iniciar sesión con Google. Revisa la consola para más detalles. Se abrirá el onboarding.');
-            await safeNavigate(ROUTES.onboarding);
+        if (!firebaseReady) {
+          // no hay firebase-config -> informar y enviar a creación
+          showToast({
+            title: 'Sin conexión a backend',
+            text: 'No se detectó la configuración de Firebase en este entorno. Te redirigimos para crear un perfil local.',
+            cta: async () => await safeNavigate(ROUTES.preguntasMentor),
+            ctaText: 'Crear perfil'
+          });
+          return;
+        }
+
+        // Sign in with Google popup
+        const { signInWithPopup } = await import('https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js');
+        try {
+          const result = await signInWithPopup(auth, provider);
+          const user = result.user;
+          if (!user) {
+            showToast({ title: 'Error', text: 'No se obtuvo información del usuario.' });
+            return;
           }
-        } else {
-          // Firebase no disponible -> fallback local: ir a onboarding para pruebas
-          console.warn('Firebase no disponible — navegación local a onboarding.');
-          await safeNavigate(ROUTES.onboarding);
+
+          // guarda uid local (útil)
+          localStorage.setItem('carlitos_user_uid', user.uid);
+
+          // Verificar en Firestore si tiene perfil
+          const exists = await userHasProfileInFirestore(user);
+          if (exists) {
+            // ✅ Tiene perfil → ir a Carlitos.html
+            await safeNavigate(ROUTES.carlitosHome);
+            return;
+          } else {
+            // ❌ No tiene perfil -> mostrar mensaje bonito y acción crear
+            showToast({
+              title: 'Parece que no tienes perfil',
+              text: 'No encontramos un perfil asociado en Carlitos. Te ayudamos a crear uno ahora.',
+              cta: async () => {
+                // opcional: pre-llenar preguntas-mentor con info del usuario (por querystring)
+                const qs = new URLSearchParams();
+                if (user.displayName) qs.set('name', user.displayName);
+                if (user.email) qs.set('email', user.email);
+                await safeNavigate(ROUTES.preguntasMentor + '?' + qs.toString());
+              },
+              ctaText: 'Crear perfil'
+            });
+            return;
+          }
+        } catch (popupErr) {
+          console.warn('signInWithPopup error:', popupErr);
+          showToast({
+            title: 'Inicio cancelado o fallido',
+            text: 'No se completó el inicio con Google. Si no tienes cuenta, crea una ahora.',
+            cta: async () => await safeNavigate(ROUTES.preguntasMentor),
+            ctaText: 'Crear perfil'
+          });
         }
       } finally {
-        loginBtn.classList.remove('btn-disabled');
+        btnLogin.disabled = false;
       }
     });
 
-    // Listener Register (crear cuenta) -> siempre lleva al flujo de onboarding / preguntas-mentor
-    registerBtn.addEventListener('click', async () => {
-      // preferimos preguntas-mentor si existe, si no -> onboarding
-      try {
-        // intenta HEAD a preguntas-mentor
-        await safeNavigate(ROUTES.preguntasMentor);
-      } catch (e) {
-        // fallback
-        await safeNavigate(ROUTES.onboarding);
-      }
+    // Empieza ahora -> siempre crea perfil (preguntas-mentor)
+    btnRegister.addEventListener('click', async () => {
+      await safeNavigate(ROUTES.preguntasMentor);
     });
 
-    // Mejora: tecla Enter para accesibilidad (opcional)
+    // accesibilidad: Enter para login si no hay foco en inputs
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        // si el foco está en algún input o modal, no interceptar
-        if (document.activeElement && ['INPUT','TEXTAREA','SELECT','BUTTON'].includes(document.activeElement.tagName)) return;
-        // por defecto abre login
-        loginBtn.click();
+      if (e.key === 'Enter' && !['INPUT','TEXTAREA','SELECT','BUTTON'].includes(document.activeElement.tagName)) {
+        btnLogin.click();
       }
     });
-
-    // Debug helper: si quieres forzar comportamiento local durante desarrollo
-    // localStorage.setItem('forceLocalAuth', '1');
   </script>
 </body>
 </html>
